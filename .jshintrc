@@ -1,0 +1,20 @@
+{
+	"curly": false,
+	"eqeqeq": true,
+	"immed": true,
+	"newcap": true,
+	"noarg": true,
+	"sub": true,
+	"undef": true,
+	"boss": true,
+	"eqnull": true,
+	"node": true,
+	"es3": true,
+	"quotmark": "single",
+	"browser": true,
+	"unused": true,
+	"maxcomplexity": 6,
+	"globals": {
+		"$": false
+	}
+}
