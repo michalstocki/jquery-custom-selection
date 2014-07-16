@@ -50,7 +50,7 @@ function removeMarkers() {
 	$('.marker_end').remove();
 }
 
-window.createSelection = function createSelection() {
+window.createSelection = function() {
 	var range = document.createRange();
 	range.setStart(startAnchor, startOffset);
 	range.setEnd(endAnchor, endOffset);
@@ -66,8 +66,7 @@ function mark(el, point, $marker) {
 	while (furtherDistanceY <= distanceY && textNode.data) {
 		distanceY = furtherDistanceY;
 		textNode = textNode.splitText(1);
-		putMarkerBefore(textNode, $marker);
-		furtherDistanceY = getMarkerDistanceY(point, $marker);
+		furtherDistanceY = getNodeDistanceY(textNode, point, $marker);
 	}
 
 	if (furtherDistanceY > distanceY) {
@@ -75,7 +74,7 @@ function mark(el, point, $marker) {
 		putMarkerBefore(textNode, $marker);
 	}
 
-	var distanceX = getMarkerDistanceX(point, $marker);
+	var distanceX = getNodeDistanceX(textNode, point, $marker);
 	var furtherDistanceX = distanceX - 1;
 	furtherDistanceY = distanceY;
 
@@ -83,14 +82,27 @@ function mark(el, point, $marker) {
 		distanceX = furtherDistanceX;
 		textNode = getPreviousTextNode(textNode);
 		if (textNode) {
-			putMarkerBefore(textNode, $marker);
-			furtherDistanceX = getMarkerDistanceX(point, $marker);
-			furtherDistanceY = getMarkerDistanceY(point, $marker);
+			furtherDistanceX = getNodeDistanceX(textNode, point, $marker);
+			furtherDistanceY = getNodeDistanceY(textNode, point, $marker);
 		}
 	}
 	el.normalize();
 	var childOffset = $(el).contents().toArray().indexOf($marker[0]);
 	return childOffset;
+}
+
+function getNodeDistanceY(node, point, $marker) {
+	if (node.previousSibling !== $marker[0]) {
+		putMarkerBefore(node, $marker);
+	}
+	return getMarkerDistanceY(point, $marker);
+}
+
+function getNodeDistanceX(node, point, $marker) {
+	if (node.previousSibling !== $marker[0]) {
+		putMarkerBefore(node, $marker);
+	}
+	return getMarkerDistanceX(point, $marker);
 }
 
 function getMarkerDistanceY(point, $marker) {
