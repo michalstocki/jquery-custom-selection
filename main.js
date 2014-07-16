@@ -44,7 +44,6 @@ $(function() {
 	});
 });
 
-
 function removeMarkers() {
 	$('.marker').remove();
 	$('.marker_end').remove();
@@ -59,50 +58,66 @@ window.createSelection = function() {
 
 function mark(el, point, $marker) {
 	var textNode = getNodeFromElByPoint(el, point);
-	putMarkerBefore(textNode, $marker);
-	var distanceY = getMarkerDistanceY(point, $marker);
+	var distanceY = getNodeDistanceY(textNode, point);
 	var furtherDistanceY = distanceY;
 
-	while (furtherDistanceY <= distanceY && textNode.data) {
+	var subNode;
+	while ((subNode = textNode.splitText(1)) && subNode.length &&
+		(furtherDistanceY = getNodeDistanceY(subNode, point)) &&
+		furtherDistanceY <= distanceY) {
+
 		distanceY = furtherDistanceY;
-		textNode = textNode.splitText(1);
-		furtherDistanceY = getNodeDistanceY(textNode, point, $marker);
+		textNode = subNode;
 	}
 
-	if (furtherDistanceY > distanceY) {
-		textNode = textNode.previousSibling.previousSibling;
-		putMarkerBefore(textNode, $marker);
-	}
-
-	var distanceX = getNodeDistanceX(textNode, point, $marker);
+	var distanceX = getNodeDistanceX(textNode, point);
 	var furtherDistanceX = distanceX - 1;
 	furtherDistanceY = distanceY;
 
-	while (furtherDistanceY === distanceY && furtherDistanceX <= distanceX && textNode) {
+	var previousNode;
+	while ((previousNode = getPreviousTextNode(textNode)) &&
+		(furtherDistanceX = getNodeDistanceX(previousNode, point)) &&
+		furtherDistanceX <= distanceX &&
+		(furtherDistanceY = getNodeDistanceY(previousNode, point)) &&
+		furtherDistanceY === distanceY) {
+
 		distanceX = furtherDistanceX;
-		textNode = getPreviousTextNode(textNode);
-		if (textNode) {
-			furtherDistanceX = getNodeDistanceX(textNode, point, $marker);
-			furtherDistanceY = getNodeDistanceY(textNode, point, $marker);
-		}
+		textNode = previousNode;
 	}
+
+	putMarkerBefore(textNode, $marker);
 	el.normalize();
 	var childOffset = $(el).contents().toArray().indexOf($marker[0]);
 	return childOffset;
 }
 
-function getNodeDistanceY(node, point, $marker) {
-	if (node.previousSibling !== $marker[0]) {
-		putMarkerBefore(node, $marker);
+function getNodeDistanceY(textNode, point) {
+	var range = document.createRange();
+	range.selectNode(textNode);
+	var rects = range.getClientRects();
+	var rect = {};
+	for (var i = 0; i < rects.length && !rect.top; i++) {
+		rect = rects[i];
 	}
-	return getMarkerDistanceY(point, $marker);
+	if (!rect.top) {
+		console.error(textNode, textNode.data);
+	}
+	var centerY = rect.top + rect.height / 2;
+	return Math.abs(centerY - point.clientY);
 }
 
-function getNodeDistanceX(node, point, $marker) {
-	if (node.previousSibling !== $marker[0]) {
-		putMarkerBefore(node, $marker);
+function getNodeDistanceX(textNode, point) {
+	var range = document.createRange();
+	range.selectNode(textNode);
+	var rects = range.getClientRects();
+	var rect = {};
+	for (var i = 0; i < rects.length && !rect.left; i++) {
+		rect = rects[i];
 	}
-	return getMarkerDistanceX(point, $marker);
+	if (!rect.left) {
+		console.error(textNode, textNode.data);
+	}
+	return Math.abs(rect.left - point.clientX);
 }
 
 function getMarkerDistanceY(point, $marker) {
