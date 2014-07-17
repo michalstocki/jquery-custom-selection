@@ -87,8 +87,7 @@ function mark(el, point, marker) {
 
 	putMarkerBefore(textNode, marker);
 	el.normalize();
-	// TODO: optimize this to not use jquery
-	return $(el).contents().toArray().indexOf(marker);
+	return Array.prototype.indexOf.call(el.childNodes, marker);
 }
 
 function logg(m) {
