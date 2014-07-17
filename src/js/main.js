@@ -1,5 +1,5 @@
-var startAnchor = $('li:nth-child(3)')[0];
-var endAnchor = $('li:nth-child(6)')[0];
+var startAnchor = null;
+var endAnchor = null;
 var startOffset = null;
 var endOffset = null;
 var startMarker, endMarker;
@@ -47,7 +47,7 @@ $(function() {
 		e = e.originalEvent;
 		logg('touchend: ' + e.touches.length);
 		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
-		window.createSelection();
+		createSelection();
 	});
 });
 
@@ -63,12 +63,12 @@ function requestTick(func) {
 	ticking = true;
 }
 
-window.createSelection = function() {
+function createSelection() {
 	var range = document.createRange();
 	range.setStart(startAnchor, startOffset);
 	range.setEnd(endAnchor, endOffset);
 	window.getSelection().addRange(range);
-};
+}
 
 function mark(el, point, marker) {
 	var textNode = getNodeFromElByPoint(el, point);
