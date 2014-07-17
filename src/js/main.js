@@ -3,7 +3,6 @@ var endAnchor = $('li:nth-child(6)')[0];
 var startOffset = null;
 var endOffset = null;
 var startMarker, endMarker;
-var context;
 var lastPoint, ticking = false;
 
 $(function() {
@@ -90,10 +89,6 @@ function mark(el, point, marker) {
 	return Array.prototype.indexOf.call(el.childNodes, marker);
 }
 
-function logg(m) {
-	$('.touch_status').text(m);
-}
-
 function putMarkerBefore(node, marker) {
 	node.parentNode.insertBefore(marker, node);
 }
@@ -133,50 +128,5 @@ function getRectsForNode(node) {
 function rectContainsPoint(rect, point) {
 	var x = point.clientX, y = point.clientY;
 	return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
-}
-
-// -- Bisect ------------------------------------------------------------------
-
-function bisectWithoutAccessor(f, x, lo, hi) {
-	while (lo < hi) {
-		var mid = (lo + hi) >> 1;
-		if (x < f(mid)) hi = mid;
-		else lo = mid + 1;
-	}
-	return lo;
-}
-
-// -- Drawing rectangles ------------------------------------------------------
-
-function drawNode(n) {
-	var r = document.createRange();
-	r.selectNode(n);
-	var rects = r.getClientRects();
-	for (var j = 0, rect; rect = rects[j++];) {
-		drawRect(rect);
-	}
-}
-
-function initCanvas() {
-	var canvas = document.getElementById('debugging');
-	canvas.width = $(window).width();
-	canvas.height = $(window).height();
-	context = canvas.getContext('2d');
-}
-
-function drawRect(rect) {
-	context.beginPath();
-	context.rect(rect.left + 0.5, rect.top + 0.5, rect.width, rect.height);
-	context.lineWidth = 1;
-	context.strokeStyle = 'red';
-	context.stroke();
-}
-
-function drawCircle(x, y) {
-	context.beginPath();
-	context.arc(x, y, 12, 0, 2 * Math.PI, false);
-	context.lineWidth = 2;
-	context.strokeStyle = 'green';
-	context.stroke();
 }
 
