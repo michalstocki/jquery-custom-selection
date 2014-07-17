@@ -152,14 +152,17 @@ function createMarker(kind) {
 function getNodeFromElByPoint(el, point) {
 	var nodes = el.childNodes;
 	for (var i = 0, n; n = nodes[i++];) {
-		if (n.nodeType === Node.TEXT_NODE) {
-			var rects = getRectsForNode(n);
-			for (var j = 0, rect; rect = rects[j++];) {
-				if (pointBelongsToRect(point, rect)) {
-					return n;
-				}
-				// TODO: find nearest textNode
-			}
+		if (n.nodeType === Node.TEXT_NODE && nodeContainsPoint(n, point)) {
+			return n;
+		}
+	}
+}
+
+function nodeContainsPoint(node, point) {
+	var rects = getRectsForNode(node);
+	for (var j = 0, rect; rect = rects[j++];) {
+		if (rectContainsPoint(rect, point)) {
+			return true;
 		}
 	}
 }
@@ -170,7 +173,7 @@ function getRectsForNode(node) {
 	return range.getClientRects();
 }
 
-function pointBelongsToRect(point, rect) {
+function rectContainsPoint(rect, point) {
 	var x = point.clientX, y = point.clientY;
 	return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 }
