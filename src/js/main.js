@@ -4,6 +4,7 @@ var startOffset = null;
 var endOffset = null;
 var $startMarker, $endMarker;
 var context;
+var lastPoint, ticking = false;
 
 $(function() {
 	$('body').on('touchstart', function(e) {
@@ -25,17 +26,19 @@ $(function() {
 	}).on('touchmove', function(e) {
 		e.preventDefault();
 		e = e.originalEvent;
-		logg('touchmove: ' + e.touches[0].clientX + '/' + e.touches[0].clientY);
 		var touch = e.touches[0];
-		var point = {
+		lastPoint = {
 			clientX: touch.clientX,
 			clientY: touch.clientY,
 			pageX: touch.pageX,
 			pageY: touch.pageY
 		};
-		endAnchor = document.elementFromPoint(point.clientX, point.clientY);
-		$endMarker = $endMarker || createMarker('marker_end');
-		endOffset = mark(endAnchor, point, $endMarker);
+		requestTick(function() {
+			$endMarker = $endMarker || createMarker('marker_end');
+			endAnchor = document.elementFromPoint(lastPoint.clientX, lastPoint.clientY);
+			endOffset = mark(endAnchor, lastPoint, $endMarker);
+			ticking = false;
+		});
 	}).on('touchend', function(e) {
 		e = e.originalEvent;
 		logg('touchend: ' + e.touches.length);
@@ -47,6 +50,13 @@ $(function() {
 function removeMarkers() {
 	$('.marker').remove();
 	$('.marker_end').remove();
+}
+
+function requestTick(func) {
+	if (!ticking) {
+		window.requestAnimationFrame(func);
+	}
+	ticking = true;
 }
 
 window.createSelection = function() {
