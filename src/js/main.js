@@ -2,7 +2,7 @@ var startAnchor = $('li:nth-child(3)')[0];
 var endAnchor = $('li:nth-child(6)')[0];
 var startOffset = null;
 var endOffset = null;
-var $startMarker, $endMarker;
+var startMarker, endMarker;
 var context;
 var lastPoint, ticking = false;
 
@@ -20,8 +20,8 @@ $(function() {
 			pageY: touch.pageY
 		};
 		startAnchor = e.touches[0].target;
-		$startMarker = $startMarker || createMarker('marker');
-		startOffset = mark(startAnchor, point, $startMarker);
+		startMarker = startMarker || createMarker('marker');
+		startOffset = mark(startAnchor, point, startMarker);
 		e.preventDefault();
 	}).on('touchmove', function(e) {
 		e.preventDefault();
@@ -35,9 +35,9 @@ $(function() {
 			pageY: touch.pageY
 		};
 		requestTick(function() {
-			$endMarker = $endMarker || createMarker('marker_end');
+			endMarker = endMarker || createMarker('marker_end');
 			var markerAnchor = document.elementFromPoint(lastPoint.clientX, lastPoint.clientY);
-			var markerOffset = mark(markerAnchor, lastPoint, $endMarker);
+			var markerOffset = mark(markerAnchor, lastPoint, endMarker);
 			if (markerOffset) {
 				endAnchor = markerAnchor;
 				endOffset =  markerOffset;
@@ -71,7 +71,7 @@ window.createSelection = function() {
 	window.getSelection().addRange(range);
 };
 
-function mark(el, point, $marker) {
+function mark(el, point, marker) {
 	var textNode = getNodeFromElByPoint(el, point);
 	if (!textNode) {
 		return null;
@@ -85,22 +85,24 @@ function mark(el, point, $marker) {
 		}
 	}
 
-	putMarkerBefore(textNode, $marker);
+	putMarkerBefore(textNode, marker);
 	el.normalize();
 	// TODO: optimize this to not use jquery
-	return $(el).contents().toArray().indexOf($marker[0]);
+	return $(el).contents().toArray().indexOf(marker);
 }
 
 function logg(m) {
 	$('.touch_status').text(m);
 }
 
-function putMarkerBefore(node, $marker) {
-	$marker.insertBefore(node);
+function putMarkerBefore(node, marker) {
+	node.parentNode.insertBefore(marker, node);
 }
 
 function createMarker(kind) {
-	return $('<span class="' + kind + '"></span>');
+	var span = document.createElement('span');
+	span.setAttribute('class', kind);
+	return span;
 }
 
 // -- Finding nearest text node ------------------------------------------------
