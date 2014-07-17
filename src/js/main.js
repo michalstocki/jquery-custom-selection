@@ -26,6 +26,7 @@ $(function() {
 	}).on('touchmove', function(e) {
 		e.preventDefault();
 		e = e.originalEvent;
+		logg('touchmove: ' + e.touches[0].clientX + '/' + e.touches[0].clientY);
 		var touch = e.touches[0];
 		lastPoint = {
 			clientX: touch.clientX,
@@ -35,8 +36,12 @@ $(function() {
 		};
 		requestTick(function() {
 			$endMarker = $endMarker || createMarker('marker_end');
-			endAnchor = document.elementFromPoint(lastPoint.clientX, lastPoint.clientY);
-			endOffset = mark(endAnchor, lastPoint, $endMarker);
+			var markerAnchor = document.elementFromPoint(lastPoint.clientX, lastPoint.clientY);
+			var markerOffset = mark(markerAnchor, lastPoint, $endMarker);
+			if (markerOffset) {
+				endAnchor = markerAnchor;
+				endOffset =  markerOffset;
+			}
 			ticking = false;
 		});
 	}).on('touchend', function(e) {
@@ -68,9 +73,11 @@ window.createSelection = function() {
 
 function mark(el, point, $marker) {
 	var textNode = getNodeFromElByPoint(el, point);
+	if (!textNode) {
+		return null;
+	}
 	var distanceY = getNodeDistanceY(textNode, point);
 	var furtherDistanceY = distanceY;
-
 	var subNode;
 	while ((subNode = textNode.splitText(1)) && subNode.length &&
 		(furtherDistanceY = getNodeDistanceY(subNode, point)) &&
@@ -97,21 +104,15 @@ function mark(el, point, $marker) {
 
 	putMarkerBefore(textNode, $marker);
 	el.normalize();
-	var childOffset = $(el).contents().toArray().indexOf($marker[0]);
-	return childOffset;
+	// TODO: optimize this to not use jquery
+	return $(el).contents().toArray().indexOf($marker[0]);
 }
 
 function getNodeDistanceY(textNode, point) {
 	var range = document.createRange();
 	range.selectNode(textNode);
 	var rects = range.getClientRects();
-	var rect = {};
-	for (var i = 0; i < rects.length && !rect.top; i++) {
-		rect = rects[i];
-	}
-	if (!rect.top) {
-		console.error(textNode, textNode.data);
-	}
+	var rect = rects[0];
 	var centerY = rect.top + rect.height / 2;
 	return Math.abs(centerY - point.clientY);
 }
@@ -120,26 +121,8 @@ function getNodeDistanceX(textNode, point) {
 	var range = document.createRange();
 	range.selectNode(textNode);
 	var rects = range.getClientRects();
-	var rect = {};
-	for (var i = 0; i < rects.length && !rect.left; i++) {
-		rect = rects[i];
-	}
-	if (!rect.left) {
-		console.error(textNode, textNode.data);
-	}
+	var rect = rects[0];
 	return Math.abs(rect.left - point.clientX);
-}
-
-function getMarkerDistanceY(point, $marker) {
-	var markerOffset = $marker.offset();
-	var markerY = markerOffset.top + 6;
-	return Math.abs(markerY - point.pageY);
-}
-
-function getMarkerDistanceX(point, $marker) {
-	var markerOffset = $marker.offset();
-	var markerX = markerOffset.left - 2;
-	return Math.abs(markerX - point.pageX);
 }
 
 function getPreviousTextNode(textNode) {
@@ -160,34 +143,36 @@ function putMarkerBefore(node, $marker) {
 	$marker.insertBefore(node);
 }
 
+function createMarker(kind) {
+	return $('<span class="' + kind + '"></span>');
+}
+
+// -- Finding nearest text node ------------------------------------------------
+
 function getNodeFromElByPoint(el, point) {
-	var x = point.clientX, y = point.clientY;
 	var nodes = el.childNodes;
-	var firstText;
 	for (var i = 0, n; n = nodes[i++];) {
 		if (n.nodeType === Node.TEXT_NODE) {
-			firstText = firstText || n;
-			var r = document.createRange();
-			r.selectNode(n);
-			var rects = r.getClientRects();
+			var rects = getRectsForNode(n);
 			for (var j = 0, rect; rect = rects[j++];) {
-				if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+				if (pointBelongsToRect(point, rect)) {
 					return n;
 				}
+				// TODO: find nearest textNode
 			}
 		}
 	}
-	if (firstText) {
-		console.log('no hovered text node found, returning: ', firstText);
-		//TODO: find nearest text node.
-	} else {
-		console.log('no text node found');
-	}
-	return firstText;
 }
 
-function createMarker(kind) {
-	return $('<span class="' + kind + '"></span>');
+function getRectsForNode(node) {
+	var range = document.createRange();
+	range.selectNode(node);
+	return range.getClientRects();
+}
+
+function pointBelongsToRect(point, rect) {
+	var x = point.clientX, y = point.clientY;
+	return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 }
 
 // -- Bisect ------------------------------------------------------------------
