@@ -76,63 +76,19 @@ function mark(el, point, $marker) {
 	if (!textNode) {
 		return null;
 	}
-	var distanceY = getNodeDistanceY(textNode, point);
-	var furtherDistanceY = distanceY;
-	var subNode;
-	while ((subNode = textNode.splitText(1)) && subNode.length &&
-		(furtherDistanceY = getNodeDistanceY(subNode, point)) &&
-		furtherDistanceY <= distanceY) {
 
-		distanceY = furtherDistanceY;
-		textNode = subNode;
-	}
-
-	var distanceX = getNodeDistanceX(textNode, point);
-	var furtherDistanceX = distanceX - 1;
-	furtherDistanceY = distanceY;
-
-	var previousNode;
-	while ((previousNode = getPreviousTextNode(textNode)) &&
-		(furtherDistanceX = getNodeDistanceX(previousNode, point)) &&
-		furtherDistanceX <= distanceX &&
-		(furtherDistanceY = getNodeDistanceY(previousNode, point)) &&
-		furtherDistanceY === distanceY) {
-
-		distanceX = furtherDistanceX;
-		textNode = previousNode;
+	while (textNode.length > 1) {
+		var trimPosition = textNode.length >> 1;
+		var subNode = textNode.splitText(trimPosition);
+		if (nodeContainsPoint(subNode, point)) {
+			textNode = subNode;
+		}
 	}
 
 	putMarkerBefore(textNode, $marker);
 	el.normalize();
 	// TODO: optimize this to not use jquery
 	return $(el).contents().toArray().indexOf($marker[0]);
-}
-
-function getNodeDistanceY(textNode, point) {
-	var range = document.createRange();
-	range.selectNode(textNode);
-	var rects = range.getClientRects();
-	var rect = rects[0];
-	var centerY = rect.top + rect.height / 2;
-	return Math.abs(centerY - point.clientY);
-}
-
-function getNodeDistanceX(textNode, point) {
-	var range = document.createRange();
-	range.selectNode(textNode);
-	var rects = range.getClientRects();
-	var rect = rects[0];
-	return Math.abs(rect.left - point.clientX);
-}
-
-function getPreviousTextNode(textNode) {
-	while (textNode.previousSibling) {
-		textNode = textNode.previousSibling;
-		if (textNode.nodeType === Node.TEXT_NODE) {
-			return textNode;
-		}
-	}
-	return null;
 }
 
 function logg(m) {
