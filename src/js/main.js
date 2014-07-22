@@ -18,9 +18,13 @@ $(function() {
 			pageX: touch.pageX,
 			pageY: touch.pageY
 		};
-		startAnchor = e.touches[0].target;
+		var eventAnchor = e.touches[0].target;
 		startMarker = startMarker || createMarker('marker');
-		startOffset = mark(startAnchor, point, startMarker);
+		var markerOffset = mark(eventAnchor, point, startMarker);
+		if (markerOffset) {
+			startAnchor = startMarker.parentNode;
+			startOffset = markerOffset;
+		}
 		e.preventDefault();
 	}).on('touchmove', function(e) {
 		e.preventDefault();
@@ -35,10 +39,10 @@ $(function() {
 		};
 		requestTick(function() {
 			endMarker = endMarker || createMarker('marker_end');
-			var markerAnchor = document.elementFromPoint(lastPoint.clientX, lastPoint.clientY);
-			var markerOffset = mark(markerAnchor, lastPoint, endMarker);
+			var eventAnchor = document.elementFromPoint(lastPoint.clientX, lastPoint.clientY);
+			var markerOffset = mark(eventAnchor, lastPoint, endMarker);
 			if (markerOffset) {
-				endAnchor = markerAnchor;
+				endAnchor = endMarker.parentNode;
 				endOffset = markerOffset;
 			}
 			ticking = false;
@@ -119,7 +123,7 @@ function getIndexOfElement(element) {
 function getFromElNodeContainingPoint(el, point) {
 	var nodes = el.childNodes;
 	for (var i = 0, n; n = nodes[i++];) {
-		if (n.nodeType === Node.TEXT_NODE && nodeContainsPoint(n, point)) {
+		if (nodeIsText(n) && nodeContainsPoint(n, point)) {
 			return n;
 		}
 	}
@@ -166,10 +170,10 @@ function getClosestTextNodeFromEl(el, point) {
 
 function getClosestNodeFromEl(el, point) {
 	var nodes = el.childNodes;
-	var closestNode;
+	var closestNode = null;
 	for (var i = 0, n; n = nodes[i++];) {
 		var rects;
-		if (rects = getRectsForNode(n)) {
+		if ((rects = getRectsForNode(n)) && rects.length) {
 			closestNode = closestNode || n;
 			closestNode = getNodeCloserToPoint(point, closestNode, n);
 		}
@@ -192,7 +196,7 @@ function getNodeCloserToPoint(point, winner, rival) {
 function getRectNearestToPoint(node, point) {
 	var y = point.clientY;
 	var rects = getRectsForNode(node);
-	var nearestRect;
+	var nearestRect = null;
 	for (var j = 0, rect; rect = rects[j++];) {
 		if (rect.top < y) {
 			nearestRect = nearestRect || rect;
