@@ -17,5 +17,8 @@
 	"unused": true,
 	"maxcomplexity": 6,
 	"jquery": true,
-	"devel": true
+	"devel": true,
+	"globals": {
+		"logg": true
+	}
 }

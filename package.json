@@ -1,0 +1,23 @@
+{
+	"name": "CustomSelection",
+	"version": "0.1.0",
+	"description": "Overriding native text selection in HTML",
+	"keywords": [
+		"text",
+		"selection",
+		"copy",
+		"highlight",
+		"jquery",
+		"range",
+		"mobile devices"
+	],
+	"author": "Michał Stocki",
+	"devDependencies": {
+		"grunt": "~0.4.4",
+		"grunt-cli": "~0.1.13",
+		"grunt-contrib-jshint": "~0.9.2",
+		"grunt-contrib-connect": "~0.7.1",
+		"grunt-contrib-concat": "~0.3",
+		"grunt-contrib-uglify": "~0.4.0"
+	}
+}

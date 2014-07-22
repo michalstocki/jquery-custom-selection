@@ -8,6 +8,7 @@ function logg(m) {
 var context;
 
 
+/* jshint-W098 */
 function initCanvas() {
 	var canvas = document.getElementById('debugging');
 	canvas.width = $(window).width();
@@ -39,3 +40,4 @@ function drawCircle(x, y) {
 	context.strokeStyle = 'green';
 	context.stroke();
 }
+/* jshint+W098 */
