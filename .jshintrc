@@ -1,5 +1,7 @@
 {
-	"curly": false,
+	"curly": true,
+	"camelcase": true,
+	"indent": 4,
 	"eqeqeq": true,
 	"immed": true,
 	"newcap": true,
@@ -14,7 +16,6 @@
 	"browser": true,
 	"unused": true,
 	"maxcomplexity": 6,
-	"globals": {
-		"$": false
-	}
+	"jquery": true,
+	"devel": true
 }
