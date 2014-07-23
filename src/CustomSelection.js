@@ -27,10 +27,6 @@
 
 //	Private methods ------------------------------------------------------------
 
-	var startAnchor = null;
-	var endAnchor = null;
-	var startOffset = null;
-	var endOffset = null;
 	var startMarker = null;
 	var endMarker = null;
 	var lastPoint = null;
@@ -70,7 +66,6 @@
 	}
 
 	function handleTouchEnd() {
-		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
 		createSelection();
 	}
 
@@ -83,10 +78,22 @@
 	}
 
 	function createSelection() {
+		if (!startMarker.parentNode || !endMarker.parentNode) {
+			return null;
+		}
 		var range = document.createRange();
+		var startAnchor = startMarker.parentNode;
+		var endAnchor = endMarker.parentNode;
+		var startOffset = getIndexOfElement(startMarker);
+		var endOffset = getIndexOfElement(endMarker);
 		range.setStart(startAnchor, startOffset);
 		range.setEnd(endAnchor, endOffset);
+		if (range.collapsed) {
+			range.setStart(endAnchor, endOffset);
+			range.setEnd(startAnchor, startOffset);
+		}
 		window.getSelection().addRange(range);
+		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
 	}
 
 //	-- Preparing Markers
@@ -105,20 +112,12 @@
 
 	function markStart(element, point) {
 		startMarker = startMarker || createMarker(startMarkerClass);
-		var markerOffset = mark(element, point, startMarker);
-		if (markerOffset) {
-			startAnchor = startMarker.parentNode;
-			startOffset = markerOffset;
-		}
+		mark(element, point, startMarker);
 	}
 
 	function markEnd(element, point) {
 		endMarker = endMarker || createMarker(endMarkerClass);
-		var markerOffset = mark(element, point, endMarker);
-		if (markerOffset) {
-			endAnchor = endMarker.parentNode;
-			endOffset = markerOffset;
-		}
+		mark(element, point, endMarker);
 	}
 
 	function createMarker(kind) {
@@ -147,7 +146,6 @@
 			return null;
 		}
 		marker.parentNode.normalize();
-		return getIndexOfElement(marker);
 	}
 
 	function putMarkerBefore(node, marker) {
