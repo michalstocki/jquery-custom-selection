@@ -4,6 +4,9 @@
 	var startMarkerClass = 'start-marker';
 	var endMarkerClass = 'end-marker';
 
+	// Collaborators
+	var frameRequester = null;
+
 //	Public interface -----------------------------------------------------------
 
 	global.CustomSelection = {
@@ -13,11 +16,13 @@
 				endMarkerClass = options.endMarkerClass || endMarkerClass;
 				bindTouchFor(element);
 			}
+			frameRequester = new CustomSelection.Lib.FrameRequester();
 		},
 		disable: function(element) {
 			unbindTouchFor(element);
 			clearSelection();
-		}
+		},
+		Lib: {}
 	};
 
 //	Private methods ------------------------------------------------------------
@@ -29,7 +34,6 @@
 	var startMarker = null;
 	var endMarker = null;
 	var lastPoint = null;
-	var ticking = false;
 
 //	-- Binding events
 
@@ -59,10 +63,9 @@
 		e.preventDefault();
 		e = e.originalEvent;
 		lastPoint = getTouchPoint(e);
-		requestTick(function() {
+		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			markEnd(eventAnchor, lastPoint);
-			ticking = false;
 		});
 	}
 
@@ -89,14 +92,7 @@
 //	-- Preparing Markers
 
 	function getTouchPoint(touchEvent) {
-		// TODO: extract as model
-		var touch = touchEvent.touches[0];
-		return {
-			clientX: touch.clientX,
-			clientY: touch.clientY,
-			pageX: touch.pageX,
-			pageY: touch.pageY
-		};
+		return new CustomSelection.Lib.Point(touchEvent);
 	}
 
 	function getTouchedElementFromEvent(touchEvent) {
@@ -131,13 +127,6 @@
 		return span;
 	}
 
-	function requestTick(func) {
-		// TODO: extract to external collaborator
-		if (!ticking) {
-			window.requestAnimationFrame(func);
-		}
-		ticking = true;
-	}
 
 //	-- Marking
 
@@ -178,7 +167,7 @@
 		return Array.prototype.indexOf.call(elements, element);
 	}
 
-// ---- Finding nearest text node
+// ---- Finding text node
 // ------ Finding node containing point
 
 	function getFromElNodeContainingPoint(el, point) {
