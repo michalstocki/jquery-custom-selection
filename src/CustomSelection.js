@@ -7,17 +7,16 @@
 //	Public interface -----------------------------------------------------------
 
 	global.CustomSelection = {
-		enable: function(options) {
+		enable: function(element, options) {
 			if (options) {
 				startMarkerClass = options.startMarkerClass || startMarkerClass;
 				endMarkerClass = options.endMarkerClass || endMarkerClass;
-				var element = options.element || $('body');
 				bindTouchFor(element);
 			}
-
 		},
-		disable: function() {
-
+		disable: function(element) {
+			unbindTouchFor(element);
+			clearSelection();
 		}
 	};
 
@@ -32,27 +31,44 @@
 	var lastPoint = null;
 	var ticking = false;
 
+//	-- Binding events
+
 	function bindTouchFor(element) {
-		$(element).on('touchstart', function(e) {
-			e.preventDefault();
-			e = e.originalEvent;
-			clearSelection();
-			var eventAnchor = getTouchedElementFromEvent(e);
-			var point = getTouchPoint(e);
-			markStart(eventAnchor, point);
-		}).on('touchmove', function(e) {
-			e.preventDefault();
-			e = e.originalEvent;
-			lastPoint = getTouchPoint(e);
-			requestTick(function() {
-				var eventAnchor = getTouchedElementByPoint(lastPoint);
-				markEnd(eventAnchor, lastPoint);
-				ticking = false;
-			});
-		}).on('touchend', function() {
-			console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
-			createSelection();
+		$(element)
+			.on('touchstart', handleTouchStart)
+			.on('touchmove', handleTouchMove)
+			.on('touchend', handleTouchEnd);
+	}
+
+	function unbindTouchFor(element) {
+		$(element)
+			.off('touchstart', handleTouchStart)
+			.off('touchmove', handleTouchMove)
+			.off('touchend', handleTouchEnd);
+	}
+
+	function handleTouchStart(e) {
+		e = e.originalEvent;
+		clearSelection();
+		var eventAnchor = getTouchedElementFromEvent(e);
+		var point = getTouchPoint(e);
+		markStart(eventAnchor, point);
+	}
+
+	function handleTouchMove(e) {
+		e.preventDefault();
+		e = e.originalEvent;
+		lastPoint = getTouchPoint(e);
+		requestTick(function() {
+			var eventAnchor = getTouchedElementByPoint(lastPoint);
+			markEnd(eventAnchor, lastPoint);
+			ticking = false;
 		});
+	}
+
+	function handleTouchEnd() {
+		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
+		createSelection();
 	}
 
 //	-- Creating Selection

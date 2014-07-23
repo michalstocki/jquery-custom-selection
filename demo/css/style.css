@@ -31,10 +31,9 @@ span.marker:after, span.marker_end:after {
 span.marker_end:after {
     background-color: red;
 }
-.touch_status {
+.settings {
     background-color: #4679bd;
-    width: 150px;
-    height: 20px;
+    width: 500px;
     border-radius: 5px;
 	padding: 2px 6px;
     font-family: sans-serif;
@@ -43,8 +42,12 @@ span.marker_end:after {
 	position: fixed;
 	top: 0;
 	left: 50%;
-	margin: 3px 3px 3px -75px;
+	margin: 3px 3px 3px -250px;
 	}
+	.touch_status {
+		display: inline-block;
+		}
+
 * {
     /*-webkit-user-select: none;*/
 }

@@ -1,5 +1,6 @@
 $(function() {
-	$('body').on('touchstart', function(e) {
+	var $body = $('body');
+	$body.on('touchstart', function(e) {
 		e = e.originalEvent;
 		logg('touchstart: ' + e.touches.length);
 	}).on('touchmove', function(e) {
@@ -10,9 +11,20 @@ $(function() {
 		logg('touchend: ' + e.touches.length);
 	});
 
-	CustomSelection.enable({
-		startMarkerClass: 'marker',
-		endMarkerClass: 'marker_end'
-	});
+	window.enableSelection = function() {
+		CustomSelection.enable($body, {
+			startMarkerClass: 'marker',
+			endMarkerClass: 'marker_end'
+		});
+
+		$('.settings .button-enable').attr('disabled', true);
+		$('.settings .button-disable').attr('disabled', false);
+	};
+
+	window.disableSelection = function() {
+		CustomSelection.disable($body);
+		$('.settings .button-enable').attr('disabled', false);
+		$('.settings .button-disable').attr('disabled', true);
+	};
 
 });
