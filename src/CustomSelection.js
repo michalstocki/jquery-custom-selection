@@ -8,7 +8,6 @@ var lastPoint, ticking = false;
 $(function() {
 	$('body').on('touchstart', function(e) {
 		e = e.originalEvent;
-		logg('touchstart: ' + e.touches.length);
 		window.getSelection().removeAllRanges();
 		removeMarkers();
 		var touch = e.touches[0];
@@ -29,7 +28,6 @@ $(function() {
 	}).on('touchmove', function(e) {
 		e.preventDefault();
 		e = e.originalEvent;
-		logg('touchmove: ' + e.touches[0].clientX + '/' + e.touches[0].clientY);
 		var touch = e.touches[0];
 		lastPoint = {
 			clientX: touch.clientX,
@@ -47,9 +45,7 @@ $(function() {
 			}
 			ticking = false;
 		});
-	}).on('touchend', function(e) {
-		e = e.originalEvent;
-		logg('touchend: ' + e.touches.length);
+	}).on('touchend', function() {
 		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
 		createSelection();
 	});
