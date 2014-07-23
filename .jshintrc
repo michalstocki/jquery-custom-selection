@@ -19,6 +19,7 @@
 	"jquery": true,
 	"devel": true,
 	"globals": {
-		"logg": true
+		"logg": false,
+		"CustomSelection": false
 	}
 }

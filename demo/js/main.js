@@ -9,4 +9,10 @@ $(function() {
 		e = e.originalEvent;
 		logg('touchend: ' + e.touches.length);
 	});
+
+	CustomSelection.enable({
+		startMarkerClass: 'marker',
+		endMarkerClass: 'marker_end'
+	});
+
 });
