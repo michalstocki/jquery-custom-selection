@@ -14,12 +14,12 @@
 			if (options) {
 				startMarkerClass = options.startMarkerClass || startMarkerClass;
 				endMarkerClass = options.endMarkerClass || endMarkerClass;
-				bindTouchFor(element);
+				enableTouchSelectionFor(element);
 			}
 			frameRequester = new CustomSelection.Lib.FrameRequester();
 		},
 		disable: function(element) {
-			unbindTouchFor(element);
+			disableTouchSelectionFor(element);
 			clearSelection();
 		},
 		Lib: {}
@@ -33,40 +33,51 @@
 
 //	-- Binding events
 
-	function bindTouchFor(element) {
+	function enableTouchSelectionFor(element) {
 		$(element)
-			.on('touchstart', handleTouchStart)
-			.on('touchmove', handleTouchMove)
-			.on('touchend', handleTouchEnd);
+//			.on('touchstart', handleTouchStart)
+//			.on('touchmove', handleTouchMove)
+//			.on('touchend', handleTouchEnd)
+			.hammer().bind('press', handleTapHold);
 	}
 
-	function unbindTouchFor(element) {
+	function disableTouchSelectionFor(element) {
 		$(element)
-			.off('touchstart', handleTouchStart)
-			.off('touchmove', handleTouchMove)
-			.off('touchend', handleTouchEnd);
+//			.off('touchstart', handleTouchStart)
+//			.off('touchmove', handleTouchMove)
+//			.off('touchend', handleTouchEnd)
+			.hammer().unbind('press', handleTapHold);
+	}
+
+	function handleTapHold(e) {
+		e = e.gesture;
+		var element = getTouchedElementFromEvent(e);
+		var point = getTouchPoint(e);
+		clearSelection();
+		wrapWithMarkersWordAtPoint(element, point);
+		createSelection();
 	}
 
 	function handleTouchStart(e) {
 		e = e.originalEvent;
 		clearSelection();
-		var eventAnchor = getTouchedElementFromEvent(e);
-		var point = getTouchPoint(e);
-		markStart(eventAnchor, point);
+//		var eventAnchor = getTouchedElementFromEvent(e);
+//		var point = getTouchPoint(e);
+//		markStart(eventAnchor, point);
 	}
 
 	function handleTouchMove(e) {
 		e.preventDefault();
-		e = e.originalEvent;
-		lastPoint = getTouchPoint(e);
-		frameRequester.requestFrame(function() {
-			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			markEnd(eventAnchor, lastPoint);
-		});
+//		e = e.originalEvent;
+//		lastPoint = getTouchPoint(e);
+//		frameRequester.requestFrame(function() {
+//			var eventAnchor = getTouchedElementByPoint(lastPoint);
+//			markEnd(eventAnchor, lastPoint);
+//		});
 	}
 
-	function handleTouchEnd() {
-		createSelection();
+	function handleTouchEnd(e) {
+//		createSelection();
 	}
 
 //	-- Creating Selection
@@ -76,6 +87,8 @@
 		$('.' + startMarkerClass).remove();
 		$('.' + endMarkerClass).remove();
 	}
+
+	window.createSelection = createSelection;
 
 	function createSelection() {
 		if (!startMarker.parentNode || !endMarker.parentNode) {
@@ -92,6 +105,7 @@
 			range.setStart(endAnchor, endOffset);
 			range.setEnd(startAnchor, startOffset);
 		}
+		console.log('106: range =>', range);
 		window.getSelection().addRange(range);
 		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
 	}
@@ -103,7 +117,8 @@
 	}
 
 	function getTouchedElementFromEvent(touchEvent) {
-		return touchEvent.touches[0].target;
+		var touches = touchEvent.touches || touchEvent.pointers;
+		return touches[0].target;
 	}
 
 	function getTouchedElementByPoint(touchPoint) {
@@ -126,6 +141,58 @@
 		return span;
 	}
 
+
+//	-- Extracting node with word at point
+
+	/* jshint-W074 */
+	function wrapWithMarkersWordAtPoint(element, point) {
+		startMarker = startMarker || createMarker(startMarkerClass);
+		endMarker = endMarker || createMarker(endMarkerClass);
+		var textNode;
+		if (textNode = getFromElNodeContainingPoint(element, point)) {
+			while (textNode.length > 1) {
+				var trimPosition = textNode.length >> 1;
+				var subNode = textNode.splitText(trimPosition);
+				if (nodeContainsPoint(subNode, point)) {
+					textNode = subNode;
+				}
+			}
+			// searching space backwards
+			var potentialSpace = textNode;
+			while (potentialSpace && potentialSpace.data[potentialSpace.length - 1] !== ' ') {
+				if (potentialSpace.length > 1) {
+					potentialSpace = potentialSpace.splitText(potentialSpace.length - 1).previousSibling;
+				} else if (potentialSpace.previousSibling && nodeIsText(potentialSpace.previousSibling)) {
+					potentialSpace = potentialSpace.previousSibling;
+				} else {
+					putMarkerBefore(potentialSpace, startMarker);
+					potentialSpace = null;
+				}
+			}
+			if (potentialSpace) {
+				putMarkerAfter(potentialSpace, startMarker);
+			}
+
+			// searching space forwards
+			potentialSpace = textNode;
+			while (potentialSpace && potentialSpace.data[0] !== ' ') {
+				if (potentialSpace.length > 1) {
+					potentialSpace = potentialSpace.splitText(1);
+				} else if (potentialSpace.nextSibling && nodeIsText(potentialSpace.nextSibling)) {
+					potentialSpace = potentialSpace.nextSibling;
+				} else {
+					putMarkerAfter(potentialSpace, endMarker);
+					potentialSpace = null;
+				}
+			}
+			if (potentialSpace) {
+				putMarkerBefore(potentialSpace, endMarker);
+			}
+			startMarker.parentNode.normalize();
+			endMarker.parentNode.normalize();
+		}
+	}
+	/* jshint+W074 */
 
 //	-- Marking
 
@@ -292,7 +359,8 @@
 	'use strict';
 
 	function Point(touchEvent) {
-		var touch = touchEvent.touches[0];
+		var touches = touchEvent.touches || touchEvent.pointers;
+		var touch = touches[0];
 		this.clientX = touch.clientX;
 		this.clientY = touch.clientY;
 		this.pageX = touch.pageX;
