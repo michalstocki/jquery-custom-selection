@@ -1,4 +1,4 @@
-/*! CustomSelection - v0.1.0 - 2014-07-24 */
+/*! jquery-custom-selection - v0.1.0 - 2014-07-24 */
 (function(global) {
 	// Default configuration
 	var startMarkerClass = 'start-marker';
