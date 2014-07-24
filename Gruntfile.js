@@ -9,9 +9,7 @@ module.exports = function(grunt) {
 	var ANY_JS_FILE = '*.js';
 
 	grunt.initConfig({
-		pkg: function() {
-			return grunt.file.readJSON('package.json');
-		},
+		pkg: grunt.file.readJSON('package.json'),
 		jshint: {
 			all: [
 				SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE,
@@ -32,7 +30,7 @@ module.exports = function(grunt) {
 		},
 		concat: {
 			options: {
-				banner: '/*! <%= pkg().name %> - v<%= pkg().version %> - ' +
+				banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
 					'<%= grunt.template.today("yyyy-mm-dd") %> */'
 			},
 			build: {
@@ -50,7 +48,7 @@ module.exports = function(grunt) {
 		uglify: {
 			options: {
 				sourceMap: true,
-				banner: '/*! <%= pkg().name %> - v<%= pkg().version %> - ' +
+				banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
 					'<%= grunt.template.today("yyyy-mm-dd") %> */'
 			},
 			build: {
