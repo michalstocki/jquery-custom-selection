@@ -15,7 +15,6 @@ span.marker, span.marker_end {
     height: 0.8em;
     position: absolute;
     margin-top: 3px;
-    pointer-events: none;
 }
 span.marker:after, span.marker_end:after {
     content:"";

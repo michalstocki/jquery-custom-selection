@@ -7,6 +7,8 @@
 
 	// Collaborators
 	var frameRequester = null;
+	var startMarker = null;
+	var endMarker = null;
 
 //	Public interface -----------------------------------------------------------
 
@@ -17,6 +19,8 @@
 				endMarkerClass = options.endMarkerClass || endMarkerClass;
 				enableTouchSelectionFor(element);
 			}
+			startMarker = createMarker(startMarkerClass);
+			endMarker = createMarker(endMarkerClass);
 			frameRequester = new CustomSelection.Lib.FrameRequester();
 		},
 		disable: function(element) {
@@ -28,29 +32,25 @@
 
 //	Private methods ------------------------------------------------------------
 
-	var startMarker = null;
-	var endMarker = null;
 	var lastPoint = null;
 
 //	-- Binding events
 
 	function enableTouchSelectionFor(element) {
 		$(element)
-//			.on('touchstart', handleTouchStart)
-//			.on('touchmove', handleTouchMove)
-			.on('touchend', handleTouchEnd)
-			.hammer().on('press', handleTapHold);
+			.on('touchmove', handleGlobalTouchMove)
+			.on('touchend', handleGlobalTouchEnd)
+			.hammer().on('press', handleGlobalTapHold);
 	}
 
 	function disableTouchSelectionFor(element) {
 		$(element)
-//			.off('touchstart', handleTouchStart)
-//			.off('touchmove', handleTouchMove)
-			.off('touchend', handleTouchEnd)
-			.hammer().off('press', handleTapHold);
+			.off('touchmove', handleGlobalTouchMove)
+			.off('touchend', handleGlobalTouchEnd)
+			.hammer().off('press', handleGlobalTapHold);
 	}
 
-	function handleTapHold(e) {
+	function handleGlobalTapHold(e) {
 		e = e.gesture;
 		var element = getTouchedElementFromEvent(e);
 		var point = getTouchPoint(e);
@@ -59,39 +59,37 @@
 		createSelection();
 	}
 
-	function handleTouchStart(e) {
-		e = e.originalEvent;
-		clearSelection();
-//		var eventAnchor = getTouchedElementFromEvent(e);
-//		var point = getTouchPoint(e);
-//		markStart(eventAnchor, point);
+	function handleGlobalTouchMove(jqueryEvent) {
+		if (isMarker(jqueryEvent.target)) {
+			handleMarkerTouchMove(jqueryEvent);
+		}
 	}
 
-	function handleTouchMove(e) {
-		e.preventDefault();
-//		e = e.originalEvent;
-//		lastPoint = getTouchPoint(e);
-//		frameRequester.requestFrame(function() {
-//			var eventAnchor = getTouchedElementByPoint(lastPoint);
-//			markEnd(eventAnchor, lastPoint);
-//		});
+	function handleGlobalTouchEnd(jqueryEvent) {
+		jqueryEvent.preventDefault();
 	}
 
-	function handleTouchEnd(e) {
-		e = e.originalEvent;
-		e.preventDefault();
-//		createSelection();
+	function handleMarkerTouchMove(jqueryEvent) {
+		jqueryEvent.preventDefault();
+		lastPoint = getTouchPoint(jqueryEvent.originalEvent);
+		frameRequester.requestFrame(function() {
+			var eventAnchor = getTouchedElementByPoint(lastPoint);
+			mark(eventAnchor, lastPoint, jqueryEvent.target);
+			updateSelection();
+		});
+	}
+
+	function isMarker(element) {
+		return element === startMarker || element === endMarker;
 	}
 
 //	-- Creating Selection
 
 	function clearSelection() {
 		window.getSelection().removeAllRanges();
-		$('.' + startMarkerClass).remove();
-		$('.' + endMarkerClass).remove();
+		$(startMarker).detach();
+		$(endMarker).detach();
 	}
-
-	window.createSelection = createSelection;
 
 	function createSelection() {
 		if (!startMarker.parentNode || !endMarker.parentNode) {
@@ -108,9 +106,13 @@
 			range.setStart(endAnchor, endOffset);
 			range.setEnd(startAnchor, startOffset);
 		}
-		console.log('106: range =>', range);
 		window.getSelection().addRange(range);
 		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
+	}
+
+	function updateSelection() {
+		window.getSelection().removeAllRanges();
+		createSelection();
 	}
 
 //	-- Preparing Markers
@@ -128,16 +130,6 @@
 		return document.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
 	}
 
-	function markStart(element, point) {
-		startMarker = startMarker || createMarker(startMarkerClass);
-		mark(element, point, startMarker);
-	}
-
-	function markEnd(element, point) {
-		endMarker = endMarker || createMarker(endMarkerClass);
-		mark(element, point, endMarker);
-	}
-
 	function createMarker(kind) {
 		var span = document.createElement('span');
 		span.setAttribute('class', kind);
@@ -149,8 +141,6 @@
 
 	/* jshint-W074 */
 	function wrapWithMarkersWordAtPoint(element, point) {
-		startMarker = startMarker || createMarker(startMarkerClass);
-		endMarker = endMarker || createMarker(endMarkerClass);
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			while (textNode.length > 1) {
@@ -191,8 +181,7 @@
 			if (potentialSpace) {
 				putMarkerBefore(potentialSpace, endMarker);
 			}
-			startMarker.parentNode.normalize();
-			endMarker.parentNode.normalize();
+			textNode.parentNode.normalize();
 		}
 	}
 	/* jshint+W074 */
