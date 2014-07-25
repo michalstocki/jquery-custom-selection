@@ -20,6 +20,7 @@
 	"devel": true,
 	"globals": {
 		"logg": false,
-		"CustomSelection": false
+		"CustomSelection": false,
+		"Hammer": false
 	}
 }

@@ -1,6 +1,7 @@
 
 (function(global) {
 	// Default configuration
+	delete Hammer.defaults.cssProps.userSelect;
 	var startMarkerClass = 'start-marker';
 	var endMarkerClass = 'end-marker';
 
@@ -37,16 +38,16 @@
 		$(element)
 //			.on('touchstart', handleTouchStart)
 //			.on('touchmove', handleTouchMove)
-//			.on('touchend', handleTouchEnd)
-			.hammer().bind('press', handleTapHold);
+			.on('touchend', handleTouchEnd)
+			.hammer().on('press', handleTapHold);
 	}
 
 	function disableTouchSelectionFor(element) {
 		$(element)
 //			.off('touchstart', handleTouchStart)
 //			.off('touchmove', handleTouchMove)
-//			.off('touchend', handleTouchEnd)
-			.hammer().unbind('press', handleTapHold);
+			.off('touchend', handleTouchEnd)
+			.hammer().off('press', handleTapHold);
 	}
 
 	function handleTapHold(e) {
@@ -77,6 +78,8 @@
 	}
 
 	function handleTouchEnd(e) {
+		e = e.originalEvent;
+		e.preventDefault();
 //		createSelection();
 	}
 
@@ -97,7 +100,7 @@
 		var range = document.createRange();
 		var startAnchor = startMarker.parentNode;
 		var endAnchor = endMarker.parentNode;
-		var startOffset = getIndexOfElement(startMarker);
+		var startOffset = getIndexOfElement(startMarker) + 1;
 		var endOffset = getIndexOfElement(endMarker);
 		range.setStart(startAnchor, startOffset);
 		range.setEnd(endAnchor, endOffset);
