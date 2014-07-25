@@ -98,8 +98,8 @@
 		var range = document.createRange();
 		var startAnchor = startMarker.parentNode;
 		var endAnchor = endMarker.parentNode;
-		var startOffset = getIndexOfElement(startMarker) + 1;
-		var endOffset = getIndexOfElement(endMarker);
+		var startOffset = Math.max(1, getIndexOfElement(startMarker));
+		var endOffset = Math.max(1, getIndexOfElement(endMarker));
 		range.setStart(startAnchor, startOffset);
 		range.setEnd(endAnchor, endOffset);
 		if (range.collapsed) {
@@ -107,7 +107,7 @@
 			range.setEnd(startAnchor, startOffset);
 		}
 		window.getSelection().addRange(range);
-		console.log('sA, eA, sO, eO', startAnchor, endAnchor, startOffset, endOffset);
+		console.log('sA, eA, sO, eO', startAnchor, startOffset, endAnchor, endOffset);
 	}
 
 	function updateSelection() {
