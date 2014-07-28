@@ -143,16 +143,11 @@
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			while (textNode.length > 1) {
-				var trimPosition = textNode.length >> 1;
-				var subNode = textNode.splitText(trimPosition);
-				if (nodeContainsPoint(subNode, point)) {
-					textNode = subNode;
-				}
-			}
+			textNode = trimTextNodeWhileContainsPoint(textNode, point);
+
 			// searching space backwards
 			var potentialSpace = textNode;
-			while (potentialSpace && potentialSpace.data[potentialSpace.length - 1] !== ' ') {
+			while (potentialSpace && !nodeEndsWith(potentialSpace, ' ')) {
 				if (potentialSpace.length > 1) {
 					potentialSpace = potentialSpace.splitText(potentialSpace.length - 1).previousSibling;
 				} else if (potentialSpace.previousSibling && nodeIsText(potentialSpace.previousSibling)) {
@@ -168,7 +163,7 @@
 
 			// searching space forwards
 			potentialSpace = textNode;
-			while (potentialSpace && potentialSpace.data[0] !== ' ') {
+			while (potentialSpace && !nodeStartsWith(potentialSpace, ' ')) {
 				if (potentialSpace.length > 1) {
 					potentialSpace = potentialSpace.splitText(1);
 				} else if (potentialSpace.nextSibling && nodeIsText(potentialSpace.nextSibling)) {
@@ -186,18 +181,20 @@
 	}
 	/* jshint+W074 */
 
+	function nodeStartsWith(node, letter) {
+		return node.data[0] === letter;
+	}
+
+	function nodeEndsWith(node, letter) {
+		return node.data[node.length - 1] === letter;
+	}
+
 //	-- Marking
 
 	function mark(el, point, marker) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(el, point)) {
-			while (textNode.length > 1) {
-				var trimPosition = textNode.length >> 1;
-				var subNode = textNode.splitText(trimPosition);
-				if (nodeContainsPoint(subNode, point)) {
-					textNode = subNode;
-				}
-			}
+			textNode = trimTextNodeWhileContainsPoint(textNode, point);
 			putMarkerBefore(textNode, marker);
 		} else if (textNode = getClosestTextNodeFromEl(el, point)) {
 			putMarkerAfter(textNode, marker);
@@ -205,6 +202,17 @@
 			return null;
 		}
 		marker.parentNode.normalize();
+	}
+
+	function trimTextNodeWhileContainsPoint(textNode, point) {
+		while (textNode.length > 1) {
+			var trimPosition = textNode.length >> 1;
+			var subNode = textNode.splitText(trimPosition);
+			if (nodeContainsPoint(subNode, point)) {
+				textNode = subNode;
+			}
+		}
+		return textNode;
 	}
 
 	function putMarkerBefore(node, marker) {
