@@ -33,6 +33,7 @@
 //	Private methods ------------------------------------------------------------
 
 	var lastPoint = null;
+	var WHITESPACE = ' ';
 
 //	-- Binding events
 
@@ -139,47 +140,60 @@
 
 //	-- Extracting node with word at point
 
-	/* jshint-W074 */
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			textNode = trimTextNodeWhileContainsPoint(textNode, point);
-
-			// searching space backwards
-			var potentialSpace = textNode;
-			while (potentialSpace && !nodeEndsWith(potentialSpace, ' ')) {
-				if (potentialSpace.length > 1) {
-					potentialSpace = potentialSpace.splitText(potentialSpace.length - 1).previousSibling;
-				} else if (potentialSpace.previousSibling && nodeIsText(potentialSpace.previousSibling)) {
-					potentialSpace = potentialSpace.previousSibling;
-				} else {
-					putMarkerBefore(potentialSpace, startMarker);
-					potentialSpace = null;
-				}
-			}
-			if (potentialSpace) {
-				putMarkerAfter(potentialSpace, startMarker);
-			}
-
-			// searching space forwards
-			potentialSpace = textNode;
-			while (potentialSpace && !nodeStartsWith(potentialSpace, ' ')) {
-				if (potentialSpace.length > 1) {
-					potentialSpace = potentialSpace.splitText(1);
-				} else if (potentialSpace.nextSibling && nodeIsText(potentialSpace.nextSibling)) {
-					potentialSpace = potentialSpace.nextSibling;
-				} else {
-					putMarkerAfter(potentialSpace, endMarker);
-					potentialSpace = null;
-				}
-			}
-			if (potentialSpace) {
-				putMarkerBefore(potentialSpace, endMarker);
-			}
+			putMarkerBeforeWhitespaceOnLeftOf(textNode, startMarker);
+			putMarkerBeforeWhitespaceOnRightOf(textNode, endMarker);
 			textNode.parentNode.normalize();
 		}
 	}
-	/* jshint+W074 */
+
+	function putMarkerBeforeWhitespaceOnLeftOf(textNode, marker) {
+		// searching space backwards
+		var node = textNode;
+		while (node && !nodeEndsWith(node, WHITESPACE)) {
+			if (node.length > 1) {
+				node = cutOutLastLetter(node);
+			} else if (node.previousSibling && nodeIsText(node.previousSibling)) {
+				node = node.previousSibling;
+			} else {
+				putMarkerBefore(node, marker);
+				node = null;
+			}
+		}
+		if (node) {
+			putMarkerAfter(node, marker);
+		}
+	}
+
+	function putMarkerBeforeWhitespaceOnRightOf(textNode, marker) {
+		// searching space forwards
+		var node = textNode;
+		while (node && !nodeStartsWith(node, WHITESPACE)) {
+			if (node.length > 1) {
+				node = cutOutFirstLetter(node);
+			} else if (node.nextSibling && nodeIsText(node.nextSibling)) {
+				node = node.nextSibling;
+			} else {
+				putMarkerAfter(node, marker);
+				node = null;
+			}
+		}
+		if (node) {
+			putMarkerBefore(node, marker);
+		}
+	}
+
+	function cutOutLastLetter(textNode) {
+		var subNode = textNode.splitText(textNode.length - 1);
+		return subNode.previousSibling;
+	}
+
+	function cutOutFirstLetter(textNode) {
+		return textNode.splitText(1);
+	}
 
 	function nodeStartsWith(node, letter) {
 		return node.data[0] === letter;
