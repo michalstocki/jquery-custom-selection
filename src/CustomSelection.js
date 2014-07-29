@@ -34,6 +34,7 @@
 
 	var lastPoint = null;
 	var WHITESPACE = ' ';
+	var rejectTouchEnd = false;
 
 //	-- Binding events
 
@@ -41,14 +42,16 @@
 		$(element)
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
-			.hammer().on('press', handleGlobalTapHold);
+			.hammer().on('press', handleGlobalTapHold)
+			.on('tap', clearSelection);
 	}
 
 	function disableTouchSelectionFor(element) {
 		$(element)
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
-			.hammer().off('press', handleGlobalTapHold);
+			.hammer().off('press', handleGlobalTapHold)
+			.off('tap', clearSelection);
 	}
 
 	function handleGlobalTapHold(e) {
@@ -58,16 +61,21 @@
 		clearSelection();
 		wrapWithMarkersWordAtPoint(element, point);
 		createSelection();
+		rejectTouchEnd = true;
 	}
 
 	function handleGlobalTouchMove(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
 			handleMarkerTouchMove(jqueryEvent);
+			rejectTouchEnd = true;
 		}
 	}
 
 	function handleGlobalTouchEnd(jqueryEvent) {
-		jqueryEvent.preventDefault();
+		if (rejectTouchEnd) {
+			jqueryEvent.preventDefault();
+			rejectTouchEnd = false;
+		}
 	}
 
 	function handleMarkerTouchMove(jqueryEvent) {
