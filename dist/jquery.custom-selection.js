@@ -1,53 +1,59 @@
-/*! jquery-custom-selection - v0.1.0 - 2014-07-25 */
-(function(global) {
+/*! jquery-custom-selection - v0.1.0 - 2014-07-29 */
+(function($) {
 	// Default configuration
 	delete Hammer.defaults.cssProps.userSelect;
-	var startMarkerClass = 'start-marker';
-	var endMarkerClass = 'end-marker';
+	var settings, defaults = {
+		markerClass: 'marker'
+	};
 
 	// Collaborators
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
 
-//	Public interface -----------------------------------------------------------
-
-	global.CustomSelection = {
-		enable: function(element, options) {
-			if (options) {
-				startMarkerClass = options.startMarkerClass || startMarkerClass;
-				endMarkerClass = options.endMarkerClass || endMarkerClass;
-				enableTouchSelectionFor(element);
-			}
-			startMarker = createMarker(startMarkerClass);
-			endMarker = createMarker(endMarkerClass);
-			frameRequester = new CustomSelection.Lib.FrameRequester();
-		},
-		disable: function(element) {
-			disableTouchSelectionFor(element);
-			clearSelection();
-		},
+	window.CustomSelection = {
 		Lib: {}
+	};
+
+//	jQueryPlugin ---------------------------------------------------------------
+
+	$.fn.customSelection = function(options) {
+		settings = $.extend(defaults, options);
+		enableTouchSelectionFor(this);
+		startMarker = createMarker(settings.markerClass);
+		endMarker = createMarker(settings.markerClass);
+		frameRequester = new CustomSelection.Lib.FrameRequester();
+		return this;
+	};
+
+	$.fn.disableCustomSelection = function() {
+		disableTouchSelectionFor(this);
+		clearSelection();
+		return this;
 	};
 
 //	Private methods ------------------------------------------------------------
 
 	var lastPoint = null;
+	var WHITESPACE = ' ';
+	var rejectTouchEnd = false;
 
 //	-- Binding events
 
-	function enableTouchSelectionFor(element) {
-		$(element)
+	function enableTouchSelectionFor($element) {
+		$element
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
-			.hammer().on('press', handleGlobalTapHold);
+			.hammer().on('press', handleGlobalTapHold)
+			.on('tap', clearSelection);
 	}
 
-	function disableTouchSelectionFor(element) {
-		$(element)
+	function disableTouchSelectionFor($element) {
+		$element
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
-			.hammer().off('press', handleGlobalTapHold);
+			.hammer().off('press', handleGlobalTapHold)
+			.off('tap', clearSelection);
 	}
 
 	function handleGlobalTapHold(e) {
@@ -57,16 +63,21 @@
 		clearSelection();
 		wrapWithMarkersWordAtPoint(element, point);
 		createSelection();
+		rejectTouchEnd = true;
 	}
 
 	function handleGlobalTouchMove(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
 			handleMarkerTouchMove(jqueryEvent);
+			rejectTouchEnd = true;
 		}
 	}
 
 	function handleGlobalTouchEnd(jqueryEvent) {
-		jqueryEvent.preventDefault();
+		if (rejectTouchEnd) {
+			jqueryEvent.preventDefault();
+			rejectTouchEnd = false;
+		}
 	}
 
 	function handleMarkerTouchMove(jqueryEvent) {
@@ -92,21 +103,32 @@
 	}
 
 	function createSelection() {
-		if (!startMarker.parentNode || !endMarker.parentNode) {
-			return null;
+		if (existInDOM(startMarker, endMarker)) {
+			var range = document.createRange();
+			range.setStart.apply(range, getRangeBoundAt(startMarker));
+			range.setEnd.apply(range, getRangeBoundAt(endMarker));
+			if (range.collapsed) {
+				range.setStart.apply(range, getRangeBoundAt(endMarker));
+				range.setEnd.apply(range, getRangeBoundAt(startMarker));
+			}
+			window.getSelection().addRange(range);
 		}
-		var range = document.createRange();
-		var startAnchor = startMarker.parentNode;
-		var endAnchor = endMarker.parentNode;
-		var startOffset = getIndexOfElement(startMarker) + 1;
-		var endOffset = getIndexOfElement(endMarker);
-		range.setStart(startAnchor, startOffset);
-		range.setEnd(endAnchor, endOffset);
-		if (range.collapsed) {
-			range.setStart(endAnchor, endOffset);
-			range.setEnd(startAnchor, startOffset);
+	}
+
+	function getRangeBoundAt(element) {
+		var offset = Math.max(1, getIndexOfElement(element));
+		var anchor = element.parentNode;
+		return [anchor, offset];
+	}
+
+	function existInDOM() {
+		for (var i = 0; i < arguments.length; i++) {
+			var element = arguments[i];
+			if (!element.parentNode) {
+				return false;
+			}
 		}
-		window.getSelection().addRange(range);
+		return true;
 	}
 
 	function updateSelection() {
@@ -136,67 +158,73 @@
 	}
 
 
-//	-- Extracting node with word at point
+//	-- Extracting word under pointer
 
-	/* jshint-W074 */
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			while (textNode.length > 1) {
-				var trimPosition = textNode.length >> 1;
-				var subNode = textNode.splitText(trimPosition);
-				if (nodeContainsPoint(subNode, point)) {
-					textNode = subNode;
-				}
-			}
-			// searching space backwards
-			var potentialSpace = textNode;
-			while (potentialSpace && potentialSpace.data[potentialSpace.length - 1] !== ' ') {
-				if (potentialSpace.length > 1) {
-					potentialSpace = potentialSpace.splitText(potentialSpace.length - 1).previousSibling;
-				} else if (potentialSpace.previousSibling && nodeIsText(potentialSpace.previousSibling)) {
-					potentialSpace = potentialSpace.previousSibling;
-				} else {
-					putMarkerBefore(potentialSpace, startMarker);
-					potentialSpace = null;
-				}
-			}
-			if (potentialSpace) {
-				putMarkerAfter(potentialSpace, startMarker);
-			}
-
-			// searching space forwards
-			potentialSpace = textNode;
-			while (potentialSpace && potentialSpace.data[0] !== ' ') {
-				if (potentialSpace.length > 1) {
-					potentialSpace = potentialSpace.splitText(1);
-				} else if (potentialSpace.nextSibling && nodeIsText(potentialSpace.nextSibling)) {
-					potentialSpace = potentialSpace.nextSibling;
-				} else {
-					putMarkerAfter(potentialSpace, endMarker);
-					potentialSpace = null;
-				}
-			}
-			if (potentialSpace) {
-				putMarkerBefore(potentialSpace, endMarker);
-			}
+			textNode = trimTextNodeWhileContainsPoint(textNode, point);
+			putMarkerBeforeWhitespaceOnLeftOf(textNode, startMarker);
+			putMarkerBeforeWhitespaceOnRightOf(textNode, endMarker);
 			textNode.parentNode.normalize();
 		}
 	}
-	/* jshint+W074 */
+
+	function putMarkerBeforeWhitespaceOnLeftOf(textNode, marker) {
+		// searching space backwards
+		var node = textNode;
+		while (!nodeEndsWith(node, WHITESPACE)) {
+			if (node.data.length > 1) {
+				node = removeLastLetter(node);
+			} else if (node.previousSibling && nodeIsText(node.previousSibling)) {
+				node = node.previousSibling;
+			} else {
+				putMarkerBefore(node, marker);
+				return;
+			}
+		}
+		putMarkerAfter(node, marker);
+	}
+
+	function putMarkerBeforeWhitespaceOnRightOf(textNode, marker) {
+		// searching space forwards
+		var node = textNode;
+		while (!nodeStartsWith(node, WHITESPACE)) {
+			if (node.length > 1) {
+				node = removeFirstLetter(node);
+			} else if (node.nextSibling && nodeIsText(node.nextSibling)) {
+				node = node.nextSibling;
+			} else {
+				putMarkerAfter(node, marker);
+				return;
+			}
+		}
+		putMarkerBefore(node, marker);
+	}
+
+	function removeLastLetter(textNode) {
+		var subNode = textNode.splitText(textNode.length - 1);
+		return subNode.previousSibling;
+	}
+
+	function removeFirstLetter(textNode) {
+		return textNode.splitText(1);
+	}
+
+	function nodeStartsWith(node, letter) {
+		return node.data[0] === letter;
+	}
+
+	function nodeEndsWith(node, letter) {
+		return node.data[node.length - 1] === letter;
+	}
 
 //	-- Marking
 
 	function mark(el, point, marker) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(el, point)) {
-			while (textNode.length > 1) {
-				var trimPosition = textNode.length >> 1;
-				var subNode = textNode.splitText(trimPosition);
-				if (nodeContainsPoint(subNode, point)) {
-					textNode = subNode;
-				}
-			}
+			textNode = trimTextNodeWhileContainsPoint(textNode, point);
 			putMarkerBefore(textNode, marker);
 		} else if (textNode = getClosestTextNodeFromEl(el, point)) {
 			putMarkerAfter(textNode, marker);
@@ -204,6 +232,17 @@
 			return null;
 		}
 		marker.parentNode.normalize();
+	}
+
+	function trimTextNodeWhileContainsPoint(textNode, point) {
+		while (textNode.length > 1) {
+			var trimPosition = textNode.length >> 1;
+			var subNode = textNode.splitText(trimPosition);
+			if (nodeContainsPoint(subNode, point)) {
+				textNode = subNode;
+			}
+		}
+		return textNode;
 	}
 
 	function putMarkerBefore(node, marker) {
@@ -242,6 +281,7 @@
 				return true;
 			}
 		}
+		return false;
 	}
 
 	function getRectsForNode(node) {
@@ -314,7 +354,7 @@
 		return nearestRect;
 	}
 
-})(this);
+})(jQuery);
 
 
 /**

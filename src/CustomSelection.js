@@ -1,33 +1,35 @@
 
-(function(global) {
+(function($) {
 	// Default configuration
 	delete Hammer.defaults.cssProps.userSelect;
-	var startMarkerClass = 'start-marker';
-	var endMarkerClass = 'end-marker';
+	var settings, defaults = {
+		markerClass: 'marker'
+	};
 
 	// Collaborators
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
 
-//	Public interface -----------------------------------------------------------
-
-	global.CustomSelection = {
-		enable: function(element, options) {
-			if (options) {
-				startMarkerClass = options.startMarkerClass || startMarkerClass;
-				endMarkerClass = options.endMarkerClass || endMarkerClass;
-				enableTouchSelectionFor(element);
-			}
-			startMarker = createMarker(startMarkerClass);
-			endMarker = createMarker(endMarkerClass);
-			frameRequester = new CustomSelection.Lib.FrameRequester();
-		},
-		disable: function(element) {
-			disableTouchSelectionFor(element);
-			clearSelection();
-		},
+	window.CustomSelection = {
 		Lib: {}
+	};
+
+//	jQueryPlugin ---------------------------------------------------------------
+
+	$.fn.customSelection = function(options) {
+		settings = $.extend(defaults, options);
+		enableTouchSelectionFor(this);
+		startMarker = createMarker(settings.markerClass);
+		endMarker = createMarker(settings.markerClass);
+		frameRequester = new CustomSelection.Lib.FrameRequester();
+		return this;
+	};
+
+	$.fn.disableCustomSelection = function() {
+		disableTouchSelectionFor(this);
+		clearSelection();
+		return this;
 	};
 
 //	Private methods ------------------------------------------------------------
@@ -38,16 +40,16 @@
 
 //	-- Binding events
 
-	function enableTouchSelectionFor(element) {
-		$(element)
+	function enableTouchSelectionFor($element) {
+		$element
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
 	}
 
-	function disableTouchSelectionFor(element) {
-		$(element)
+	function disableTouchSelectionFor($element) {
+		$element
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
@@ -156,7 +158,7 @@
 	}
 
 
-//	-- Extracting node with word at point
+//	-- Extracting word under pointer
 
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
@@ -279,6 +281,7 @@
 				return true;
 			}
 		}
+		return false;
 	}
 
 	function getRectsForNode(node) {
@@ -351,5 +354,5 @@
 		return nearestRect;
 	}
 
-})(this);
+})(jQuery);
 

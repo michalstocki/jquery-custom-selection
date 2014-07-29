@@ -40,7 +40,7 @@ module.exports = function(grunt) {
 							SRC_DIR + 'CustomSelection.js',
 							SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE
 						],
-						dest: DIST_DIR + 'custom-selection.js'
+						dest: DIST_DIR + 'jquery.custom-selection.js'
 					}
 				]
 			}
@@ -54,8 +54,8 @@ module.exports = function(grunt) {
 			build: {
 				files: [
 					{
-						src: [DIST_DIR + 'custom-selection.js'],
-						dest: DIST_DIR + 'custom-selection.min.js'
+						src: [DIST_DIR + 'jquery.custom-selection.js'],
+						dest: DIST_DIR + 'jquery.custom-selection.min.js'
 					}
 				]
 			}

@@ -12,17 +12,13 @@ $(function() {
 	});
 
 	window.enableSelection = function() {
-		CustomSelection.enable($body, {
-			startMarkerClass: 'marker',
-			endMarkerClass: 'marker_end'
-		});
-
+		$body.customSelection();
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
 	};
 
 	window.disableSelection = function() {
-		CustomSelection.disable($body);
+		$body.disableCustomSelection();
 		$('.settings .button-enable').attr('disabled', false);
 		$('.settings .button-disable').attr('disabled', true);
 	};
