@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.0 - 2014-07-29 */
+/*! jquery-custom-selection - v0.1.1 - 2014-07-29 */
 (function($) {
 	// Default configuration
 	delete Hammer.defaults.cssProps.userSelect;
