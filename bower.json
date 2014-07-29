@@ -2,7 +2,7 @@
 	"name": "jquery-custom-selection",
 	"description": "Overriding native text selection in HTML on mobile devices",
 	"version": "0.1.0",
-	"main": "dist/custom-selection.min.js",
+	"main": "dist/jquery.custom-selection.min.js",
 	"ignore": [
 		"demo",
 		"src",
