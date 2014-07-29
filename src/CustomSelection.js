@@ -93,22 +93,32 @@
 	}
 
 	function createSelection() {
-		if (!startMarker.parentNode || !endMarker.parentNode) {
-			return null;
+		if (existInDOM(startMarker, endMarker)) {
+			var range = document.createRange();
+			range.setStart.apply(range, getRangeBoundAt(startMarker));
+			range.setEnd.apply(range, getRangeBoundAt(endMarker));
+			if (range.collapsed) {
+				range.setStart.apply(range, getRangeBoundAt(endMarker));
+				range.setEnd.apply(range, getRangeBoundAt(startMarker));
+			}
+			window.getSelection().addRange(range);
 		}
-		var range = document.createRange();
-		var startAnchor = startMarker.parentNode;
-		var endAnchor = endMarker.parentNode;
-		var startOffset = Math.max(1, getIndexOfElement(startMarker));
-		var endOffset = Math.max(1, getIndexOfElement(endMarker));
-		range.setStart(startAnchor, startOffset);
-		range.setEnd(endAnchor, endOffset);
-		if (range.collapsed) {
-			range.setStart(endAnchor, endOffset);
-			range.setEnd(startAnchor, startOffset);
+	}
+
+	function getRangeBoundAt(element) {
+		var offset = Math.max(1, getIndexOfElement(element));
+		var anchor = element.parentNode;
+		return [anchor, offset];
+	}
+
+	function existInDOM() {
+		for (var i = 0; i < arguments.length; i++) {
+			var element = arguments[i];
+			if (!element.parentNode) {
+				return false;
+			}
 		}
-		window.getSelection().addRange(range);
-		console.log('sA, eA, sO, eO', startAnchor, startOffset, endAnchor, endOffset);
+		return true;
 	}
 
 	function updateSelection() {
@@ -153,45 +163,41 @@
 	function putMarkerBeforeWhitespaceOnLeftOf(textNode, marker) {
 		// searching space backwards
 		var node = textNode;
-		while (node && !nodeEndsWith(node, WHITESPACE)) {
-			if (node.length > 1) {
-				node = cutOutLastLetter(node);
+		while (!nodeEndsWith(node, WHITESPACE)) {
+			if (node.data.length > 1) {
+				node = removeLastLetter(node);
 			} else if (node.previousSibling && nodeIsText(node.previousSibling)) {
 				node = node.previousSibling;
 			} else {
 				putMarkerBefore(node, marker);
-				node = null;
+				return;
 			}
 		}
-		if (node) {
-			putMarkerAfter(node, marker);
-		}
+		putMarkerAfter(node, marker);
 	}
 
 	function putMarkerBeforeWhitespaceOnRightOf(textNode, marker) {
 		// searching space forwards
 		var node = textNode;
-		while (node && !nodeStartsWith(node, WHITESPACE)) {
+		while (!nodeStartsWith(node, WHITESPACE)) {
 			if (node.length > 1) {
-				node = cutOutFirstLetter(node);
+				node = removeFirstLetter(node);
 			} else if (node.nextSibling && nodeIsText(node.nextSibling)) {
 				node = node.nextSibling;
 			} else {
 				putMarkerAfter(node, marker);
-				node = null;
+				return;
 			}
 		}
-		if (node) {
-			putMarkerBefore(node, marker);
-		}
+		putMarkerBefore(node, marker);
 	}
 
-	function cutOutLastLetter(textNode) {
+	function removeLastLetter(textNode) {
 		var subNode = textNode.splitText(textNode.length - 1);
 		return subNode.previousSibling;
 	}
 
-	function cutOutFirstLetter(textNode) {
+	function removeFirstLetter(textNode) {
 		return textNode.splitText(1);
 	}
 
