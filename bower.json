@@ -6,8 +6,12 @@
 	"ignore": [
 		"demo",
 		"src",
+		".editorconfig",
+		".gitignore",
 		".jshintrc",
-		"index.html"
+		"Gruntfile.js",
+		"index.html",
+		"package.json"
 	],
 	"dependencies": {
 		"jquery": "~2.1.1",
