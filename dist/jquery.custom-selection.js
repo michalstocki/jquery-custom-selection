@@ -1,7 +1,6 @@
-/*! jquery-custom-selection - v0.1.1 - 2014-07-29 */
+/*! jquery-custom-selection - v0.1.1 - 2014-07-30 */
 (function($) {
 	// Default configuration
-	delete Hammer.defaults.cssProps.userSelect;
 	var settings, defaults = {
 		markerClass: 'marker'
 	};
@@ -19,6 +18,7 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
+		hammerAllowTextSelection();
 		enableTouchSelectionFor(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
@@ -39,6 +39,10 @@
 	var rejectTouchEnd = false;
 
 //	-- Binding events
+
+	function hammerAllowTextSelection() {
+		delete Hammer.defaults.cssProps.userSelect;
+	}
 
 	function enableTouchSelectionFor($element) {
 		$element
