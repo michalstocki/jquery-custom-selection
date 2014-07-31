@@ -8,28 +8,28 @@
 span.selection {
     background-color: yellow;
 }
-span.marker, span.marker_end {
+span.marker {
     display: inline-block;
-    background-color: black;
+    background-color: rgb(71, 71, 71);
     width: 2px;
-    height: 0.8em;
+    height: 0.9em;
     position: absolute;
-    margin-top: 3px;
+    margin-top: 2px;
+	border-radius: 1px 1px 0 0;
 }
-span.marker:after, span.marker_end:after {
+span.marker:after {
     content:"";
     display: block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50% 50% 0 0;
-    background-color: green;
+    width: 24px;
+    height: 35px;
+    border-radius: 12px 12px 0 0;
+    background: linear-gradient(#34a727 0, darkgreen 18px);
     position: absolute;
     top: 100%;
-    left: -5px;
+    left: -12px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.7);
 }
-span.marker_end:after {
-    background-color: red;
-}
+
 .settings {
     background-color: #4679bd;
     width: 500px;

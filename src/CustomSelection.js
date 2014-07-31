@@ -62,8 +62,10 @@
 
 	function handleGlobalTapHold(e) {
 		e = e.gesture;
+		e.srcEvent.preventDefault();
+		e.srcEvent.stopPropagation();
 		var element = getTouchedElementFromEvent(e);
-		var point = getTouchPoint(e);
+		var point = getTouchPoint(e, {shift: false});
 		clearSelection();
 		wrapWithMarkersWordAtPoint(element, point);
 		createSelection();
@@ -142,8 +144,8 @@
 
 //	-- Preparing Markers
 
-	function getTouchPoint(touchEvent) {
-		return new CustomSelection.Lib.Point(touchEvent);
+	function getTouchPoint(touchEvent, options) {
+		return new CustomSelection.Lib.Point(touchEvent, options);
 	}
 
 	function getTouchedElementFromEvent(touchEvent) {
