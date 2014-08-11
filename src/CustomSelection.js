@@ -64,12 +64,14 @@
 		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		var element = getTouchedElementFromEvent(e);
-		var point = getTouchPoint(e, {shift: false});
-		clearSelection();
-		wrapWithMarkersWordAtPoint(element, point);
-		createSelection();
-		rejectTouchEnd = true;
+		if (!isMarker(e.target)) {
+			var element = getTouchedElementFromEvent(e);
+			var point = getTouchPoint(e, {shift: false});
+			clearSelection();
+			wrapWithMarkersWordAtPoint(element, point);
+			createSelection();
+			rejectTouchEnd = true;
+		}
 	}
 
 	function handleGlobalTouchMove(jqueryEvent) {
