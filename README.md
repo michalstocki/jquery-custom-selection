@@ -11,20 +11,16 @@ Using native text selection causes displaying CAB bar (Android) or actions butto
 
 1. Include jQuery:
 
-```html
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-```
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+
 
 2. Include plugin's code:
 
-```html
-<script src="dist/jquery.custom-selection.min.js"></script>
-```
+        <script src="dist/jquery.custom-selection.min.js"></script>
 
 3. Call the plugin:
 
-```javascript
-$("body").customSelection({
-	markerClass: "marker"
-});
-```
+        $("body").customSelection({
+    	    markerClass: "marker"
+        });
