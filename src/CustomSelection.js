@@ -45,6 +45,12 @@
 	}
 
 	function enableTouchSelectionFor($element) {
+		$element.each(function() {
+			new Hammer(this, {
+				holdThreshold: 2,
+				holdTimeout: 500
+			});
+		});
 		$element
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)

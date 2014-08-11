@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.1 - 2014-07-30 */
+/*! jquery-custom-selection - v0.1.1 - 2014-08-11 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -45,6 +45,12 @@
 	}
 
 	function enableTouchSelectionFor($element) {
+		$element.each(function() {
+			new Hammer(this, {
+				holdThreshold: 2,
+				holdTimeout: 500
+			});
+		});
 		$element
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
@@ -62,12 +68,16 @@
 
 	function handleGlobalTapHold(e) {
 		e = e.gesture;
-		var element = getTouchedElementFromEvent(e);
-		var point = getTouchPoint(e);
-		clearSelection();
-		wrapWithMarkersWordAtPoint(element, point);
-		createSelection();
-		rejectTouchEnd = true;
+		e.srcEvent.preventDefault();
+		e.srcEvent.stopPropagation();
+		if (!isMarker(e.target)) {
+			var element = getTouchedElementFromEvent(e);
+			var point = getTouchPoint(e, {shift: false});
+			clearSelection();
+			wrapWithMarkersWordAtPoint(element, point);
+			createSelection();
+			rejectTouchEnd = true;
+		}
 	}
 
 	function handleGlobalTouchMove(jqueryEvent) {
@@ -142,8 +152,8 @@
 
 //	-- Preparing Markers
 
-	function getTouchPoint(touchEvent) {
-		return new CustomSelection.Lib.Point(touchEvent);
+	function getTouchPoint(touchEvent, options) {
+		return new CustomSelection.Lib.Point(touchEvent, options);
 	}
 
 	function getTouchedElementFromEvent(touchEvent) {
@@ -392,14 +402,21 @@
 
 (function(global) {
 	'use strict';
+	var defaults = {shift: true};
+	var SHIFT_Y = -32;
 
-	function Point(touchEvent) {
+	function Point(touchEvent, options) {
+		var settings = $.extend({}, defaults, options);
 		var touches = touchEvent.touches || touchEvent.pointers;
 		var touch = touches[0];
 		this.clientX = touch.clientX;
 		this.clientY = touch.clientY;
 		this.pageX = touch.pageX;
 		this.pageY = touch.pageY;
+		if (settings.shift) {
+			this.clientY += SHIFT_Y;
+			this.pageY += SHIFT_Y;
+		}
 	}
 
 	global.CustomSelection.Lib.Point = Point;
