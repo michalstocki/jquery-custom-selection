@@ -24,6 +24,7 @@ span.marker:after {
     width: 24px;
     height: 35px;
     border-radius: 12px 12px 0 0;
+	background-color: darkgreen;
     background: linear-gradient(#34a727 0, darkgreen 18px);
     position: absolute;
     top: 100%;
