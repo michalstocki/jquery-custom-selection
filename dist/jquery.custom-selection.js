@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.1 - 2014-08-11 */
+/*! jquery-custom-selection - v0.1.1 - 2014-08-13 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -20,6 +20,7 @@
 		settings = $.extend(defaults, options);
 		hammerAllowTextSelection();
 		enableTouchSelectionFor(this);
+		useContextOf(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
@@ -37,11 +38,18 @@
 	var lastPoint = null;
 	var WHITESPACE = ' ';
 	var rejectTouchEnd = false;
+	var contextWindow = null;
+	var contextDocument = null;
 
 //	-- Binding events
 
 	function hammerAllowTextSelection() {
 		delete Hammer.defaults.cssProps.userSelect;
+	}
+
+	function useContextOf($element) {
+		contextDocument = $element[0].ownerDocument;
+		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
 	}
 
 	function enableTouchSelectionFor($element) {
@@ -111,21 +119,23 @@
 //	-- Creating Selection
 
 	function clearSelection() {
-		window.getSelection().removeAllRanges();
+		if (contextWindow) {
+			contextWindow.getSelection().removeAllRanges();
+		}
 		$(startMarker).detach();
 		$(endMarker).detach();
 	}
 
 	function createSelection() {
 		if (existInDOM(startMarker, endMarker)) {
-			var range = document.createRange();
+			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
 			range.setEnd.apply(range, getRangeBoundAt(endMarker));
 			if (range.collapsed) {
 				range.setStart.apply(range, getRangeBoundAt(endMarker));
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
-			window.getSelection().addRange(range);
+			contextWindow.getSelection().addRange(range);
 		}
 	}
 
@@ -146,7 +156,7 @@
 	}
 
 	function updateSelection() {
-		window.getSelection().removeAllRanges();
+		contextWindow.getSelection().removeAllRanges();
 		createSelection();
 	}
 
@@ -162,11 +172,11 @@
 	}
 
 	function getTouchedElementByPoint(touchPoint) {
-		return document.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		return contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
 	}
 
 	function createMarker(kind) {
-		var span = document.createElement('span');
+		var span = contextDocument.createElement('span');
 		span.setAttribute('class', kind);
 		return span;
 	}
@@ -299,7 +309,7 @@
 	}
 
 	function getRectsForNode(node) {
-		var range = document.createRange();
+		var range = contextDocument.createRange();
 		range.selectNode(node);
 		return range.getClientRects();
 	}
