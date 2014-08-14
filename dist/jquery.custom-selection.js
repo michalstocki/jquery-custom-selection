@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.1 - 2014-08-13 */
+/*! jquery-custom-selection - v0.1.1 - 2014-08-14 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -286,16 +286,19 @@
 		return Array.prototype.indexOf.call(elements, element);
 	}
 
-// ---- Finding text node
-// ------ Finding node containing point
+//  ---- Finding text node
+//  ------ Finding node containing point
 
 	function getFromElNodeContainingPoint(el, point) {
-		var nodes = el.childNodes;
-		for (var i = 0, n; n = nodes[i++];) {
-			if (nodeIsText(n) && nodeContainsPoint(n, point)) {
-				return n;
+		if (el) {
+			var nodes = el.childNodes;
+			for (var i = 0, n; n = nodes[i++];) {
+				if (nodeIsText(n) && nodeContainsPoint(n, point)) {
+					return n;
+				}
 			}
 		}
+		return null;
 	}
 
 	function nodeContainsPoint(node, point) {
@@ -323,7 +326,7 @@
 		return node.nodeType === Node.TEXT_NODE && node.length;
 	}
 
-// ------ Finding node closest to pointer
+//  ------ Finding node closest to pointer
 
 	function getClosestTextNodeFromEl(el, point) {
 		var node = el;
@@ -339,13 +342,15 @@
 	}
 
 	function getClosestNodeFromEl(el, point) {
-		var nodes = el.childNodes;
 		var closestNode = null;
-		for (var i = 0, n; n = nodes[i++];) {
-			var rects;
-			if ((rects = getRectsForNode(n)) && rects.length) {
-				closestNode = closestNode || n;
-				closestNode = getNodeCloserToPoint(point, closestNode, n);
+		if (el) {
+			var nodes = el.childNodes;
+			for (var i = 0, n; n = nodes[i++];) {
+				var rects;
+				if ((rects = getRectsForNode(n)) && rects.length) {
+					closestNode = closestNode || n;
+					closestNode = getNodeCloserToPoint(point, closestNode, n);
+				}
 			}
 		}
 		return closestNode;
