@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.1 - 2014-08-14 */
+/*! jquery-custom-selection - v0.1.2 - 2014-08-26 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -14,7 +14,7 @@
 		Lib: {}
 	};
 
-//	jQueryPlugin ---------------------------------------------------------------
+//	jQuery Plugin --------------------------------------------------------------
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
