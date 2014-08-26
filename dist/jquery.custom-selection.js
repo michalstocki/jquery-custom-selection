@@ -172,7 +172,10 @@
 	}
 
 	function getTouchedElementByPoint(touchPoint) {
-		return contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		hideMarkers();
+		var element = contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		showMarkers();
+		return element;
 	}
 
 	function createMarker(kind) {
@@ -181,6 +184,17 @@
 		return span;
 	}
 
+	function hideMarkers() {
+		var css = {visibility: 'hidden'};
+		$(startMarker).css(css);
+		$(endMarker).css(css);
+	}
+
+	function showMarkers() {
+		var css = {visibility: 'visible'};
+		$(startMarker).css(css);
+		$(endMarker).css(css);
+	}
 
 //	-- Extracting word under pointer
 
