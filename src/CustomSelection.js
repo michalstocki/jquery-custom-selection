@@ -140,8 +140,11 @@
 	}
 
 	function getRangeBoundAt(element) {
-		var offset = Math.max(1, getIndexOfElement(element));
+		var offset = getIndexOfElement(element);
 		var anchor = element.parentNode;
+		if (element.nextSibling) {
+			offset += 1;
+		}
 		return [anchor, offset];
 	}
 
