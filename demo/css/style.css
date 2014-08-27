@@ -1,9 +1,3 @@
-#debugging {
-    position: fixed;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-}
 
 span.selection {
     background-color: yellow;
@@ -39,7 +33,7 @@ span.marker:after {
     font-family: sans-serif;
     color: white;
     font-size: 12px;
-	position: fixed;
+	position: absolute;
 	top: 0;
 	left: 50%;
 	margin: 3px 3px 3px -250px;
@@ -47,7 +41,3 @@ span.marker:after {
 	.touch_status {
 		display: inline-block;
 		}
-
-* {
-    /*-webkit-user-select: none;*/
-}
