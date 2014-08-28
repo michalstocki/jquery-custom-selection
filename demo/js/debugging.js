@@ -35,7 +35,7 @@ function drawRect(rect) {
 
 function drawCircle(x, y) {
 	context.beginPath();
-	context.arc(x, y, 12, 0, 2 * Math.PI, false);
+	context.arc(x, y, 10, 0, 2 * Math.PI, false);
 	context.lineWidth = 2;
 	context.strokeStyle = 'green';
 	context.stroke();
