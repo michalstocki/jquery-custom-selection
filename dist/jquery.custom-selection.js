@@ -263,8 +263,6 @@
 //	-- Marking
 
 	function mark(el, point, marker) {
-		window.initCanvas();
-		window.drawCircle(point.clientX, point.clientY);
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(el, point)) {
 			textNode = trimTextNodeWhileContainsPoint(textNode, point);
@@ -364,7 +362,6 @@
 		var subNode;
 		while (subNode = getClosestNodeFromElOnLeftOfPoint(node, point)) {
 			if (nodeIsText(subNode)) {
-				window.drawNode(subNode);
 				return subNode;
 			} else {
 				node = subNode;

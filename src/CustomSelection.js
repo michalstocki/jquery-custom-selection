@@ -362,7 +362,6 @@
 		var subNode;
 		while (subNode = getClosestNodeFromElOnLeftOfPoint(node, point)) {
 			if (nodeIsText(subNode)) {
-				window.drawNode(subNode);
 				return subNode;
 			} else {
 				node = subNode;
