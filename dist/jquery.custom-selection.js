@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.2 - 2014-08-26 */
+/*! jquery-custom-selection - v0.1.2 - 2014-08-27 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -140,8 +140,11 @@
 	}
 
 	function getRangeBoundAt(element) {
-		var offset = Math.max(1, getIndexOfElement(element));
+		var offset = getIndexOfElement(element);
 		var anchor = element.parentNode;
+		if (element.nextSibling) {
+			offset += 1;
+		}
 		return [anchor, offset];
 	}
 
@@ -172,7 +175,10 @@
 	}
 
 	function getTouchedElementByPoint(touchPoint) {
-		return contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		hideMarkers();
+		var element = contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		showMarkers();
+		return element;
 	}
 
 	function createMarker(kind) {
@@ -181,6 +187,17 @@
 		return span;
 	}
 
+	function hideMarkers() {
+		var css = {visibility: 'hidden'};
+		$(startMarker).css(css);
+		$(endMarker).css(css);
+	}
+
+	function showMarkers() {
+		var css = {visibility: 'visible'};
+		$(startMarker).css(css);
+		$(endMarker).css(css);
+	}
 
 //	-- Extracting word under pointer
 
