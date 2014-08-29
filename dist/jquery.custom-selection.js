@@ -353,7 +353,7 @@
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
 		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
 		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-//		getClosestTextNodeBelowPoint(el, point) ||
+//		searchTextNode(el, nearestBelowPoint) ||
 		searchTextNode(el, nearestAbovePoint);
 	}
 
@@ -439,19 +439,17 @@
 
 	function getNodeNearerPointAbove(point, winner, rival) {
 		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
+		var newWinner = winner;
 		if (winner) {
 			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.top >= nearestWinnerRect.top) {
-				return rival;
-			} else {
-				return winner;
+				newWinner = rival;
 			}
 		} else if (nearestRivalRect) {
-			return rival;
-		} else {
-			return null;
+			newWinner = rival;
 		}
+		return newWinner;
 	}
 
 	function getRectNearestAbovePoint(node, point) {
