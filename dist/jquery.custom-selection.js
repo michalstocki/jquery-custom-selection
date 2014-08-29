@@ -350,17 +350,17 @@
 //  ------ Finding node closest to pointer
 
 	function getClosestTextNodeFromEl(el, point) {
-		return getClosestTextNodeOnLeftOfPoint(el, point) ||
+		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
+		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
+		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
 //		getClosestTextNodeBelowPoint(el, point) ||
-		getClosestTextNodeAbovePoint(el, point);
+		searchTextNode(el, nearestAbovePoint);
 	}
 
-//	-------- Finding node on **left** of pointer
-
-	function getClosestTextNodeOnLeftOfPoint(el, point) {
+	function searchTextNode(el, comparator) {
 		var node = el;
 		var subNode;
-		while (subNode = getClosestNodeFromElOnLeftOfPoint(node, point)) {
+		while (subNode = searchNode(node, comparator)) {
 			if (nodeIsText(subNode)) {
 				return subNode;
 			} else {
@@ -369,7 +369,7 @@
 		}
 	}
 
-	function getClosestNodeFromElOnLeftOfPoint(el, point) {
+	function searchNode(el, comparator) {
 		var closestNode = null;
 		if (el) {
 			var nodes = el.childNodes;
@@ -377,20 +377,25 @@
 				var rects;
 				if ((rects = getRectsForNode(n)) && rects.length &&
 					(nodeHasChildren(n) || nodeIsText(n))) {
-					closestNode = getNodeCloserOnLeftOfPoint(point, closestNode, n);
+					closestNode = comparator(closestNode, n);
 				}
 			}
 		}
 		return closestNode;
 	}
 
-	function getNodeCloserOnLeftOfPoint(point, winner, rival) {
+	function areDifferent(arg1, arg2) {
+		return arg1 && arg2 && arg1 !== arg2;
+	}
+
+//	-------- Finding node on **left** of pointer
+
+	function getNodeNearerPointOnLeft(point, winner, rival) {
 		var newWinner = winner;
 		var nearestRivalRect = getRectNearestOnLeftOfPoint(rival, point);
 		if (winner) {
 			var nearestWinnerRect = getRectNearestOnLeftOfPoint(winner, point);
-			if (nearestRivalRect && nearestWinnerRect &&
-				nearestRivalRect !== nearestWinnerRect &&
+			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.right > nearestWinnerRect.right) {
 				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 			}
@@ -432,39 +437,11 @@
 
 //	-------- Finding node **above** pointer
 
-	function getClosestTextNodeAbovePoint(el, point) {
-		var node = el;
-		var subNode;
-		while (subNode = getClosestNodeFromElAbovePoint(node, point)) {
-			if (nodeIsText(subNode)) {
-				return subNode;
-			} else {
-				node = subNode;
-			}
-		}
-	}
-
-	function getClosestNodeFromElAbovePoint(el, point) {
-		var closestNode = null;
-		if (el) {
-			var nodes = el.childNodes;
-			for (var i = 0, n; n = nodes[i++];) {
-				var rects;
-				if ((rects = getRectsForNode(n)) && rects.length &&
-					(nodeHasChildren(n) || nodeIsText(n))) {
-					closestNode = getNodeCloserAbovePoint(point, closestNode, n);
-				}
-			}
-		}
-		return closestNode;
-	}
-
-	function getNodeCloserAbovePoint(point, winner, rival) {
+	function getNodeNearerPointAbove(point, winner, rival) {
 		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
 		if (winner) {
 			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
-			if (nearestRivalRect && nearestWinnerRect &&
-				nearestRivalRect !== nearestWinnerRect &&
+			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.top >= nearestWinnerRect.top) {
 				return rival;
 			} else {
