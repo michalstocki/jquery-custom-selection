@@ -336,7 +336,7 @@
 
 	function rectContainsPoint(rect, point) {
 		var x = point.clientX, y = point.clientY;
-		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 	}
 
 	function nodeIsText(node) {
@@ -385,21 +385,19 @@
 	}
 
 	function getNodeCloserOnLeftOfPoint(point, winner, rival) {
+		var newWinner = winner;
 		var nearestRivalRect = getRectNearestOnLeftOfPoint(rival, point);
 		if (winner) {
 			var nearestWinnerRect = getRectNearestOnLeftOfPoint(winner, point);
 			if (nearestRivalRect && nearestWinnerRect &&
 				nearestRivalRect !== nearestWinnerRect &&
-				nearestRivalRect.left > nearestWinnerRect.left) {
-				return rival;
-			} else {
-				return winner;
+				nearestRivalRect.right > nearestWinnerRect.right) {
+				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 			}
 		} else if (nearestRivalRect) {
-			return rival;
-		} else {
-			return null;
+			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 		}
+		return newWinner;
 	}
 
 	function getRectNearestOnLeftOfPoint(node, point) {
@@ -416,6 +414,20 @@
 			}
 		}
 		return nearestRect;
+	}
+
+	function splitNodeAfterRect(node, clientRect) {
+		var rects = getRectsForNode(node);
+		var lastRect = rects[rects.length - 1];
+		if (clientRect === lastRect || !nodeIsText(node)) {
+			return node;
+		} else {
+			var point = {
+				clientX: clientRect.right - 1,
+				clientY: clientRect.bottom - 1
+			};
+			return trimTextNodeWhileContainsPoint(node, point);
+		}
 	}
 
 //	-------- Finding node **above** pointer
