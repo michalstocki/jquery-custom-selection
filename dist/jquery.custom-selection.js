@@ -383,10 +383,6 @@
 		return closestNode;
 	}
 
-	function areDifferent(arg1, arg2) {
-		return arg1 && arg2 && arg1 !== arg2;
-	}
-
 //	-------- Finding node on **left** of pointer
 
 	function getNodeNearerPointOnLeft(point, winner, rival) {
@@ -414,6 +410,10 @@
 			}
 		}
 		return nearestRect;
+	}
+
+	function areDifferent(arg1, arg2) {
+		return arg1 && arg2 && arg1 !== arg2;
 	}
 
 	function rectIsInTheSameLineOnLeft(rect, point) {
@@ -445,10 +445,10 @@
 			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.top >= nearestWinnerRect.top) {
-				newWinner = rival;
+				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 			}
 		} else if (nearestRivalRect) {
-			newWinner = rival;
+			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 		}
 		return newWinner;
 	}

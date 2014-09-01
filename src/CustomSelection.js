@@ -199,7 +199,7 @@
 		$(endMarker).css(css);
 	}
 
-//	-- Extracting word under pointer
+//	-- Extracting a word under the pointer
 
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
@@ -303,8 +303,8 @@
 		return Array.prototype.indexOf.call(elements, element);
 	}
 
-//  ---- Finding text node
-//  ------ Finding node containing point
+//  ---- Finding a text node
+//  ------ Finding a node containing the pointer
 
 	function getFromElNodeContainingPoint(el, point) {
 		if (el) {
@@ -347,7 +347,7 @@
 		return node.childNodes.length > 0;
 	}
 
-//  ------ Finding node closest to pointer
+//  ------ Finding the closest node to the pointer
 
 	function getClosestTextNodeFromEl(el, point) {
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
@@ -383,11 +383,7 @@
 		return closestNode;
 	}
 
-	function areDifferent(arg1, arg2) {
-		return arg1 && arg2 && arg1 !== arg2;
-	}
-
-//	-------- Finding node on **left** of pointer
+//	-------- Finding node on the **left** of the pointer
 
 	function getNodeNearerPointOnLeft(point, winner, rival) {
 		var newWinner = winner;
@@ -416,6 +412,10 @@
 		return nearestRect;
 	}
 
+	function areDifferent(arg1, arg2) {
+		return arg1 && arg2 && arg1 !== arg2;
+	}
+
 	function rectIsInTheSameLineOnLeft(rect, point) {
 		var x = point.clientX;
 		var y = point.clientY;
@@ -436,7 +436,7 @@
 		}
 	}
 
-//	-------- Finding node **above** pointer
+//	-------- Finding node **above** the pointer
 
 	function getNodeNearerPointAbove(point, winner, rival) {
 		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
@@ -445,10 +445,10 @@
 			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.top >= nearestWinnerRect.top) {
-				newWinner = rival;
+				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 			}
 		} else if (nearestRivalRect) {
-			newWinner = rival;
+			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
 		}
 		return newWinner;
 	}
