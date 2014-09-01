@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.2 - 2014-08-29 */
+/*! jquery-custom-selection - v0.1.2 - 2014-09-01 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -353,7 +353,6 @@
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
 		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
 		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-//		searchTextNode(el, nearestBelowPoint) ||
 		searchTextNode(el, nearestAbovePoint);
 	}
 
@@ -406,19 +405,21 @@
 	}
 
 	function getRectNearestOnLeftOfPoint(node, point) {
-		var x = point.clientX;
-		var y = point.clientY;
 		var rects = getRectsForNode(node);
 		var nearestRect = null;
 		for (var j = 0, rect; rect = rects[j++];) {
-			if (rect.right < x && rect.top <= y && rect.bottom >= y) {
-				nearestRect = nearestRect || rect;
-				if (nearestRect !== rect && rect.right > nearestRect.right) {
-					nearestRect = rect;
-				}
+			if (rectIsInTheSameLineOnLeft(rect, point) &&
+				(!nearestRect || rect.right > nearestRect.right)) {
+				nearestRect = rect;
 			}
 		}
 		return nearestRect;
+	}
+
+	function rectIsInTheSameLineOnLeft(rect, point) {
+		var x = point.clientX;
+		var y = point.clientY;
+		return rect.right < x && rect.top <= y && rect.bottom >= y;
 	}
 
 	function splitNodeAfterRect(node, clientRect) {
@@ -457,11 +458,8 @@
 		var rects = getRectsForNode(node);
 		var nearestRect = null;
 		for (var j = 0, rect; rect = rects[j++];) {
-			if (rect.top < y) {
-				nearestRect = nearestRect || rect;
-				if (nearestRect !== rect && rect.top >= nearestRect.top) {
-					nearestRect = rect;
-				}
+			if (rect.top < y && (!nearestRect || rect.top >= nearestRect.top)) {
+				nearestRect = rect;
 			}
 		}
 		return nearestRect;
