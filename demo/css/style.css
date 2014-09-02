@@ -1,22 +1,19 @@
+
 #debugging {
-    position: fixed;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-}
+	position: fixed;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	}
 
 span.selection {
     background-color: yellow;
 }
 span.marker {
     display: inline-block;
-    background-color: rgb(71, 71, 71);
-    width: 2px;
+    width: 0;
     height: 0.9em;
-    position: absolute;
-    margin-top: 2px;
-	margin-left: -1px;
-	border-radius: 1px 1px 0 0;
+    position: relative;
 }
 span.marker:after {
     content:"";
@@ -30,6 +27,7 @@ span.marker:after {
     top: 100%;
     left: -12px;
 	box-shadow: 0 1px 3px rgba(0,0,0,0.7);
+	opacity: 0.9;
 }
 
 .settings {
@@ -40,7 +38,7 @@ span.marker:after {
     font-family: sans-serif;
     color: white;
     font-size: 12px;
-	position: fixed;
+	position: absolute;
 	top: 0;
 	left: 50%;
 	margin: 3px 3px 3px -250px;
@@ -48,7 +46,3 @@ span.marker:after {
 	.touch_status {
 		display: inline-block;
 		}
-
-* {
-    /*-webkit-user-select: none;*/
-}

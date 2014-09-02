@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.1 - 2014-08-11 */
+/*! jquery-custom-selection - v0.1.3 - 2014-09-02 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -14,12 +14,13 @@
 		Lib: {}
 	};
 
-//	jQueryPlugin ---------------------------------------------------------------
+//	jQuery Plugin --------------------------------------------------------------
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		hammerAllowTextSelection();
 		enableTouchSelectionFor(this);
+		useContextOf(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
@@ -37,11 +38,18 @@
 	var lastPoint = null;
 	var WHITESPACE = ' ';
 	var rejectTouchEnd = false;
+	var contextWindow = null;
+	var contextDocument = null;
 
 //	-- Binding events
 
 	function hammerAllowTextSelection() {
 		delete Hammer.defaults.cssProps.userSelect;
+	}
+
+	function useContextOf($element) {
+		contextDocument = $element[0].ownerDocument;
+		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
 	}
 
 	function enableTouchSelectionFor($element) {
@@ -111,27 +119,32 @@
 //	-- Creating Selection
 
 	function clearSelection() {
-		window.getSelection().removeAllRanges();
+		if (contextWindow) {
+			contextWindow.getSelection().removeAllRanges();
+		}
 		$(startMarker).detach();
 		$(endMarker).detach();
 	}
 
 	function createSelection() {
 		if (existInDOM(startMarker, endMarker)) {
-			var range = document.createRange();
+			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
 			range.setEnd.apply(range, getRangeBoundAt(endMarker));
 			if (range.collapsed) {
 				range.setStart.apply(range, getRangeBoundAt(endMarker));
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
-			window.getSelection().addRange(range);
+			contextWindow.getSelection().addRange(range);
 		}
 	}
 
 	function getRangeBoundAt(element) {
-		var offset = Math.max(1, getIndexOfElement(element));
+		var offset = getIndexOfElement(element);
 		var anchor = element.parentNode;
+		if (element.nextSibling) {
+			offset += 1;
+		}
 		return [anchor, offset];
 	}
 
@@ -146,7 +159,7 @@
 	}
 
 	function updateSelection() {
-		window.getSelection().removeAllRanges();
+		contextWindow.getSelection().removeAllRanges();
 		createSelection();
 	}
 
@@ -162,17 +175,31 @@
 	}
 
 	function getTouchedElementByPoint(touchPoint) {
-		return document.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		hideMarkers();
+		var element = contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		showMarkers();
+		return element;
 	}
 
 	function createMarker(kind) {
-		var span = document.createElement('span');
+		var span = contextDocument.createElement('span');
 		span.setAttribute('class', kind);
 		return span;
 	}
 
+	function hideMarkers() {
+		var css = {visibility: 'hidden'};
+		$(startMarker).css(css);
+		$(endMarker).css(css);
+	}
 
-//	-- Extracting word under pointer
+	function showMarkers() {
+		var css = {visibility: 'visible'};
+		$(startMarker).css(css);
+		$(endMarker).css(css);
+	}
+
+//	-- Extracting a word under the pointer
 
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
@@ -276,16 +303,19 @@
 		return Array.prototype.indexOf.call(elements, element);
 	}
 
-// ---- Finding text node
-// ------ Finding node containing point
+//  ---- Finding a text node
+//  ------ Finding a node containing the pointer
 
 	function getFromElNodeContainingPoint(el, point) {
-		var nodes = el.childNodes;
-		for (var i = 0, n; n = nodes[i++];) {
-			if (nodeIsText(n) && nodeContainsPoint(n, point)) {
-				return n;
+		if (el) {
+			var nodes = el.childNodes;
+			for (var i = 0, n; n = nodes[i++];) {
+				if (nodeIsText(n) && nodeContainsPoint(n, point)) {
+					return n;
+				}
 			}
 		}
+		return null;
 	}
 
 	function nodeContainsPoint(node, point) {
@@ -299,7 +329,7 @@
 	}
 
 	function getRectsForNode(node) {
-		var range = document.createRange();
+		var range = contextDocument.createRange();
 		range.selectNode(node);
 		return range.getClientRects();
 	}
@@ -313,56 +343,123 @@
 		return node.nodeType === Node.TEXT_NODE && node.length;
 	}
 
-// ------ Finding node closest to pointer
+	function nodeHasChildren(node) {
+		return node.childNodes.length > 0;
+	}
+
+//  ------ Finding the closest node to the pointer
 
 	function getClosestTextNodeFromEl(el, point) {
+		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
+		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
+		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
+		searchTextNode(el, nearestAbovePoint);
+	}
+
+	function searchTextNode(el, comparator) {
 		var node = el;
 		var subNode;
-		while (subNode = getClosestNodeFromEl(node, point)) {
+		while (subNode = searchNode(node, comparator)) {
 			if (nodeIsText(subNode)) {
 				return subNode;
 			} else {
 				node = subNode;
 			}
 		}
-		return null;
 	}
 
-	function getClosestNodeFromEl(el, point) {
-		var nodes = el.childNodes;
+	function searchNode(el, comparator) {
 		var closestNode = null;
-		for (var i = 0, n; n = nodes[i++];) {
-			var rects;
-			if ((rects = getRectsForNode(n)) && rects.length) {
-				closestNode = closestNode || n;
-				closestNode = getNodeCloserToPoint(point, closestNode, n);
+		if (el) {
+			var nodes = el.childNodes;
+			for (var i = 0, n; n = nodes[i++];) {
+				var rects;
+				if ((rects = getRectsForNode(n)) && rects.length &&
+					(nodeHasChildren(n) || nodeIsText(n))) {
+					closestNode = comparator(closestNode, n);
+				}
 			}
 		}
 		return closestNode;
 	}
 
-	function getNodeCloserToPoint(point, winner, rival) {
-		var nearestWinnerRect = getRectNearestToPoint(winner, point);
-		var nearestRivalRect = getRectNearestToPoint(rival, point);
-		if (nearestRivalRect && nearestWinnerRect &&
-			nearestRivalRect !== nearestWinnerRect &&
-			nearestRivalRect.top >= nearestWinnerRect.top) {
-			return rival;
+//	-------- Finding node on the **left** of the pointer
+
+	function getNodeNearerPointOnLeft(point, winner, rival) {
+		var newWinner = winner;
+		var nearestRivalRect = getRectNearestOnLeftOfPoint(rival, point);
+		if (winner) {
+			var nearestWinnerRect = getRectNearestOnLeftOfPoint(winner, point);
+			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
+				nearestRivalRect.right > nearestWinnerRect.right) {
+				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+			}
+		} else if (nearestRivalRect) {
+			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+		}
+		return newWinner;
+	}
+
+	function getRectNearestOnLeftOfPoint(node, point) {
+		var rects = getRectsForNode(node);
+		var nearestRect = null;
+		for (var j = 0, rect; rect = rects[j++];) {
+			if (rectIsInTheSameLineOnLeft(rect, point) &&
+				(!nearestRect || rect.right > nearestRect.right)) {
+				nearestRect = rect;
+			}
+		}
+		return nearestRect;
+	}
+
+	function areDifferent(arg1, arg2) {
+		return arg1 && arg2 && arg1 !== arg2;
+	}
+
+	function rectIsInTheSameLineOnLeft(rect, point) {
+		var x = point.clientX;
+		var y = point.clientY;
+		return rect.right < x && rect.top <= y && rect.bottom >= y;
+	}
+
+	function splitNodeAfterRect(node, clientRect) {
+		var rects = getRectsForNode(node);
+		var lastRect = rects[rects.length - 1];
+		if (clientRect === lastRect || !nodeIsText(node)) {
+			return node;
 		} else {
-			return winner;
+			var point = {
+				clientX: clientRect.right - 1,
+				clientY: clientRect.bottom - 1
+			};
+			return trimTextNodeWhileContainsPoint(node, point);
 		}
 	}
 
-	function getRectNearestToPoint(node, point) {
+//	-------- Finding node **above** the pointer
+
+	function getNodeNearerPointAbove(point, winner, rival) {
+		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
+		var newWinner = winner;
+		if (winner) {
+			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
+			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
+				nearestRivalRect.top >= nearestWinnerRect.top) {
+				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+			}
+		} else if (nearestRivalRect) {
+			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+		}
+		return newWinner;
+	}
+
+	function getRectNearestAbovePoint(node, point) {
 		var y = point.clientY;
 		var rects = getRectsForNode(node);
 		var nearestRect = null;
 		for (var j = 0, rect; rect = rects[j++];) {
-			if (rect.top < y) {
-				nearestRect = nearestRect || rect;
-				if (nearestRect !== rect && rect.top >= nearestRect.top) {
-					nearestRect = rect;
-				}
+			if (rect.top < y && (!nearestRect || rect.top >= nearestRect.top)) {
+				nearestRect = rect;
 			}
 		}
 		return nearestRect;
