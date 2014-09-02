@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.1.2 - 2014-09-01 */
+/*! jquery-custom-selection - v0.1.3 - 2014-09-02 */
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -199,7 +199,7 @@
 		$(endMarker).css(css);
 	}
 
-//	-- Extracting word under pointer
+//	-- Extracting a word under the pointer
 
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
@@ -303,8 +303,8 @@
 		return Array.prototype.indexOf.call(elements, element);
 	}
 
-//  ---- Finding text node
-//  ------ Finding node containing point
+//  ---- Finding a text node
+//  ------ Finding a node containing the pointer
 
 	function getFromElNodeContainingPoint(el, point) {
 		if (el) {
@@ -347,7 +347,7 @@
 		return node.childNodes.length > 0;
 	}
 
-//  ------ Finding node closest to pointer
+//  ------ Finding the closest node to the pointer
 
 	function getClosestTextNodeFromEl(el, point) {
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
@@ -383,7 +383,7 @@
 		return closestNode;
 	}
 
-//	-------- Finding node on **left** of pointer
+//	-------- Finding node on the **left** of the pointer
 
 	function getNodeNearerPointOnLeft(point, winner, rival) {
 		var newWinner = winner;
@@ -436,7 +436,7 @@
 		}
 	}
 
-//	-------- Finding node **above** pointer
+//	-------- Finding node **above** the pointer
 
 	function getNodeNearerPointAbove(point, winner, rival) {
 		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
