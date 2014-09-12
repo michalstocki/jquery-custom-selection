@@ -1,4 +1,3 @@
-
 (function($) {
 	// Default configuration
 	var settings, defaults = {
@@ -9,6 +8,7 @@
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
+	var selectionDrawer = null;
 
 	window.CustomSelection = {
 		Lib: {}
@@ -18,12 +18,13 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		hammerAllowTextSelection();
 		enableTouchSelectionFor(this);
 		useContextOf(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(this, settings.selectionColor);
+		$(window).resize(redrawSelection);
 		return this;
 	};
 
@@ -40,12 +41,9 @@
 	var rejectTouchEnd = false;
 	var contextWindow = null;
 	var contextDocument = null;
+	var lastSelectionRange = null;
 
 //	-- Binding events
-
-	function hammerAllowTextSelection() {
-		delete Hammer.defaults.cssProps.userSelect;
-	}
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
@@ -124,9 +122,23 @@
 		}
 		$(startMarker).detach();
 		$(endMarker).detach();
+		if (selectionDrawer) {
+			selectionDrawer.clearSelection();
+		}
 	}
 
-	function createSelection() {
+	function redrawSelection() {
+		updateSelection(true);
+	}
+
+	function hasRangeChanged(range) {
+		return !lastSelectionRange
+			|| lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) != 0
+			|| lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) != 0;
+	}
+
+	function createSelection(force) {
+		force = force || false;
 		if (existInDOM(startMarker, endMarker)) {
 			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
@@ -136,6 +148,13 @@
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
 			contextWindow.getSelection().addRange(range);
+
+			if (force || hasRangeChanged(range)) {
+				lastSelectionRange = range;
+				if (selectionDrawer) {
+					selectionDrawer.redraw(range);
+				}
+			}
 		}
 	}
 
@@ -158,9 +177,9 @@
 		return true;
 	}
 
-	function updateSelection() {
+	function updateSelection(force) {
 		contextWindow.getSelection().removeAllRanges();
-		createSelection();
+		createSelection(force);
 	}
 
 //	-- Preparing Markers
@@ -353,7 +372,7 @@
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
 		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
 		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-		searchTextNode(el, nearestAbovePoint);
+			searchTextNode(el, nearestAbovePoint);
 	}
 
 	function searchTextNode(el, comparator) {

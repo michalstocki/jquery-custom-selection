@@ -1,48 +1,51 @@
-
-#debugging {
-	position: fixed;
-	top: 0;
-	left: 0;
-	pointer-events: none;
-	}
+#customSelectionCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+}
 
 span.selection {
     background-color: yellow;
 }
+
 span.marker {
     display: inline-block;
     width: 0;
     height: 0.9em;
     position: relative;
 }
+
 span.marker:after {
-    content:"";
+    content: "";
     display: block;
     width: 24px;
     height: 35px;
     border-radius: 12px 12px 0 0;
-	background-color: darkgreen;
+    background-color: darkgreen;
     background: linear-gradient(#34a727 0, darkgreen 18px);
     position: absolute;
     top: 100%;
     left: -12px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.7);
-	opacity: 0.9;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    opacity: 0.9;
 }
 
 .settings {
     background-color: #4679bd;
     width: 500px;
     border-radius: 5px;
-	padding: 2px 6px;
+    padding: 2px 6px;
     font-family: sans-serif;
     color: white;
     font-size: 12px;
-	position: absolute;
-	top: 0;
-	left: 50%;
-	margin: 3px 3px 3px -250px;
-	}
-	.touch_status {
-		display: inline-block;
-		}
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin: 3px 3px 3px -250px;
+}
+
+.touch_status {
+    display: inline-block;
+}

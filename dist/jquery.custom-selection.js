@@ -1,5 +1,4 @@
-/*! jquery-custom-selection - v0.1.2 - 2014-09-01 */
-(function($) {
+/*! jquery-custom-selection - v0.1.2 - 2014-09-12 */(function($) {
 	// Default configuration
 	var settings, defaults = {
 		markerClass: 'marker'
@@ -9,6 +8,7 @@
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
+	var selectionDrawer = null;
 
 	window.CustomSelection = {
 		Lib: {}
@@ -18,12 +18,13 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		hammerAllowTextSelection();
 		enableTouchSelectionFor(this);
 		useContextOf(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(this, settings.selectionColor);
+		$(window).resize(redrawSelection);
 		return this;
 	};
 
@@ -40,12 +41,9 @@
 	var rejectTouchEnd = false;
 	var contextWindow = null;
 	var contextDocument = null;
+	var lastSelectionRange = null;
 
 //	-- Binding events
-
-	function hammerAllowTextSelection() {
-		delete Hammer.defaults.cssProps.userSelect;
-	}
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
@@ -124,9 +122,23 @@
 		}
 		$(startMarker).detach();
 		$(endMarker).detach();
+		if (selectionDrawer) {
+			selectionDrawer.clearSelection();
+		}
 	}
 
-	function createSelection() {
+	function redrawSelection() {
+		updateSelection(true);
+	}
+
+	function hasRangeChanged(range) {
+		return !lastSelectionRange
+			|| lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) != 0
+			|| lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) != 0;
+	}
+
+	function createSelection(force) {
+		force = force || false;
 		if (existInDOM(startMarker, endMarker)) {
 			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
@@ -136,6 +148,13 @@
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
 			contextWindow.getSelection().addRange(range);
+
+			if (force || hasRangeChanged(range)) {
+				lastSelectionRange = range;
+				if (selectionDrawer) {
+					selectionDrawer.redraw(range);
+				}
+			}
 		}
 	}
 
@@ -158,9 +177,9 @@
 		return true;
 	}
 
-	function updateSelection() {
+	function updateSelection(force) {
 		contextWindow.getSelection().removeAllRanges();
-		createSelection();
+		createSelection(force);
 	}
 
 //	-- Preparing Markers
@@ -199,7 +218,7 @@
 		$(endMarker).css(css);
 	}
 
-//	-- Extracting word under pointer
+//	-- Extracting a word under the pointer
 
 	function wrapWithMarkersWordAtPoint(element, point) {
 		var textNode;
@@ -303,8 +322,8 @@
 		return Array.prototype.indexOf.call(elements, element);
 	}
 
-//  ---- Finding text node
-//  ------ Finding node containing point
+//  ---- Finding a text node
+//  ------ Finding a node containing the pointer
 
 	function getFromElNodeContainingPoint(el, point) {
 		if (el) {
@@ -347,13 +366,13 @@
 		return node.childNodes.length > 0;
 	}
 
-//  ------ Finding node closest to pointer
+//  ------ Finding the closest node to the pointer
 
 	function getClosestTextNodeFromEl(el, point) {
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
 		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
 		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-		searchTextNode(el, nearestAbovePoint);
+			searchTextNode(el, nearestAbovePoint);
 	}
 
 	function searchTextNode(el, comparator) {
@@ -383,7 +402,7 @@
 		return closestNode;
 	}
 
-//	-------- Finding node on **left** of pointer
+//	-------- Finding node on the **left** of the pointer
 
 	function getNodeNearerPointOnLeft(point, winner, rival) {
 		var newWinner = winner;
@@ -436,7 +455,7 @@
 		}
 	}
 
-//	-------- Finding node **above** pointer
+//	-------- Finding node **above** the pointer
 
 	function getNodeNearerPointAbove(point, winner, rival) {
 		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
@@ -518,6 +537,85 @@
 
 	global.CustomSelection.Lib.Point = Point;
 
+})(this);
+
+(function(global) {
+	'use strict';
+
+	var context;
+	var lastDrawnRange;
+	var $element;
+	var fillStyle;
+
+	function SelectionDrawer($el, selectionColor) {
+		$element = $el;
+		fillStyle = selectionColor;
+		initCanvas();
+	}
+
+	SelectionDrawer.prototype.redraw = function(range) {
+		clearSelection();
+		updateCanvasBounds();
+		drawSelection(range);
+	};
+
+	SelectionDrawer.prototype.clearSelection = function() {
+		clearSelection();
+	};
+
+	function initCanvas() {
+		var canvas = getCanvas() || createCanvas();
+		context = canvas.getContext('2d');
+	}
+
+	function drawSelection(range) {
+		var rects = range.getClientRects();
+		context.beginPath();
+
+		for (var i = 0; i < rects.length; i++) {
+			context.rect(rects[i].left + 0.5, rects[i].top + 0.5, rects[i].width, rects[i].height);
+		}
+
+		context.closePath();
+		context.fillStyle = fillStyle;
+		context.fill();
+
+		lastDrawnRange = range;
+	}
+
+	function clearSelection() {
+		var canvas = getCanvas();
+		if (canvas) {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+		}
+	}
+
+	function updateCanvasBounds() {
+		var canvas = getCanvas();
+		canvas.style.top = $(window).scrollTop() + 'px';
+		canvas.style.left = $(window).scrollLeft() + 'px';
+
+		if (canvas.width != $(window).width()) {
+			canvas.width = $(window).width();
+		}
+
+		if (canvas.height != $(window).height()) {
+			canvas.height = $(window).height();
+		}
+	}
+
+	function getCanvas() {
+		return document.getElementById('customSelectionCanvas');
+	}
+
+	function createCanvas() {
+		var canvas = document.createElement('canvas');
+		canvas.setAttribute('id', 'customSelectionCanvas');
+		$element[0].appendChild(canvas);
+		return canvas;
+	}
+
+	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
 })(this);
 
 (function() {
