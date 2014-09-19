@@ -5,6 +5,7 @@
 	var lastDrawnRange;
 	var $element;
 	var fillStyle;
+	var ios = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	function SelectionDrawer($el, selectionColor) {
 		$element = $el;
@@ -29,10 +30,10 @@
 
 	function drawSelection(range) {
 		var rects = range.getClientRects();
+		var scrollY = ios ? window.scrollY : 0;
 		context.beginPath();
-
 		for (var i = 0; i < rects.length; i++) {
-			context.rect(rects[i].left + 0.5, rects[i].top + 0.5, rects[i].width, rects[i].height);
+			context.rect(rects[i].left + 0.5, rects[i].top + 0.5 + scrollY, rects[i].width, rects[i].height);
 		}
 
 		context.closePath();
@@ -54,11 +55,11 @@
 		canvas.style.top = $(window).scrollTop() + 'px';
 		canvas.style.left = $(window).scrollLeft() + 'px';
 
-		if (canvas.width != $(window).width()) {
+		if (canvas.width !== $(window).width()) {
 			canvas.width = $(window).width();
 		}
 
-		if (canvas.height != $(window).height()) {
+		if (canvas.height !== $(window).height()) {
 			canvas.height = $(window).height();
 		}
 	}
@@ -70,6 +71,8 @@
 	function createCanvas() {
 		var canvas = document.createElement('canvas');
 		canvas.setAttribute('id', 'customSelectionCanvas');
+		canvas.setAttribute('width', $(window).width());
+		canvas.setAttribute('height', $(window).height());
 		$element[0].appendChild(canvas);
 		return canvas;
 	}

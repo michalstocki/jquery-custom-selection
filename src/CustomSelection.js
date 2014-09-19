@@ -3,6 +3,7 @@
 	var settings, defaults = {
 		markerClass: 'marker'
 	};
+	var ios = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	// Collaborators
 	var frameRequester = null;
@@ -132,9 +133,7 @@
 	}
 
 	function hasRangeChanged(range) {
-		return !lastSelectionRange
-			|| lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) != 0
-			|| lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) != 0;
+		return !lastSelectionRange || lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0	|| lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
 	}
 
 	function createSelection(force) {
@@ -354,7 +353,8 @@
 	}
 
 	function rectContainsPoint(rect, point) {
-		var x = point.clientX, y = point.clientY;
+		var x = ios ? point.pageX : point.clientX;
+		var y = ios ? point.pageY : point.clientY;
 		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 	}
 
