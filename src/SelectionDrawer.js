@@ -5,7 +5,7 @@
 	var lastDrawnRange;
 	var $element;
 	var fillStyle;
-	var ios = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
+	var ios = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false);
 
 	function SelectionDrawer($el, selectionColor) {
 		$element = $el;
@@ -29,10 +29,13 @@
 
 	function drawSelection(range) {
 		var rects = range.getClientRects();
-		var scrollY = ios ? window.scrollY : 0;
+		var scrollY = ios ? $(window).scrollTop() : 0;
 		context.beginPath();
 		for (var i = 0; i < rects.length; i++) {
-			context.rect(rects[i].left + 0.5, rects[i].top + 0.5 + scrollY, rects[i].width, rects[i].height);
+			context.rect(rects[i].left + 0.5,
+										rects[i].top + 0.5 - scrollY,
+										rects[i].width,
+										rects[i].height);
 		}
 
 		context.closePath();
@@ -40,13 +43,6 @@
 		context.fill();
 
 		lastDrawnRange = range;
-	}
-
-	function clearSelection() {
-		var canvas = getCanvas();
-		if (canvas) {
-			context.clearRect(0, 0, canvas.width, canvas.height);
-		}
 	}
 
 	function updateCanvasBounds() {
