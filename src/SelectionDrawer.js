@@ -14,13 +14,12 @@
 	}
 
 	SelectionDrawer.prototype.redraw = function(range) {
-		clearSelection();
 		updateCanvasBounds();
 		drawSelection(range);
 	};
 
 	SelectionDrawer.prototype.clearSelection = function() {
-		clearSelection();
+		updateCanvasBounds();
 	};
 
 	function initCanvas() {
@@ -55,13 +54,8 @@
 		canvas.style.top = $(window).scrollTop() + 'px';
 		canvas.style.left = $(window).scrollLeft() + 'px';
 
-		if (canvas.width !== $(window).width()) {
-			canvas.width = $(window).width();
-		}
-
-		if (canvas.height !== $(window).height()) {
-			canvas.height = $(window).height();
-		}
+		canvas.width = $(window).width();
+		canvas.height = $(window).height();
 	}
 
 	function getCanvas() {
