@@ -4,7 +4,7 @@
 		markerClass: 'marker',
 		onSelectionChange: function() {}
 	};
-	var ios = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
+	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	// Collaborators
 	var frameRequester = null;
@@ -20,14 +20,12 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		enableTouchSelectionFor(this);
 		useContextOf(this);
+		enableTouchSelectionFor(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(this, settings.selectionColor);
-
-		addOrientationHandling();
 		return this;
 	};
 
@@ -49,7 +47,7 @@
 //	-- Binding events
 
 	function addOrientationHandling() {
-		if (ios) {
+		if (isAppleDevice) {
 			$(window).on('orientationchange', redrawSelection);
 		}
 		else {
@@ -74,6 +72,7 @@
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
+		$(contextWindow).on('orientationchange resize', redrawSelection);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -360,8 +359,8 @@
 	}
 
 	function rectContainsPoint(rect, point) {
-		var x = ios ? point.pageX : point.clientX;
-		var y = ios ? point.pageY : point.clientY;
+		var x = isAppleDevice ? point.pageX : point.clientX;
+		var y = isAppleDevice ? point.pageY : point.clientY;
 		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 	}
 

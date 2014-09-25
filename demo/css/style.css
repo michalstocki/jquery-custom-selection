@@ -6,6 +6,13 @@
     z-index: -1;
 }
 
+#debugging {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
 span.selection {
     background-color: yellow;
 }
