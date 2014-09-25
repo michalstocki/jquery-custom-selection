@@ -5,7 +5,7 @@
 	var lastDrawnRange;
 	var $element;
 	var fillStyle;
-	var ios = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false);
+	var isAndroid = /(Android)/g.test(navigator.userAgent);
 
 	function SelectionDrawer($el, selectionColor) {
 		$element = $el;
@@ -14,7 +14,7 @@
 	}
 
 	SelectionDrawer.prototype.redraw = function(range) {
-		updateCanvasBounds();
+		updateCanvasBounds(range.getBoundingClientRect());
 		drawSelection(range);
 	};
 
@@ -28,14 +28,17 @@
 	}
 
 	function drawSelection(range) {
+		var boundingClientRect = range.getBoundingClientRect();
 		var rects = range.getClientRects();
-		var scrollY = ios ? $(window).scrollTop() : 0;
+		var SELECTION_OFFSET = 0.5;
 		context.beginPath();
+
 		for (var i = 0; i < rects.length; i++) {
-			context.rect(rects[i].left + 0.5,
-										rects[i].top + 0.5 - scrollY,
-										rects[i].width,
-										rects[i].height);
+
+			context.rect(rects[i].left - boundingClientRect.left + SELECTION_OFFSET,
+					rects[i].top - boundingClientRect.top + SELECTION_OFFSET,
+					rects[i].width,
+					rects[i].height);
 		}
 
 		context.closePath();
@@ -45,13 +48,19 @@
 		lastDrawnRange = range;
 	}
 
-	function updateCanvasBounds() {
-		var canvas = getCanvas();
-		canvas.style.top = $(window).scrollTop() + 'px';
-		canvas.style.left = $(window).scrollLeft() + 'px';
+	function yOffset() {
+		return isAndroid ? $(window).scrollTop() : 0;
+	}
 
-		canvas.width = $(window).width();
-		canvas.height = $(window).height();
+	function updateCanvasBounds(newBounds) {
+		newBounds = newBounds || {top: 0, left: 0, width: 0, height: 0};
+		var canvas = getCanvas();
+
+		canvas.style.top = (newBounds.top + yOffset()) + 'px';
+		canvas.style.left = newBounds.left + 'px';
+
+		canvas.width = newBounds.width;
+		canvas.height = newBounds.height;
 	}
 
 	function getCanvas() {
@@ -60,9 +69,9 @@
 
 	function createCanvas() {
 		var canvas = document.createElement('canvas');
-		canvas.setAttribute('id', 'customSelectionCanvas');
-		canvas.setAttribute('width', $(window).width());
-		canvas.setAttribute('height', $(window).height());
+		canvas.id = 'customSelectionCanvas';
+		canvas.width = '0px';
+		canvas.height = '0px';
 		$element[0].appendChild(canvas);
 		return canvas;
 	}

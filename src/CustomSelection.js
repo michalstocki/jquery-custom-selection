@@ -25,7 +25,8 @@
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(this, settings.selectionColor);
-		$(window).resize(redrawSelection);
+
+		addOrientationHandling();
 		return this;
 	};
 
@@ -45,6 +46,15 @@
 	var lastSelectionRange = null;
 
 //	-- Binding events
+
+	function addOrientationHandling() {
+		if (ios) {
+			$(window).on('orientationchange', redrawSelection);
+		}
+		else {
+			$(window).on('resize', redrawSelection);
+		}
+	}
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
@@ -129,7 +139,7 @@
 	}
 
 	function redrawSelection() {
-		updateSelection(true);
+			updateSelection(true);
 	}
 
 	function hasRangeChanged(range) {
