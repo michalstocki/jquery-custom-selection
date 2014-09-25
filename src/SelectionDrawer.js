@@ -6,7 +6,7 @@
 	var canvas;
 	var context;
 	var settings;
-	var isAndroid = /(Android)/g.test(navigator.userAgent);
+	var isAppleDevice = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	function SelectionDrawer(options) {
 		settings = options;
@@ -51,7 +51,7 @@
 	}
 
 	function yOffset() {
-		return isAndroid ? $(window).scrollTop() : 0;
+		return !isAppleDevice ? $(settings.contextWindow).scrollTop() : 0;
 	}
 
 	function updateCanvasBounds(newBounds) {
