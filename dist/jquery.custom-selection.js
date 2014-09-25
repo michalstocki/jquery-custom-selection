@@ -1,14 +1,17 @@
-/*! jquery-custom-selection - v0.1.3 - 2014-09-02 */
-(function($) {
+/*! jquery-custom-selection - v0.2.0 - 2014-09-25 */(function($) {
 	// Default configuration
 	var settings, defaults = {
-		markerClass: 'marker'
+		markerClass: 'marker',
+		onSelectionChange: function() {
+		}
 	};
+	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	// Collaborators
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
+	var selectionDrawer = null;
 
 	window.CustomSelection = {
 		Lib: {}
@@ -18,18 +21,23 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		hammerAllowTextSelection();
-		enableTouchSelectionFor(this);
 		useContextOf(this);
+		enableTouchSelectionFor(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
+			$element: this,
+			contextWindow: contextWindow,
+			contextDocument: contextDocument,
+			fillStyle: settings.selectionColor
+		});
 		return this;
 	};
 
 	$.fn.disableCustomSelection = function() {
 		disableTouchSelectionFor(this);
-		clearSelection();
+		handleTap();
 		return this;
 	};
 
@@ -40,12 +48,9 @@
 	var rejectTouchEnd = false;
 	var contextWindow = null;
 	var contextDocument = null;
+	var lastSelectionRange = null;
 
 //	-- Binding events
-
-	function hammerAllowTextSelection() {
-		delete Hammer.defaults.cssProps.userSelect;
-	}
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
@@ -63,7 +68,8 @@
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', clearSelection);
+			.on('tap', handleTap);
+		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -71,7 +77,7 @@
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', clearSelection);
+			.off('tap', handleTap);
 	}
 
 	function handleGlobalTapHold(e) {
@@ -81,9 +87,9 @@
 		if (!isMarker(e.target)) {
 			var element = getTouchedElementFromEvent(e);
 			var point = getTouchPoint(e, {shift: false});
-			clearSelection();
+			handleTap();
 			wrapWithMarkersWordAtPoint(element, point);
-			createSelection();
+			makeSelection();
 			rejectTouchEnd = true;
 		}
 	}
@@ -108,8 +114,19 @@
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			mark(eventAnchor, lastPoint, jqueryEvent.target);
-			updateSelection();
+			makeSelection();
 		});
+	}
+
+	function handleTap() {
+		$(startMarker).detach();
+		$(endMarker).detach();
+		selectionDrawer.clearSelection();
+	}
+
+	function handleResize() {
+		var range = createSelectionRange();
+		drawSelectionRange(range);
 	}
 
 	function isMarker(element) {
@@ -118,15 +135,36 @@
 
 //	-- Creating Selection
 
-	function clearSelection() {
-		if (contextWindow) {
-			contextWindow.getSelection().removeAllRanges();
+	function makeSelection() {
+		var range = createSelectionRange();
+		if (hasRangeChanged(range)) {
+			drawSelectionRange(range);
 		}
-		$(startMarker).detach();
-		$(endMarker).detach();
 	}
 
-	function createSelection() {
+	function drawSelectionRange(range) {
+		if (range) {
+			settings.onSelectionChange(range);
+			lastSelectionRange = range;
+			selectionDrawer.redraw(range);
+		}
+	}
+
+	function hasEndOfSelectionChanged(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
+	}
+
+	function hasStartOfSelectionChanged(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
+	}
+
+	function hasRangeChanged(range) {
+		return !lastSelectionRange ||
+			hasEndOfSelectionChanged(range) ||
+			hasStartOfSelectionChanged(range);
+	}
+
+	function createSelectionRange() {
 		if (existInDOM(startMarker, endMarker)) {
 			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
@@ -135,8 +173,10 @@
 				range.setStart.apply(range, getRangeBoundAt(endMarker));
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
-			contextWindow.getSelection().addRange(range);
+
+			return range;
 		}
+		return null;
 	}
 
 	function getRangeBoundAt(element) {
@@ -156,11 +196,6 @@
 			}
 		}
 		return true;
-	}
-
-	function updateSelection() {
-		contextWindow.getSelection().removeAllRanges();
-		createSelection();
 	}
 
 //	-- Preparing Markers
@@ -335,7 +370,8 @@
 	}
 
 	function rectContainsPoint(rect, point) {
-		var x = point.clientX, y = point.clientY;
+		var x = isAppleDevice ? point.pageX : point.clientX;
+		var y = isAppleDevice ? point.pageY : point.clientY;
 		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 	}
 
@@ -353,7 +389,7 @@
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
 		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
 		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-		searchTextNode(el, nearestAbovePoint);
+			searchTextNode(el, nearestAbovePoint);
 	}
 
 	function searchTextNode(el, comparator) {
@@ -548,3 +584,80 @@
 		};
 	}
 }());
+
+(function(global) {
+	'use strict';
+
+	var CUSTOM_SELECTION_CANVAS_CLASS = 'custom-selection-canvas';
+
+	var canvas;
+	var context;
+	var settings;
+	var isAppleDevice = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
+
+	function SelectionDrawer(options) {
+		settings = options;
+		initCanvas();
+	}
+
+	SelectionDrawer.prototype.redraw = function(range) {
+		updateCanvasBounds(range.getBoundingClientRect());
+		drawSelection(range);
+	};
+
+	SelectionDrawer.prototype.clearSelection = function() {
+		updateCanvasBounds();
+	};
+
+	function initCanvas() {
+		createCanvas();
+		context = canvas.getContext('2d');
+	}
+
+	function drawSelection(range) {
+		var boundingClientRect = range.getBoundingClientRect();
+		var rects = range.getClientRects();
+		var SUBPIXEL_OFFSET = 0.5;
+
+		var offsetX = SUBPIXEL_OFFSET - boundingClientRect.left;
+		var offsetY = SUBPIXEL_OFFSET - boundingClientRect.top;
+		context.save();
+		context.translate(offsetX, offsetY);
+
+		context.beginPath();
+		Array.prototype.forEach.call(rects, function(rect) {
+			context.rect(rect.left,
+					rect.top,
+					rect.width,
+					rect.height);
+		});
+		context.closePath();
+		context.fillStyle = settings.fillStyle;
+		context.fill();
+		context.restore();
+	}
+
+	function yOffset() {
+		return !isAppleDevice ? $(settings.contextWindow).scrollTop() : 0;
+	}
+
+	function updateCanvasBounds(newBounds) {
+		newBounds = newBounds || {top: 0, left: 0, width: 0, height: 0};
+
+		canvas.style.top = (newBounds.top + yOffset()) + 'px';
+		canvas.style.left = newBounds.left + 'px';
+
+		canvas.width = newBounds.width;
+		canvas.height = newBounds.height;
+	}
+
+	function createCanvas() {
+		canvas = settings.contextDocument.createElement('canvas');
+		canvas.className = CUSTOM_SELECTION_CANVAS_CLASS;
+		canvas.width = 0;
+		canvas.height = 0;
+		settings.$element[0].appendChild(canvas);
+	}
+
+	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
+})(this);
