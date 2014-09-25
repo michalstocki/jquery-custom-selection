@@ -26,7 +26,12 @@
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
-		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(this, settings.selectionColor);
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
+			$element: this,
+			contextWindow: contextWindow,
+			contextDocument: contextDocument,
+			fillStyle: settings.selectionColor
+		});
 		return this;
 	};
 
