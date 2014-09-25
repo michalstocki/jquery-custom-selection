@@ -21,6 +21,7 @@
 	"globals": {
 		"logg": false,
 		"CustomSelection": false,
-		"Hammer": false
+		"Hammer": false,
+		"Range": false
 	}
 }
