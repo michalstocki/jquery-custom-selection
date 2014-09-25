@@ -134,23 +134,19 @@
 	function handleTap() {
 		$(startMarker).detach();
 		$(endMarker).detach();
-		if (selectionDrawer) {
-			selectionDrawer.clearSelection();
-		}
+		selectionDrawer.clearSelection();
 	}
 
 	function handleResize() {
-		var selection = createSelectionRange();
-		drawSelectionRange(selection);
+		var range = createSelectionRange();
+		drawSelectionRange(range);
 	}
 
-	function drawSelectionRange(selection) {
-		if (typeof selection !== 'undefined') {
-			settings.onSelectionChange(selection);
-			lastSelectionRange = selection;
-			if (selectionDrawer) {
-				selectionDrawer.redraw(selection);
-			}
+	function drawSelectionRange(range) {
+		if (typeof range !== 'undefined') {
+			settings.onSelectionChange(range);
+			lastSelectionRange = range;
+			selectionDrawer.redraw(range);
 		}
 	}
 
