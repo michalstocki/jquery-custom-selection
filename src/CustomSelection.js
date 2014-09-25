@@ -1,7 +1,8 @@
 (function($) {
 	// Default configuration
 	var settings, defaults = {
-		markerClass: 'marker'
+		markerClass: 'marker',
+		onSelectionChange: function() {}
 	};
 	var ios = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
@@ -156,7 +157,7 @@
 				range.setStart.apply(range, getRangeBoundAt(endMarker));
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
-			contextWindow.getSelection().addRange(range);
+			settings.onSelectionChange(range);
 
 			if (force || hasRangeChanged(range)) {
 				lastSelectionRange = range;
