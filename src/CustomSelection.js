@@ -2,7 +2,8 @@
 	// Default configuration
 	var settings, defaults = {
 		markerClass: 'marker',
-		onSelectionChange: function() {}
+		onSelectionChange: function() {
+		}
 	};
 	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
@@ -31,7 +32,7 @@
 
 	$.fn.disableCustomSelection = function() {
 		disableTouchSelectionFor(this);
-		clearSelection();
+		handleTap();
 		return this;
 	};
 
@@ -46,12 +47,10 @@
 
 //	-- Binding events
 
-	function addOrientationHandling() {
-		if (isAppleDevice) {
-			$(window).on('orientationchange', redrawSelection);
-		}
-		else {
-			$(window).on('resize', redrawSelection);
+	function makeSelection() {
+		var range = createSelectionRange();
+		if (hasRangeChanged(range)) {
+			drawSelectionRange(range);
 		}
 	}
 
@@ -71,8 +70,8 @@
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', clearSelection);
-		$(contextWindow).on('orientationchange resize', redrawSelection);
+			.on('tap', handleTap);
+		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -80,7 +79,7 @@
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', clearSelection);
+			.off('tap', handleTap);
 	}
 
 	function handleGlobalTapHold(e) {
@@ -90,9 +89,9 @@
 		if (!isMarker(e.target)) {
 			var element = getTouchedElementFromEvent(e);
 			var point = getTouchPoint(e, {shift: false});
-			clearSelection();
+			handleTap();
 			wrapWithMarkersWordAtPoint(element, point);
-			createSelection();
+			makeSelection();
 			rejectTouchEnd = true;
 		}
 	}
@@ -117,7 +116,7 @@
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			mark(eventAnchor, lastPoint, jqueryEvent.target);
-			updateSelection();
+			makeSelection();
 		});
 	}
 
@@ -127,7 +126,7 @@
 
 //	-- Creating Selection
 
-	function clearSelection() {
+	function handleTap() {
 		$(startMarker).detach();
 		$(endMarker).detach();
 		if (selectionDrawer) {
@@ -135,16 +134,36 @@
 		}
 	}
 
-	function redrawSelection() {
-			updateSelection(true);
+	function handleResize() {
+		var selection = createSelectionRange();
+		drawSelectionRange(selection);
+	}
+
+	function drawSelectionRange(selection) {
+		if (typeof selection !== 'undefined') {
+			settings.onSelectionChange(selection);
+			lastSelectionRange = selection;
+			if (selectionDrawer) {
+				selectionDrawer.redraw(selection);
+			}
+		}
+	}
+
+	function hasEndOfSelectionChanged(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
+	}
+
+	function hasStartOfSelectionChanged(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
 	}
 
 	function hasRangeChanged(range) {
-		return !lastSelectionRange || lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0	|| lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
+		return !lastSelectionRange ||
+			hasEndOfSelectionChanged(range) ||
+			hasStartOfSelectionChanged(range);
 	}
 
-	function createSelection(force) {
-		force = force || false;
+	function createSelectionRange() {
 		if (existInDOM(startMarker, endMarker)) {
 			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
@@ -153,15 +172,10 @@
 				range.setStart.apply(range, getRangeBoundAt(endMarker));
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
-			settings.onSelectionChange(range);
 
-			if (force || hasRangeChanged(range)) {
-				lastSelectionRange = range;
-				if (selectionDrawer) {
-					selectionDrawer.redraw(range);
-				}
-			}
+			return range;
 		}
+		return undefined;
 	}
 
 	function getRangeBoundAt(element) {
@@ -181,10 +195,6 @@
 			}
 		}
 		return true;
-	}
-
-	function updateSelection(force) {
-		createSelection(force);
 	}
 
 //	-- Preparing Markers
