@@ -1,8 +1,11 @@
-/*! jquery-custom-selection - v0.1.2 - 2014-09-12 */(function($) {
+/*! jquery-custom-selection - v0.2.0 - 2014-09-25 */(function($) {
 	// Default configuration
 	var settings, defaults = {
-		markerClass: 'marker'
+		markerClass: 'marker',
+		onSelectionChange: function() {
+		}
 	};
+	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	// Collaborators
 	var frameRequester = null;
@@ -18,19 +21,23 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		enableTouchSelectionFor(this);
 		useContextOf(this);
+		enableTouchSelectionFor(this);
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
-		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(this, settings.selectionColor);
-		$(window).resize(redrawSelection);
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
+			$element: this,
+			contextWindow: contextWindow,
+			contextDocument: contextDocument,
+			fillStyle: settings.selectionColor
+		});
 		return this;
 	};
 
 	$.fn.disableCustomSelection = function() {
 		disableTouchSelectionFor(this);
-		clearSelection();
+		handleTap();
 		return this;
 	};
 
@@ -61,7 +68,8 @@
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', clearSelection);
+			.on('tap', handleTap);
+		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -69,7 +77,7 @@
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', clearSelection);
+			.off('tap', handleTap);
 	}
 
 	function handleGlobalTapHold(e) {
@@ -79,9 +87,9 @@
 		if (!isMarker(e.target)) {
 			var element = getTouchedElementFromEvent(e);
 			var point = getTouchPoint(e, {shift: false});
-			clearSelection();
+			handleTap();
 			wrapWithMarkersWordAtPoint(element, point);
-			createSelection();
+			makeSelection();
 			rejectTouchEnd = true;
 		}
 	}
@@ -106,8 +114,19 @@
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			mark(eventAnchor, lastPoint, jqueryEvent.target);
-			updateSelection();
+			makeSelection();
 		});
+	}
+
+	function handleTap() {
+		$(startMarker).detach();
+		$(endMarker).detach();
+		selectionDrawer.clearSelection();
+	}
+
+	function handleResize() {
+		var range = createSelectionRange();
+		drawSelectionRange(range);
 	}
 
 	function isMarker(element) {
@@ -116,29 +135,36 @@
 
 //	-- Creating Selection
 
-	function clearSelection() {
-		if (contextWindow) {
-			contextWindow.getSelection().removeAllRanges();
-		}
-		$(startMarker).detach();
-		$(endMarker).detach();
-		if (selectionDrawer) {
-			selectionDrawer.clearSelection();
+	function makeSelection() {
+		var range = createSelectionRange();
+		if (hasRangeChanged(range)) {
+			drawSelectionRange(range);
 		}
 	}
 
-	function redrawSelection() {
-		updateSelection(true);
+	function drawSelectionRange(range) {
+		if (range) {
+			settings.onSelectionChange(range);
+			lastSelectionRange = range;
+			selectionDrawer.redraw(range);
+		}
+	}
+
+	function hasEndOfSelectionChanged(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
+	}
+
+	function hasStartOfSelectionChanged(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
 	}
 
 	function hasRangeChanged(range) {
-		return !lastSelectionRange
-			|| lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) != 0
-			|| lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) != 0;
+		return !lastSelectionRange ||
+			hasEndOfSelectionChanged(range) ||
+			hasStartOfSelectionChanged(range);
 	}
 
-	function createSelection(force) {
-		force = force || false;
+	function createSelectionRange() {
 		if (existInDOM(startMarker, endMarker)) {
 			var range = contextDocument.createRange();
 			range.setStart.apply(range, getRangeBoundAt(startMarker));
@@ -147,15 +173,10 @@
 				range.setStart.apply(range, getRangeBoundAt(endMarker));
 				range.setEnd.apply(range, getRangeBoundAt(startMarker));
 			}
-			contextWindow.getSelection().addRange(range);
 
-			if (force || hasRangeChanged(range)) {
-				lastSelectionRange = range;
-				if (selectionDrawer) {
-					selectionDrawer.redraw(range);
-				}
-			}
+			return range;
 		}
+		return null;
 	}
 
 	function getRangeBoundAt(element) {
@@ -175,11 +196,6 @@
 			}
 		}
 		return true;
-	}
-
-	function updateSelection(force) {
-		contextWindow.getSelection().removeAllRanges();
-		createSelection(force);
 	}
 
 //	-- Preparing Markers
@@ -354,7 +370,8 @@
 	}
 
 	function rectContainsPoint(rect, point) {
-		var x = point.clientX, y = point.clientY;
+		var x = isAppleDevice ? point.pageX : point.clientX;
+		var y = isAppleDevice ? point.pageY : point.clientY;
 		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 	}
 
@@ -539,85 +556,6 @@
 
 })(this);
 
-(function(global) {
-	'use strict';
-
-	var context;
-	var lastDrawnRange;
-	var $element;
-	var fillStyle;
-
-	function SelectionDrawer($el, selectionColor) {
-		$element = $el;
-		fillStyle = selectionColor;
-		initCanvas();
-	}
-
-	SelectionDrawer.prototype.redraw = function(range) {
-		clearSelection();
-		updateCanvasBounds();
-		drawSelection(range);
-	};
-
-	SelectionDrawer.prototype.clearSelection = function() {
-		clearSelection();
-	};
-
-	function initCanvas() {
-		var canvas = getCanvas() || createCanvas();
-		context = canvas.getContext('2d');
-	}
-
-	function drawSelection(range) {
-		var rects = range.getClientRects();
-		context.beginPath();
-
-		for (var i = 0; i < rects.length; i++) {
-			context.rect(rects[i].left + 0.5, rects[i].top + 0.5, rects[i].width, rects[i].height);
-		}
-
-		context.closePath();
-		context.fillStyle = fillStyle;
-		context.fill();
-
-		lastDrawnRange = range;
-	}
-
-	function clearSelection() {
-		var canvas = getCanvas();
-		if (canvas) {
-			context.clearRect(0, 0, canvas.width, canvas.height);
-		}
-	}
-
-	function updateCanvasBounds() {
-		var canvas = getCanvas();
-		canvas.style.top = $(window).scrollTop() + 'px';
-		canvas.style.left = $(window).scrollLeft() + 'px';
-
-		if (canvas.width != $(window).width()) {
-			canvas.width = $(window).width();
-		}
-
-		if (canvas.height != $(window).height()) {
-			canvas.height = $(window).height();
-		}
-	}
-
-	function getCanvas() {
-		return document.getElementById('customSelectionCanvas');
-	}
-
-	function createCanvas() {
-		var canvas = document.createElement('canvas');
-		canvas.setAttribute('id', 'customSelectionCanvas');
-		$element[0].appendChild(canvas);
-		return canvas;
-	}
-
-	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
-})(this);
-
 (function() {
 	var lastTime = 0;
 	var vendors = ['ms', 'moz', 'webkit', 'o'];
@@ -646,3 +584,80 @@
 		};
 	}
 }());
+
+(function(global) {
+	'use strict';
+
+	var CUSTOM_SELECTION_CANVAS_CLASS = 'custom-selection-canvas';
+
+	var canvas;
+	var context;
+	var settings;
+	var isAppleDevice = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
+
+	function SelectionDrawer(options) {
+		settings = options;
+		initCanvas();
+	}
+
+	SelectionDrawer.prototype.redraw = function(range) {
+		updateCanvasBounds(range.getBoundingClientRect());
+		drawSelection(range);
+	};
+
+	SelectionDrawer.prototype.clearSelection = function() {
+		updateCanvasBounds();
+	};
+
+	function initCanvas() {
+		createCanvas();
+		context = canvas.getContext('2d');
+	}
+
+	function drawSelection(range) {
+		var boundingClientRect = range.getBoundingClientRect();
+		var rects = range.getClientRects();
+		var SUBPIXEL_OFFSET = 0.5;
+
+		var offsetX = SUBPIXEL_OFFSET - boundingClientRect.left;
+		var offsetY = SUBPIXEL_OFFSET - boundingClientRect.top;
+		context.save();
+		context.translate(offsetX, offsetY);
+
+		context.beginPath();
+		Array.prototype.forEach.call(rects, function(rect) {
+			context.rect(rect.left,
+					rect.top,
+					rect.width,
+					rect.height);
+		});
+		context.closePath();
+		context.fillStyle = settings.fillStyle;
+		context.fill();
+		context.restore();
+	}
+
+	function yOffset() {
+		return !isAppleDevice ? $(settings.contextWindow).scrollTop() : 0;
+	}
+
+	function updateCanvasBounds(newBounds) {
+		newBounds = newBounds || {top: 0, left: 0, width: 0, height: 0};
+
+		canvas.style.top = (newBounds.top + yOffset()) + 'px';
+		canvas.style.left = newBounds.left + 'px';
+
+		canvas.width = newBounds.width;
+		canvas.height = newBounds.height;
+	}
+
+	function createCanvas() {
+		canvas = settings.contextDocument.createElement('canvas');
+		canvas.className = CUSTOM_SELECTION_CANVAS_CLASS;
+		canvas.width = 0;
+		canvas.height = 0;
+		settings.$element[0].appendChild(canvas);
+	}
+
+	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
+})(this);
