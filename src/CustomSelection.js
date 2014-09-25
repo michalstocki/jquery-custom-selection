@@ -129,9 +129,6 @@
 //	-- Creating Selection
 
 	function clearSelection() {
-		if (contextWindow) {
-			contextWindow.getSelection().removeAllRanges();
-		}
 		$(startMarker).detach();
 		$(endMarker).detach();
 		if (selectionDrawer) {
@@ -188,7 +185,6 @@
 	}
 
 	function updateSelection(force) {
-		contextWindow.getSelection().removeAllRanges();
 		createSelection(force);
 	}
 
