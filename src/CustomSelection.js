@@ -52,13 +52,6 @@
 
 //	-- Binding events
 
-	function makeSelection() {
-		var range = createSelectionRange();
-		if (hasRangeChanged(range)) {
-			drawSelectionRange(range);
-		}
-	}
-
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
 		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
@@ -125,12 +118,6 @@
 		});
 	}
 
-	function isMarker(element) {
-		return element === startMarker || element === endMarker;
-	}
-
-//	-- Creating Selection
-
 	function handleTap() {
 		$(startMarker).detach();
 		$(endMarker).detach();
@@ -142,8 +129,21 @@
 		drawSelectionRange(range);
 	}
 
+	function isMarker(element) {
+		return element === startMarker || element === endMarker;
+	}
+
+//	-- Creating Selection
+
+	function makeSelection() {
+		var range = createSelectionRange();
+		if (hasRangeChanged(range)) {
+			drawSelectionRange(range);
+		}
+	}
+
 	function drawSelectionRange(range) {
-		if (typeof range !== 'undefined') {
+		if (range) {
 			settings.onSelectionChange(range);
 			lastSelectionRange = range;
 			selectionDrawer.redraw(range);
@@ -176,7 +176,7 @@
 
 			return range;
 		}
-		return undefined;
+		return null;
 	}
 
 	function getRangeBoundAt(element) {
