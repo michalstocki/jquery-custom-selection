@@ -35,9 +35,14 @@
 		return this;
 	};
 
+	$.fn.clearCustomSelection = function() {
+		clearSelection();
+		return this;
+	};
+
 	$.fn.disableCustomSelection = function() {
 		disableTouchSelectionFor(this);
-		handleTap();
+		clearSelection();
 		return this;
 	};
 
@@ -68,7 +73,7 @@
 			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', handleTap);
+			.on('tap', clearSelection);
 		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
@@ -77,7 +82,7 @@
 			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', handleTap);
+			.off('tap', clearSelection);
 	}
 
 	function handleGlobalTapHold(e) {
@@ -87,7 +92,7 @@
 		if (!isMarker(e.target)) {
 			var element = getTouchedElementFromEvent(e);
 			var point = getTouchPoint(e, {shift: false});
-			handleTap();
+			clearSelection();
 			wrapWithMarkersWordAtPoint(element, point);
 			makeSelection();
 			rejectTouchEnd = true;
@@ -118,10 +123,12 @@
 		});
 	}
 
-	function handleTap() {
+	function clearSelection() {
 		$(startMarker).detach();
 		$(endMarker).detach();
+		lastSelectionRange = null;
 		selectionDrawer.clearSelection();
+		settings.onSelectionChange(contextDocument.createRange());
 	}
 
 	function handleResize() {
