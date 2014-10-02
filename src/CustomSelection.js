@@ -1,7 +1,10 @@
 (function($) {
+	var ON_TOUCH_DEVICES = 'onTouchDevices';
+
 	// Default configuration
 	var settings, defaults = {
 		markerClass: 'marker',
+		useMarkers: ON_TOUCH_DEVICES,
 		onSelectionChange: function() {
 		}
 	};
@@ -21,6 +24,12 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
+
+		if (shouldLeaveNativeSelection())
+		{
+			return;
+		}
+
 		useContextOf(this);
 		enableTouchSelectionFor(this);
 		startMarker = createMarker(settings.markerClass);
@@ -41,6 +50,11 @@
 	};
 
 	$.fn.disableCustomSelection = function() {
+		if (shouldLeaveNativeSelection())
+		{
+			return;
+		}
+
 		disableTouchSelectionFor(this);
 		clearSelection();
 		return this;
@@ -54,8 +68,13 @@
 	var contextWindow = null;
 	var contextDocument = null;
 	var lastSelectionRange = null;
+	var movedMarker = false;
 
 //	-- Binding events
+
+	function shouldLeaveNativeSelection() {
+		return settings.useMarkers === ON_TOUCH_DEVICES && !isTouchDevice();
+	}
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
@@ -70,7 +89,9 @@
 			});
 		});
 		$element
-			.on('touchmove', handleGlobalTouchMove)
+			.on('mousedown', handleGlobalMouseDown)
+			.on('mouseup', handleGlobalMouseUp)
+			.on('touchmove mousemove', handleGlobalPointerMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
@@ -79,7 +100,9 @@
 
 	function disableTouchSelectionFor($element) {
 		$element
-			.off('touchmove', handleGlobalTouchMove)
+			.off('mousedown', handleGlobalMouseDown)
+			.off('mouseup', handleGlobalMouseUp)
+			.off('touchmove mousemove', handleGlobalPointerMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
 			.off('tap', clearSelection);
@@ -89,8 +112,9 @@
 		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		if (!isMarker(e.target)) {
-			var element = getTouchedElementFromEvent(e);
+		var element = getTouchedElementFromEvent(e);
+
+		if (!isMarker(element)) {
 			var point = getTouchPoint(e, {shift: false});
 			clearSelection();
 			wrapWithMarkersWordAtPoint(element, point);
@@ -99,11 +123,21 @@
 		}
 	}
 
-	function handleGlobalTouchMove(jqueryEvent) {
+	function handleGlobalMouseDown(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
+			movedMarker = jqueryEvent.target;
+		}
+	}
+
+	function handleGlobalPointerMove(jqueryEvent) {
+		if (isMoveAllowed(jqueryEvent)) {
 			handleMarkerTouchMove(jqueryEvent);
 			rejectTouchEnd = true;
 		}
+	}
+
+	function handleGlobalMouseUp() {
+		movedMarker = null;
 	}
 
 	function handleGlobalTouchEnd(jqueryEvent) {
@@ -118,7 +152,7 @@
 		lastPoint = getTouchPoint(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			mark(eventAnchor, lastPoint, jqueryEvent.target);
+			mark(eventAnchor, lastPoint, getMarkerToMove(jqueryEvent));
 			makeSelection();
 		});
 	}
@@ -138,6 +172,18 @@
 
 	function isMarker(element) {
 		return element === startMarker || element === endMarker;
+	}
+
+	function isMoveAllowed(jqueryEvent) {
+		return movedMarker || (isTouchDevice() && isMarker(jqueryEvent.target));
+	}
+
+	function isTouchDevice() {
+		return 'ontouchend' in document;
+	}
+
+	function getMarkerToMove(jqueryEvent) {
+		return movedMarker || jqueryEvent.target;
 	}
 
 //	-- Creating Selection
@@ -212,7 +258,7 @@
 	}
 
 	function getTouchedElementFromEvent(touchEvent) {
-		var touches = touchEvent.touches || touchEvent.pointers;
+		var touches = touchEvent.touches || touchEvent.pointers || [touchEvent];
 		return touches[0].target;
 	}
 
