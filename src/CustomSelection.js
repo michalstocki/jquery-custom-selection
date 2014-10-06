@@ -64,8 +64,7 @@
 		if (isTouchDevice()) {
 			disableTouchSelectionFor(this);
 		}
-		else
-		{
+		else {
 			disableMouseSelectionFor(this);
 		}
 
@@ -141,35 +140,37 @@
 			.off('tap', clearSelection);
 	}
 
-
 	function handleGlobalMouseDown(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
 			movedMarker = jqueryEvent.target;
 		}
 		else {
 			clearSelection();
-
-			if (timeoutId)
-			{
-				clearInterval(timeoutId);
-			}
-
-			mouseDownTime = Date.now();
-			mouseDownPoint = getTouchPoint(jqueryEvent, {shift: false});
-			hasMovedOverThreshold = false;
-
-			timeoutId = setTimeout(function() {
-				if (!hasMovedOverThreshold)
-				{
-					tryToInitNewSelection(jqueryEvent);
-				}
-
-				mouseDownPoint = null;
-				mouseDownTime = 0;
-				hasMovedOverThreshold = false;
-				timeoutId = null;
-			}, settings.holdTimeout);
+			handleGlobalMouseHoldDownStart(jqueryEvent);
 		}
+	}
+
+	function handleGlobalMouseHoldDownStart(jqueryEvent) {
+		if (timeoutId) {
+			clearInterval(timeoutId);
+		}
+
+		mouseDownTime = Date.now();
+		mouseDownPoint = getTouchPoint(jqueryEvent, {shift: false});
+		hasMovedOverThreshold = false;
+
+		timeoutId = setTimeout(handleGlobalMouseHoldDown, settings.holdTimeout, jqueryEvent);
+	}
+
+	function handleGlobalMouseHoldDown(jqueryEvent) {
+		if (!hasMovedOverThreshold) {
+			tryToInitNewSelection(jqueryEvent);
+		}
+
+		mouseDownPoint = null;
+		mouseDownTime = 0;
+		hasMovedOverThreshold = false;
+		timeoutId = null;
 	}
 
 	function handleGlobalMouseUp() {
@@ -180,8 +181,7 @@
 		if (movedMarker) {
 			handleMarkerTouchMove(e);
 		}
-		else if (movedOverThreshold(e))
-		{
+		else if (movedOverThreshold(e)) {
 			hasMovedOverThreshold = true;
 		}
 	}
@@ -212,7 +212,7 @@
 		lastPoint = getTouchPoint(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			mark(eventAnchor, lastPoint, getMarkerToMove(jqueryEvent));
+			mark(eventAnchor, lastPoint, jqueryEvent.target);
 			makeSelection();
 		});
 	}
@@ -250,12 +250,8 @@
 		return 'ontouchend' in document;
 	}
 
-	function getMarkerToMove(jqueryEvent) {
-		return movedMarker || jqueryEvent.target;
-	}
-
 	function tryToInitNewSelection(e) {
-		var element = getTouchedElementFromEvent(e);
+		var element = getTargetElementFromPointerEvent(e);
 
 		if (!isMarker(element)) {
 			var point = getTouchPoint(e, {shift: false});
@@ -348,8 +344,8 @@
 		return new CustomSelection.Lib.Point(touchEvent, options);
 	}
 
-	function getTouchedElementFromEvent(touchEvent) {
-		var touches = touchEvent.touches || touchEvent.pointers || [touchEvent];
+	function getTargetElementFromPointerEvent(pointerEvent) {
+		var touches = pointerEvent.touches || pointerEvent.pointers || [pointerEvent];
 		return touches[0].target;
 	}
 

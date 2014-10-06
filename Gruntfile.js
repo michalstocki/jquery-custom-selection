@@ -86,6 +86,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-webdriver');
 
 	grunt.registerTask('dist', ['jshint', 'concat:build', 'uglify:build']);
-	grunt.registerTask('server', ['dist', 'connect:serverKeepAlive']);
+	grunt.registerTask('server', ['connect:serverKeepAlive']);
 	grunt.registerTask('e2e', ['concat:build', 'uglify:build', 'connect:server', 'webdriver']);
 };

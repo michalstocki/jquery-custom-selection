@@ -1,6 +1,7 @@
 'use strict';
 
 var chai = require('chai');
+var expect = chai.expect;
 
 describe('jquery custom selection', function () {
 	var URL = 'http://localhost:8004';
@@ -19,10 +20,9 @@ describe('jquery custom selection', function () {
 			.pause(MOUSE_DOWN_TIME)
 			.buttonUp(PARAGRAPH_SELECTOR)
 			.isVisible(MARKER_SELECTOR, function(error, result) {
-				chai.expect(error).to.be.undefined;
-				chai.expect(result.length).to.equal(2);
+				expect(error).to.be.undefined;
+				expect(result.length).to.equal(2);
 			})
-			.saveScreenshot('./screenshot.png')
 			.end(done);
 	});
 });
