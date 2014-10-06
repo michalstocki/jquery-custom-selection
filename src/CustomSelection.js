@@ -4,6 +4,8 @@
 	// Default configuration
 	var settings, defaults = {
 		markerClass: 'marker',
+		holdThreshold: 4,
+		holdTimeout: 500,
 		useMarkers: ON_TOUCH_DEVICES,
 		onSelectionChange: function() {
 		}
@@ -25,13 +27,18 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 
-		if (shouldLeaveNativeSelection())
-		{
+		if (shouldLeaveNativeSelection()) {
 			return;
 		}
 
 		useContextOf(this);
-		enableTouchSelectionFor(this);
+
+		if (isTouchDevice()) {
+			enableTouchSelectionFor(this);
+		}
+		else {
+			enableMouseSelectionFor(this);
+		}
 		startMarker = createMarker(settings.markerClass);
 		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
@@ -50,12 +57,18 @@
 	};
 
 	$.fn.disableCustomSelection = function() {
-		if (shouldLeaveNativeSelection())
-		{
+		if (shouldLeaveNativeSelection()) {
 			return;
 		}
 
-		disableTouchSelectionFor(this);
+		if (isTouchDevice()) {
+			disableTouchSelectionFor(this);
+		}
+		else
+		{
+			disableMouseSelectionFor(this);
+		}
+
 		clearSelection();
 		return this;
 	};
@@ -69,6 +82,11 @@
 	var contextDocument = null;
 	var lastSelectionRange = null;
 	var movedMarker = false;
+	var mouseDownTime = 0;
+	var mouseDownPoint = null;
+	var userSelectBeforeEnablingSelection = null;
+	var hasMovedOverThreshold = false;
+	var timeoutId = null;
 
 //	-- Binding events
 
@@ -81,17 +99,34 @@
 		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
 	}
 
-	function enableTouchSelectionFor($element) {
-		$element.each(function() {
-			new Hammer(this, {
-				holdThreshold: 2,
-				holdTimeout: 500
-			});
-		});
+	function enableMouseSelectionFor($element) {
+		disableNativeSelection($element);
 		$element
 			.on('mousedown', handleGlobalMouseDown)
 			.on('mouseup', handleGlobalMouseUp)
-			.on('touchmove mousemove', handleGlobalPointerMove)
+			.on('mousemove', handleGlobalMouseMove);
+		$(contextWindow).on('resize', handleResize);
+	}
+
+	function disableMouseSelectionFor($element) {
+		restoreNativeSelection($element);
+
+		$element
+			.off('mousedown', handleGlobalMouseDown)
+			.off('mouseup', handleGlobalMouseUp)
+			.off('mousemove', handleGlobalMouseMove);
+		$(contextWindow).off('resize', handleResize);
+	}
+
+	function enableTouchSelectionFor($element) {
+		$element.each(function() {
+			new Hammer(this, {
+				holdThreshold: settings.holdThreshold,
+				holdTimeout: settings.holdTimeout
+			});
+		});
+		$element
+			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
@@ -100,44 +135,69 @@
 
 	function disableTouchSelectionFor($element) {
 		$element
-			.off('mousedown', handleGlobalMouseDown)
-			.off('mouseup', handleGlobalMouseUp)
-			.off('touchmove mousemove', handleGlobalPointerMove)
+			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
 			.off('tap', clearSelection);
+	}
+
+
+	function handleGlobalMouseDown(jqueryEvent) {
+		if (isMarker(jqueryEvent.target)) {
+			movedMarker = jqueryEvent.target;
+		}
+		else {
+			clearSelection();
+
+			if (timeoutId)
+			{
+				clearInterval(timeoutId);
+			}
+
+			mouseDownTime = Date.now();
+			mouseDownPoint = getTouchPoint(jqueryEvent, {shift: false});
+			hasMovedOverThreshold = false;
+
+			timeoutId = setTimeout(function() {
+				if (!hasMovedOverThreshold)
+				{
+					tryToInitNewSelection(jqueryEvent);
+				}
+
+				mouseDownPoint = null;
+				mouseDownTime = 0;
+				hasMovedOverThreshold = false;
+				timeoutId = null;
+			}, settings.holdTimeout);
+		}
+	}
+
+	function handleGlobalMouseUp() {
+		movedMarker = null;
+	}
+
+	function handleGlobalMouseMove(e) {
+		if (movedMarker) {
+			handleMarkerTouchMove(e);
+		}
+		else if (movedOverThreshold(e))
+		{
+			hasMovedOverThreshold = true;
+		}
 	}
 
 	function handleGlobalTapHold(e) {
 		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		var element = getTouchedElementFromEvent(e);
-
-		if (!isMarker(element)) {
-			var point = getTouchPoint(e, {shift: false});
-			clearSelection();
-			wrapWithMarkersWordAtPoint(element, point);
-			makeSelection();
-			rejectTouchEnd = true;
-		}
+		tryToInitNewSelection(e);
 	}
 
-	function handleGlobalMouseDown(jqueryEvent) {
+	function handleGlobalTouchMove(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
-			movedMarker = jqueryEvent.target;
-		}
-	}
-
-	function handleGlobalPointerMove(jqueryEvent) {
-		if (isMoveAllowed(jqueryEvent)) {
 			handleMarkerTouchMove(jqueryEvent);
 			rejectTouchEnd = true;
 		}
-	}
-
-	function handleGlobalMouseUp() {
-		movedMarker = null;
 	}
 
 	function handleGlobalTouchEnd(jqueryEvent) {
@@ -170,12 +230,20 @@
 		drawSelectionRange(range);
 	}
 
-	function isMarker(element) {
-		return element === startMarker || element === endMarker;
+	function movedOverThreshold(e) {
+		if (!mouseDownPoint) {
+			return false;
+		}
+
+		var mouseMoveXDiff = Math.abs(e.clientX - mouseDownPoint.clientX);
+		var mouseMoveYDiff = Math.abs(e.clientY - mouseDownPoint.clientY);
+
+		return mouseMoveXDiff > settings.holdThreshold ||
+			mouseMoveYDiff > settings.holdThreshold;
 	}
 
-	function isMoveAllowed(jqueryEvent) {
-		return movedMarker || (isTouchDevice() && isMarker(jqueryEvent.target));
+	function isMarker(element) {
+		return element === startMarker || element === endMarker;
 	}
 
 	function isTouchDevice() {
@@ -184,6 +252,29 @@
 
 	function getMarkerToMove(jqueryEvent) {
 		return movedMarker || jqueryEvent.target;
+	}
+
+	function tryToInitNewSelection(e) {
+		var element = getTouchedElementFromEvent(e);
+
+		if (!isMarker(element)) {
+			var point = getTouchPoint(e, {shift: false});
+			clearSelection();
+			wrapWithMarkersWordAtPoint(element, point);
+			makeSelection();
+			rejectTouchEnd = true;
+		}
+	}
+
+	// -- Dealing with native selection
+
+	function disableNativeSelection($element) {
+		userSelectBeforeEnablingSelection = $element.css('user-select');
+		$element.css('user-select', 'none');
+	}
+
+	function restoreNativeSelection($element) {
+		$element.css('user-select', userSelectBeforeEnablingSelection);
 	}
 
 //	-- Creating Selection
@@ -425,7 +516,7 @@
 	function rectContainsPoint(rect, point) {
 		var x = isAppleDevice ? point.pageX : point.clientX;
 		var y = isAppleDevice ? point.pageY : point.clientY;
-		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
+		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 	}
 
 	function nodeIsText(node) {

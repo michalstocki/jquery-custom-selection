@@ -12,7 +12,10 @@ $(function() {
 	});
 
 	window.enableSelection = function() {
-		$body.customSelection({selectionColor: '#e9e9e7'});
+		$body.customSelection({
+			selectionColor: 'lightgreen',
+			useMarkers: 'always'
+		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
 	};
