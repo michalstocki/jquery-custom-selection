@@ -74,7 +74,7 @@ module.exports = function(grunt) {
 				}
 			},
 			customSelection: {
-				tests: ['test/spec/*.js']
+				tests: ['test/e2e/*.js']
 			}
 		}
 	});

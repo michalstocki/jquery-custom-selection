@@ -35,8 +35,7 @@
 
 		if (isTouchDevice()) {
 			enableTouchSelectionFor(this);
-		}
-		else {
+		} else {
 			enableMouseSelectionFor(this);
 		}
 		startMarker = createMarker(settings.markerClass);
@@ -63,8 +62,7 @@
 
 		if (isTouchDevice()) {
 			disableTouchSelectionFor(this);
-		}
-		else {
+		} else {
 			disableMouseSelectionFor(this);
 		}
 
@@ -143,8 +141,7 @@
 	function handleGlobalMouseDown(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
 			movedMarker = jqueryEvent.target;
-		}
-		else {
+		} else {
 			clearSelection();
 			handleGlobalMouseHoldDownStart(jqueryEvent);
 		}
@@ -179,7 +176,7 @@
 
 	function handleGlobalMouseMove(e) {
 		if (movedMarker) {
-			handleMarkerTouchMove(e);
+			handleMarkerPointerMove(e);
 		}
 		else if (movedOverThreshold(e)) {
 			hasMovedOverThreshold = true;
@@ -195,7 +192,7 @@
 
 	function handleGlobalTouchMove(jqueryEvent) {
 		if (isMarker(jqueryEvent.target)) {
-			handleMarkerTouchMove(jqueryEvent);
+			handleMarkerPointerMove(jqueryEvent);
 			rejectTouchEnd = true;
 		}
 	}
@@ -207,12 +204,12 @@
 		}
 	}
 
-	function handleMarkerTouchMove(jqueryEvent) {
+	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		lastPoint = getTouchPoint(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			mark(eventAnchor, lastPoint, jqueryEvent.target);
+			mark(eventAnchor, lastPoint, getMarkerToMove(jqueryEvent));
 			makeSelection();
 		});
 	}
@@ -248,6 +245,10 @@
 
 	function isTouchDevice() {
 		return 'ontouchend' in document;
+	}
+
+	function getMarkerToMove(jqueryEvent) {
+		return movedMarker || jqueryEvent.target;
 	}
 
 	function tryToInitNewSelection(e) {
@@ -512,7 +513,7 @@
 	function rectContainsPoint(rect, point) {
 		var x = isAppleDevice ? point.pageX : point.clientX;
 		var y = isAppleDevice ? point.pageY : point.clientY;
-		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
 	}
 
 	function nodeIsText(node) {
