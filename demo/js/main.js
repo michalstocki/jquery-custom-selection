@@ -1,6 +1,6 @@
 $(function() {
-	var $body = $('body');
-	$body.on('touchstart', function(e) {
+	var $content = $('.content');
+	$content.on('touchstart', function(e) {
 		e = e.originalEvent;
 		logg('touchstart: ' + e.touches.length);
 	}).on('touchmove', function(e) {
@@ -12,15 +12,24 @@ $(function() {
 	});
 
 	window.enableSelection = function() {
-		$body.customSelection({selectionColor: '#e9e9e7'});
+		$content.customSelection({
+			selectionColor: 'lightgreen',
+			useMarkers: 'always',
+			onSelectionChange: onSelectionChange
+		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
 	};
 
 	window.disableSelection = function() {
-		$body.disableCustomSelection();
+		$content.disableCustomSelection();
 		$('.settings .button-enable').attr('disabled', false);
 		$('.settings .button-disable').attr('disabled', true);
 	};
 
+	function onSelectionChange(range) {
+		$('.selected-text-status').text(range.toString());
+	}
+
+	window.enableSelection();
 });
