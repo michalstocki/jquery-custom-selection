@@ -1,442 +1,442 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>Native range on own selection anchors in ePub</title>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>Native range on own selection anchors in ePub</title>
 
-    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="bower_components/hammerjs/hammer.min.js"></script>
-    <script type="text/javascript" src="bower_components/jquery.hammer.js/jquery.hammer.js"></script>
+	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="bower_components/hammerjs/hammer.min.js"></script>
+	<script type="text/javascript" src="bower_components/jquery.hammer.js/jquery.hammer.js"></script>
 
     <script type='text/javascript' src='dist/jquery.custom-selection.js'></script>
 
-    <script type='text/javascript' src='demo/js/debugging.js'></script>
-    <script type='text/javascript' src='demo/js/main.js'></script>
-    <link rel="stylesheet" type="text/css" href="demo/css/style.css">
-    <meta name="viewport" content="minimum-scale=1.0, width=device-width, height=device-height, user-scalable=no">
+	<script type='text/javascript' src='demo/js/debugging.js'></script>
+	<script type='text/javascript' src='demo/js/main.js'></script>
+	<link rel="stylesheet" type="text/css" href="demo/css/style.css">
+	<meta name="viewport" content="minimum-scale=1.0, width=device-width, height=device-height, user-scalable=no">
 
 </head>
 <body>
-<div class="settings">
-    <button class="button-enable" onclick="enableSelection();">Enable selection</button>
-    <button class="button-disable" onclick="disableSelection();" disabled="disabled">Disable selection</button>
-    <div class="touch_status"></div>
-</div>
-<div class="selected-text-status-panel">
-    <span>Selected text:</span>
-    <span class="selected-text-status"></span>
-</div>
-<div class="content">
-    <section id="pgepubid00492">
-        <div class="center"><span epub:type="pagebreak" title="169" id="Page_169">169</span>
+	<div class="settings">
+		<button class="button-enable" onclick="enableSelection();">Enable selection</button>
+		<button class="button-disable" onclick="disableSelection();" disabled="disabled">Disable selection</button>
+		<div class="touch_status"></div>
+	</div>
+	<div class="selected-text-status-panel">
+		<span>Selected text:</span>
+		<span class="selected-text-status"></span>
+	</div>
+	<div class="content">
+		<section id="pgepubid00492">
+			<div class="center"><span epub:type="pagebreak" title="169" id="Page_169">169</span>
 
-        </div>
-        <h2>SECTION IV <span class="subhd">FAIRY STORIES—MODERN FANTASTIC TALES</span></h2>
+			</div>
+			<h2>SECTION IV <span class="subhd">FAIRY STORIES—MODERN FANTASTIC TALES</span></h2>
 
-        <section id="pgepubid00495" epub:type="bibliography">
-            <div class="center"><span epub:type="pagebreak" title="170" id="Page_170">170</span>
+			<section id="pgepubid00495" epub:type="bibliography">
+				<div class="center"><span epub:type="pagebreak" title="170" id="Page_170">170</span>
 
-            </div>
-            <h3>BIBLIOGRAPHY</h3>
+				</div>
+				<h3>BIBLIOGRAPHY</h3>
 
-            <ol>
-                <li>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</li>
-                <li>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</li>
-                <li>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</li>
-                <li>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</li>
-                <li id="b">Benson, A. C., <cite>David Blaize and the Blue Door</cite>.</li>
-                <li>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</li>
-                <li>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</li>
-                <li>Browne, Frances, <cite>Granny's Wonderful Chair</cite>.</li>
-                <li>Carryl, Charles E., <cite>Davy and the Goblin</cite>.</li>
-                <li>"Carroll, Lewis," <cite>Alice's Adventures in Wonderland</cite>.</li>
-                <li>"Carroll, Lewis," <cite>Through the Looking-Glass and What Alice Found
-                    There</cite>.
-                </li>
-                <li>Chamisso, Adelbert von, <cite>The Wonderful History of Peter
-                    Schlemihl</cite>.
-                </li>
-                <li>"Collodi, C.," <cite>The Adventures of Pinocchio</cite>.</li>
-                <li>Cox, Palmer, <cite>The Brownies: Their Book</cite>.</li>
-                <li>Craik, Dinah Mulock, <cite>Adventures of a Brownie</cite>.</li>
-                <li>Craik, Dinah Mulock, <cite>The Little Lame Prince and His
-                    Traveling-Cloak</cite>.
-                </li>
-                <li>Crothers, Samuel McChord, <cite>Miss Muffet's Christmas Party</cite>.</li>
-                <li>Dickens, Charles, <cite>A Christmas Carol</cite>.</li>
-                <li>Ewald, Carl, <cite>Two-Legs, and Other Stories</cite>.</li>
-                <li>Grahame, Kenneth, <cite>The Wind in the Willows</cite>.</li>
-                <li>Harris, Joel Chandler, <cite>Nights with Uncle Remus</cite>.</li>
-                <li>Hawthorne, Nathaniel, "The Snow Image," "Little Daffydowndilly," "A Rill from the Town Pump."</li>
-                <li>Ingelow, Jean, <cite>Mopsa the Fairy</cite>.</li>
-                <li>Ingelow, Jean, <cite>Stories Told to a Child</cite>. 2 vols.</li>
-                <li>Jordan, David Starr, <cite>The Book of Knight and Barbara</cite>.</li>
-                <li>Lagerlof, Selma, <cite>The Wonderful Adventures of Nils</cite>.</li>
-                <li>La Motte-Fouqué, F. de, <cite>Undine</cite>.</li>
-                <li>Lang, Andrew, <cite>Prince Prigio</cite>.</li>
-                <li>Kingsley, Charles, <cite>The Water Babies</cite>.</li>
-                <li>Maeterlinck, Maurice, <cite>The Blue Bird</cite>.</li>
-                <li>Macdonald, George, <cite>The Princess and the Goblin</cite>.</li>
-                <li>Macdonald, George, <cite>At the Back of the North Wind</cite>.</li>
-                <li>Pyle, Katherine, <cite>In the Green Forest</cite>.</li>
-                <li>Raspe, Rudolph Erich, <cite>Baron Munchausen's Narrative</cite>.</li>
-                <li>Richards, Laura E., <cite>The Story of Toto</cite>.</li>
-                <li>Richards, Laura E., <cite>The Pig Brother</cite>.</li>
-                <li>Ruskin, John, <cite>The King of the Golden River</cite>.</li>
-                <li>Stockton, Frank R., <cite>Fanciful Tales</cite>.</li>
-                <li>Swift, Jonathan, <cite>Gulliver's Travels</cite>.</li>
-                <li>Thackeray, William Makepeace, <cite>The Rose and the Ring</cite>.</li>
-                <li>Wilde, Oscar, <cite>The Happy Prince, and Other Stories</cite>.</li>
-                <li>Wilkins, Mary E., <cite>The Pot of Gold</cite>.</li>
-            </ol>
-            <ol style="text-align: right">
-                <li>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</li>
-                <li>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</li>
-                <li>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</li>
-                <li>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</li>
-                <li id="b">Benson, A. C., <cite>David Blaize and the Blue Door</cite>.</li>
-                <li>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</li>
-                <li>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</li>
-            </ol>
-            <ol style="line-height: 200%;">
-                <li>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</li>
-                <li>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</li>
-                <li>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</li>
-                <li>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</li>
-                <li id="b">Benson, A. C., <cite>David Blaize and the Blue Door</cite>.</li>
-                <li>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</li>
-                <li>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</li>
-                <li>Browne, Frances, <cite>Granny's Wonderful Chair</cite>.</li>
-                <li>Carryl, Charles E., <cite>Davy and the Goblin</cite>.</li>
-                <li>"Carroll, Lewis," <cite>Alice's Adventures in Wonderland</cite>.</li>
-                <li>"Carroll, Lewis," <cite>Through the Looking-Glass and What Alice Found
-                    There</cite>.
-                </li>
-            </ol>
-        </section>
-        <section id="pgepubid00498">
-            <div class="center"><span epub:type="pagebreak" title="171" id="Page_171">171</span>
+				<ol>
+					<li>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</li>
+					<li>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</li>
+					<li>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</li>
+					<li>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</li>
+					<li id="b">Benson, A. C., <cite>David Blaize and the Blue Door</cite>.</li>
+					<li>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</li>
+					<li>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</li>
+					<li>Browne, Frances, <cite>Granny's Wonderful Chair</cite>.</li>
+					<li>Carryl, Charles E., <cite>Davy and the Goblin</cite>.</li>
+					<li>"Carroll, Lewis," <cite>Alice's Adventures in Wonderland</cite>.</li>
+					<li>"Carroll, Lewis," <cite>Through the Looking-Glass and What Alice Found
+						There</cite>.
+					</li>
+					<li>Chamisso, Adelbert von, <cite>The Wonderful History of Peter
+						Schlemihl</cite>.
+					</li>
+					<li>"Collodi, C.," <cite>The Adventures of Pinocchio</cite>.</li>
+					<li>Cox, Palmer, <cite>The Brownies: Their Book</cite>.</li>
+					<li>Craik, Dinah Mulock, <cite>Adventures of a Brownie</cite>.</li>
+					<li>Craik, Dinah Mulock, <cite>The Little Lame Prince and His
+						Traveling-Cloak</cite>.
+					</li>
+					<li>Crothers, Samuel McChord, <cite>Miss Muffet's Christmas Party</cite>.</li>
+					<li>Dickens, Charles, <cite>A Christmas Carol</cite>.</li>
+					<li>Ewald, Carl, <cite>Two-Legs, and Other Stories</cite>.</li>
+					<li>Grahame, Kenneth, <cite>The Wind in the Willows</cite>.</li>
+					<li>Harris, Joel Chandler, <cite>Nights with Uncle Remus</cite>.</li>
+					<li>Hawthorne, Nathaniel, "The Snow Image," "Little Daffydowndilly," "A Rill from the Town Pump."</li>
+					<li>Ingelow, Jean, <cite>Mopsa the Fairy</cite>.</li>
+					<li>Ingelow, Jean, <cite>Stories Told to a Child</cite>. 2 vols.</li>
+					<li>Jordan, David Starr, <cite>The Book of Knight and Barbara</cite>.</li>
+					<li>Lagerlof, Selma, <cite>The Wonderful Adventures of Nils</cite>.</li>
+					<li>La Motte-Fouqué, F. de, <cite>Undine</cite>.</li>
+					<li>Lang, Andrew, <cite>Prince Prigio</cite>.</li>
+					<li>Kingsley, Charles, <cite>The Water Babies</cite>.</li>
+					<li>Maeterlinck, Maurice, <cite>The Blue Bird</cite>.</li>
+					<li>Macdonald, George, <cite>The Princess and the Goblin</cite>.</li>
+					<li>Macdonald, George, <cite>At the Back of the North Wind</cite>.</li>
+					<li>Pyle, Katherine, <cite>In the Green Forest</cite>.</li>
+					<li>Raspe, Rudolph Erich, <cite>Baron Munchausen's Narrative</cite>.</li>
+					<li>Richards, Laura E., <cite>The Story of Toto</cite>.</li>
+					<li>Richards, Laura E., <cite>The Pig Brother</cite>.</li>
+					<li>Ruskin, John, <cite>The King of the Golden River</cite>.</li>
+					<li>Stockton, Frank R., <cite>Fanciful Tales</cite>.</li>
+					<li>Swift, Jonathan, <cite>Gulliver's Travels</cite>.</li>
+					<li>Thackeray, William Makepeace, <cite>The Rose and the Ring</cite>.</li>
+					<li>Wilde, Oscar, <cite>The Happy Prince, and Other Stories</cite>.</li>
+					<li>Wilkins, Mary E., <cite>The Pot of Gold</cite>.</li>
+				</ol>
+				<ol style="text-align: right">
+					<li>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</li>
+					<li>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</li>
+					<li>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</li>
+					<li>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</li>
+					<li id="b">Benson, A. C., <cite>David Blaize and the Blue Door</cite>.</li>
+					<li>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</li>
+					<li>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</li>
+				</ol>
+				<ol style="line-height: 200%;">
+					<li>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</li>
+					<li>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</li>
+					<li>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</li>
+					<li>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</li>
+					<li id="b">Benson, A. C., <cite>David Blaize and the Blue Door</cite>.</li>
+					<li>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</li>
+					<li>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</li>
+					<li>Browne, Frances, <cite>Granny's Wonderful Chair</cite>.</li>
+					<li>Carryl, Charles E., <cite>Davy and the Goblin</cite>.</li>
+					<li>"Carroll, Lewis," <cite>Alice's Adventures in Wonderland</cite>.</li>
+					<li>"Carroll, Lewis," <cite>Through the Looking-Glass and What Alice Found
+						There</cite>.
+					</li>
+				</ol>
+			</section>
+			<section id="pgepubid00498">
+				<div class="center"><span epub:type="pagebreak" title="171" id="Page_171">171</span>
 
-            </div>
-            <h3>INTRODUCTORY</h3>
+				</div>
+				<h3>INTRODUCTORY</h3>
 
-            <p>The difficulties of classification are very apparent here, and once more it must be noted that
-                illustrative and practical purposes rather than logical ones are served by the arrangement adopted. The
-                modern fanciful story is here placed next to the real folk story instead of after all the groups of folk
-                products. The Hebrew stories at the beginning belong quite as well, perhaps even better, in Section V,
-                while the stories at the end of Section VI shade off into the more modern types of short tales. Then the
-                fact that other groups of modern stories are to follow later, illustrating more realistic studies of
-                life and the very recent and remarkably numerous writings centering around animal life, limits the list
-                here. Many of the animal stories might, with equal propriety, be placed under the head of the
-                fantastic.</p>
+				<p>The difficulties of classification are very apparent here, and once more it must be noted that
+					illustrative and practical purposes rather than logical ones are served by the arrangement adopted. The
+					modern fanciful story is here placed next to the real folk story instead of after all the groups of folk
+					products. The Hebrew stories at the beginning belong quite as well, perhaps even better, in Section V,
+					while the stories at the end of Section VI shade off into the more modern types of short tales. Then the
+					fact that other groups of modern stories are to follow later, illustrating more realistic studies of
+					life and the very recent and remarkably numerous writings centering around animal life, limits the list
+					here. Many of the animal stories might, with equal propriety, be placed under the head of the
+					fantastic.</p>
 
-            <p style="line-height: 150%;"><span epub:type="bridgehead">The child's natural literature.</span> The world
-                has lost certain secrets as the price of an advancing civilization. It is a commonplace of observation
-                that no one can duplicate the success of Mother Goose, whether she be thought of as the maker of jingles
-                or the teller of tales. The conditions of modern life preclude the generally naïve attitude that
-                produced the folk rhymes, ballads, tales, proverbs, fables, and myths. The folk saw things simply and
-                directly. The complex, analytic, questioning mind is not yet, either in or out of stories. The motives
-                from which people act are to them plain and not mixed. Characters are good or bad. They feel no need of
-                elaborately explaining their joys and sorrows. Such experiences come with the day's work. "To-morrow to
-                fresh woods, and pastures new." The zest of life with them is emphatic. Their humor is fresh, unbounded,
-                sincere; there is no trace of cynicism. In folk literature we do not feel the presence of a "writer" who
-                is mightily concerned about maintaining his reputation for wisdom, originality, or style. Hence the
-                freedom from any note of straining after effect, of artificiality. In the midst of a life limited to
-                fundamental needs, their literature deals with fundamentals. On the whole, it was a literature for
-                entertainment. A more learned upper class may have concerned itself then about "problems" and
-                "purposes," as the whole world does now, but the literature of the folk had no such interests.</p>
+				<p style="line-height: 150%;"><span epub:type="bridgehead">The child's natural literature.</span> The world
+					has lost certain secrets as the price of an advancing civilization. It is a commonplace of observation
+					that no one can duplicate the success of Mother Goose, whether she be thought of as the maker of jingles
+					or the teller of tales. The conditions of modern life preclude the generally naïve attitude that
+					produced the folk rhymes, ballads, tales, proverbs, fables, and myths. The folk saw things simply and
+					directly. The complex, analytic, questioning mind is not yet, either in or out of stories. The motives
+					from which people act are to them plain and not mixed. Characters are good or bad. They feel no need of
+					elaborately explaining their joys and sorrows. Such experiences come with the day's work. "To-morrow to
+					fresh woods, and pastures new." The zest of life with them is emphatic. Their humor is fresh, unbounded,
+					sincere; there is no trace of cynicism. In folk literature we do not feel the presence of a "writer" who
+					is mightily concerned about maintaining his reputation for wisdom, originality, or style. Hence the
+					freedom from any note of straining after effect, of artificiality. In the midst of a life limited to
+					fundamental needs, their literature deals with fundamentals. On the whole, it was a literature for
+					entertainment. A more learned upper class may have concerned itself then about "problems" and
+					"purposes," as the whole world does now, but the literature of the folk had no such interests.</p>
 
-            <p id="p1">Without discussing the limits of the culture-epoch theory of human development as a complete
-                guide in education, it is clear that the young child passes through a period when his mind looks out
-                upon the world in a manner analogous to that of the folk as expressed in their literature. Quarrel with
-                the fact as we may, it still remains a fact that his nature craves these old stories and will not be
-                satisfied with something "just as good."</p>
+				<p id="p1">Without discussing the limits of the culture-epoch theory of human development as a complete
+					guide in education, it is clear that the young child passes through a period when his mind looks out
+					upon the world in a manner analogous to that of the folk as expressed in their literature. Quarrel with
+					the fact as we may, it still remains a fact that his nature craves these old stories and will not be
+					satisfied with something "just as good."</p>
 
-            <p style="width: 50%;"><span epub:type="bridgehead">The modern fairy story.</span> The advance of
-                civilization has been accompanied by a wistful longing for the simplicities left by the way. In some
-                periods this interest in the past has been more marked than in others. When the machinery of life has
-                weighed too heavily on the human spirit, men have turned for relief to a contemplation of the "good old
-                times" and have preached crusades of a "return to nature." <span epub:type="pagebreak" title="172"
-                                                                                 id="Page_172">172</span> Many modern
-                writers have tried to recapture some of the power of the folk tale by imitating its method. In many
-                cases they have had a fair degree of success: in one case, that of Hans Christian Andersen, the success
-                is admittedly very complete. As a rule, however, the sharpness of the sense of wonder has been blunted,
-                and many imitators of the old fairy tale succeed in keeping only the shell. Another class of modern
-                fantastic tale is that of the <span lang="fr" xml:lang="fr">pourquoi</span> story, which has the
-                explanation of something as its object. Such tales grow out of the attempt to use the charm of old
-                stories as a means of conveying instruction, somewhat after the method of those parents who covered up
-                our bitter medicine with some of our favorite jam. Even "Little Red Riding Hood," as we saw, has been
-                turned into a flower myth. So compelling is this pedagogical motive that so-called nature myths have
-                been invented or made from existing stories in great numbers. The practical results please many
-                teachers, but it may be questioned whether the gain is sufficient to compensate children for the
-                distorting results upon masterpieces.</p>
+				<p style="width: 50%;"><span epub:type="bridgehead">The modern fairy story.</span> The advance of
+					civilization has been accompanied by a wistful longing for the simplicities left by the way. In some
+					periods this interest in the past has been more marked than in others. When the machinery of life has
+					weighed too heavily on the human spirit, men have turned for relief to a contemplation of the "good old
+					times" and have preached crusades of a "return to nature." <span epub:type="pagebreak" title="172"
+																					 id="Page_172">172</span> Many modern
+					writers have tried to recapture some of the power of the folk tale by imitating its method. In many
+					cases they have had a fair degree of success: in one case, that of Hans Christian Andersen, the success
+					is admittedly very complete. As a rule, however, the sharpness of the sense of wonder has been blunted,
+					and many imitators of the old fairy tale succeed in keeping only the shell. Another class of modern
+					fantastic tale is that of the <span lang="fr" xml:lang="fr">pourquoi</span> story, which has the
+					explanation of something as its object. Such tales grow out of the attempt to use the charm of old
+					stories as a means of conveying instruction, somewhat after the method of those parents who covered up
+					our bitter medicine with some of our favorite jam. Even "Little Red Riding Hood," as we saw, has been
+					turned into a flower myth. So compelling is this pedagogical motive that so-called nature myths have
+					been invented or made from existing stories in great numbers. The practical results please many
+					teachers, but it may be questioned whether the gain is sufficient to compensate children for the
+					distorting results upon masterpieces.</p>
 
-            <p><span epub:type="bridgehead">Wide range of the modern fairy tale.</span> The bibliography will suggest
-                something of the treasures in the field of the modern fanciful story. From the delightful nonsense of
-                <cite>Alice in Wonderland</cite> and the "travelers' tales" of <cite>Baron Munchausen</cite> to the
-                profound seriousness of <cite>The King of the Golden River</cite> and <cite>Why the Chimes Rang</cite>
-                is a far cry. There are the rich fancies of Barrie and Maeterlinck, at the same time delicate as the
-                promises of spring and brilliant as the fruitions of summer. One may be blown away to the land of Oz, he
-                may lose his shadow with Peter Schlemihl, he may outdo the magic carpet with his Traveling-Cloak, he may
-                visit the courts of kings with his Wonderful Chair; Miss Muffet will invite us to her Christmas party,
-                Lemuel Gulliver will lead us to lands not marked in the school atlas; on every side is a world of
-                wonder.</p>
+				<p><span epub:type="bridgehead">Wide range of the modern fairy tale.</span> The bibliography will suggest
+					something of the treasures in the field of the modern fanciful story. From the delightful nonsense of
+					<cite>Alice in Wonderland</cite> and the "travelers' tales" of <cite>Baron Munchausen</cite> to the
+					profound seriousness of <cite>The King of the Golden River</cite> and <cite>Why the Chimes Rang</cite>
+					is a far cry. There are the rich fancies of Barrie and Maeterlinck, at the same time delicate as the
+					promises of spring and brilliant as the fruitions of summer. One may be blown away to the land of Oz, he
+					may lose his shadow with Peter Schlemihl, he may outdo the magic carpet with his Traveling-Cloak, he may
+					visit the courts of kings with his Wonderful Chair; Miss Muffet will invite us to her Christmas party,
+					Lemuel Gulliver will lead us to lands not marked in the school atlas; on every side is a world of
+					wonder.</p>
 
-            <p><span epub:type="bridgehead">Some qualities of these modern tales.</span> Every age produces after its
-                own fashion, and we must expect to find the modern user of the fairy-story method expressing through it
-                the qualities of his own outlook upon the world. Interest in the picturesque aspects of landscape will
-                be emphasized, as in the early portions of "The Story of Fairyfoot" and, with especial magnificence of
-                style, throughout <cite>The King of the Golden River</cite>. There will appear the saddened mood of the
-                modern in the face of the human miseries that make happiness a mockery, as in "The Happy Prince." The
-                destructive effects of the possessive instinct upon all that is finest in human nature is reflected in
-                "The Prince's Dream." That the most valuable efforts are often those performed with least spectacular
-                settings may be discerned in "The Knights of the Silver Shield," while the lesson of kindly helpfulness
-                is the burden of "Old Pipes and the Dryad." In many modern stories the reader is too much aware of the
-                conscious efforts of style and structure. The thoughtful child will sometimes be too much distressed by
-                the more somber modern story, and should not hear too many of the gloomy type.</p>
+				<p><span epub:type="bridgehead">Some qualities of these modern tales.</span> Every age produces after its
+					own fashion, and we must expect to find the modern user of the fairy-story method expressing through it
+					the qualities of his own outlook upon the world. Interest in the picturesque aspects of landscape will
+					be emphasized, as in the early portions of "The Story of Fairyfoot" and, with especial magnificence of
+					style, throughout <cite>The King of the Golden River</cite>. There will appear the saddened mood of the
+					modern in the face of the human miseries that make happiness a mockery, as in "The Happy Prince." The
+					destructive effects of the possessive instinct upon all that is finest in human nature is reflected in
+					"The Prince's Dream." That the most valuable efforts are often those performed with least spectacular
+					settings may be discerned in "The Knights of the Silver Shield," while the lesson of kindly helpfulness
+					is the burden of "Old Pipes and the Dryad." In many modern stories the reader is too much aware of the
+					conscious efforts of style and structure. The thoughtful child will sometimes be too much distressed by
+					the more somber modern story, and should not hear too many of the gloomy type.</p>
 
-            <p style="margin-top: 70px;"><span epub:type="bridgehead">Andersen the consummate master.</span> Hans
-                Christian Andersen is the acknowledged master of the modern story for children. What are the sources of
-                his success? Genius is always unexplainable except in terms of itself, but some things are clear. To
-                begin, he makes a mark—drives down a peg: "There came a soldier marching along <span
-                        epub:type="pagebreak" title="173" id="Page_173">173</span> the high road—<em>one, two! one,
-                    two!</em>" and you are off. No backing and filling, no jockeying for position, no elaborate setting
-                of the stage. The story's the thing! Next, the language is the language of common oral speech, free and
-                unrestrained. The rigid forms of the grammar are eschewed. There is no beating around the bush. Seeing
-                through the eyes of the child, he uses the language that is natural to such sight: "Aha! there sat the
-                dog with eyes as big as mill-wheels." In quick dramatic fashion the story unrolls before your vision:
-                "So the soldier cut the witch's head off. There she lay!" No agonizing over the cruelty of it, the lack
-                of sympathy. It is a joke after the child's own heart, and with a hearty laugh at this end to an
-                impostor, the listener is on with the story. The logic is the logic of childhood: "And everyone could
-                see she was a real princess, for she was so lovely." When Andersen deals with some of the deeper truths
-                of existence, as in "The Nightingale" or "The Ugly Duckling," he still manages to throw it all into the
-                form that is natural and convincing and simple to the child. He never mounts a pedestal and becomes a
-                grown-up philosopher. Perhaps Andersen's secret lay in the fact that some fairy godmother invested him
-                at birth with a power to see things so completely as a child sees them that he never questioned the
-                dignity of the method. In few of his stories is there any evidence of a constraint due to a conscious
-                attempt to write down to the understandings of children.</p>
-        </section>
-        <section id="pgepubid00501">
-            <h3>SUGGESTIONS FOR READING</h3>
+				<p style="margin-top: 70px;"><span epub:type="bridgehead">Andersen the consummate master.</span> Hans
+					Christian Andersen is the acknowledged master of the modern story for children. What are the sources of
+					his success? Genius is always unexplainable except in terms of itself, but some things are clear. To
+					begin, he makes a mark—drives down a peg: "There came a soldier marching along <span
+							epub:type="pagebreak" title="173" id="Page_173">173</span> the high road—<em>one, two! one,
+						two!</em>" and you are off. No backing and filling, no jockeying for position, no elaborate setting
+					of the stage. The story's the thing! Next, the language is the language of common oral speech, free and
+					unrestrained. The rigid forms of the grammar are eschewed. There is no beating around the bush. Seeing
+					through the eyes of the child, he uses the language that is natural to such sight: "Aha! there sat the
+					dog with eyes as big as mill-wheels." In quick dramatic fashion the story unrolls before your vision:
+					"So the soldier cut the witch's head off. There she lay!" No agonizing over the cruelty of it, the lack
+					of sympathy. It is a joke after the child's own heart, and with a hearty laugh at this end to an
+					impostor, the listener is on with the story. The logic is the logic of childhood: "And everyone could
+					see she was a real princess, for she was so lovely." When Andersen deals with some of the deeper truths
+					of existence, as in "The Nightingale" or "The Ugly Duckling," he still manages to throw it all into the
+					form that is natural and convincing and simple to the child. He never mounts a pedestal and becomes a
+					grown-up philosopher. Perhaps Andersen's secret lay in the fact that some fairy godmother invested him
+					at birth with a power to see things so completely as a child sees them that he never questioned the
+					dignity of the method. In few of his stories is there any evidence of a constraint due to a conscious
+					attempt to write down to the understandings of children.</p>
+			</section>
+			<section id="pgepubid00501">
+				<h3>SUGGESTIONS FOR READING</h3>
 
-            <p>The most valuable discussion of the difficulties to be mastered in writing the literary fairy tale, and
-                the story of the only very complete mastery yet made, will be found in the account of Hans Christian
-                Andersen in <cite>Eminent Authors of the Nineteenth Century</cite>, by Georg Brandes. Now and then hints
-                of importance on such stories and their value for children may be found in biographies of the more
-                prominent writers represented in the section and mentioned in the bibliography, and in magazine articles
-                and reviews. These latter may be located by use of the periodical indexes found in most libraries. For
-                the proper attitude which the schools should have toward fiction and fanciful writing in general,
-                nothing could be better than two lectures on "Children's Reading," in <cite>On the Art of Reading</cite>,
-                by Sir Arthur Quiller-Couch.</p>
-        </section>
-        <section id="pgepubid00503">
-            <div class="center"><span epub:type="pagebreak" title="174" id="Page_174">174</span>
+				<p>The most valuable discussion of the difficulties to be mastered in writing the literary fairy tale, and
+					the story of the only very complete mastery yet made, will be found in the account of Hans Christian
+					Andersen in <cite>Eminent Authors of the Nineteenth Century</cite>, by Georg Brandes. Now and then hints
+					of importance on such stories and their value for children may be found in biographies of the more
+					prominent writers represented in the section and mentioned in the bibliography, and in magazine articles
+					and reviews. These latter may be located by use of the periodical indexes found in most libraries. For
+					the proper attitude which the schools should have toward fiction and fanciful writing in general,
+					nothing could be better than two lectures on "Children's Reading," in <cite>On the Art of Reading</cite>,
+					by Sir Arthur Quiller-Couch.</p>
+			</section>
+			<section id="pgepubid00503">
+				<div class="center"><span epub:type="pagebreak" title="174" id="Page_174">174</span>
 
-                <div style="text-align: right">
-                    <div>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</div>
-                    <div>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</div>
-                    <div>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</div>
-                    <div>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</div>
-                    <div>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</div>
-                    <div>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</div>
-                </div>
+					<div style="text-align: right">
+						<div>Alden, Raymond Macdonald, <cite>Why the Chimes Rang, and Other Stories</cite>.</div>
+						<div>Andersen, Hans Christian, <cite>Fairy Tales</cite>.</div>
+						<div>Barrie, Sir James Matthew, <cite>The Little White Bird</cite>. [Peter Pan.]</div>
+						<div>Baum, L. Frank, <cite>The Wizard of Oz</cite>.</div>
+						<div>Beston, H. B., <cite>The Firelight Fairy Book</cite>.</div>
+						<div>Brown, Abbie Farwell, <cite>The Lonesomest Doll</cite>.</div>
+					</div>
 
-            </div>
-            <h3>190</h3>
+				</div>
+				<h3>190</h3>
 
-            <p class="intro">The rabbis of old were good story-tellers. They were essentially teachers and they
-                understood that the best sermon is a story. "They were fond of the parable, the anecdote, the apt
-                illustration, and their legends that have been transmitted to us, all aglow with the light and life of
-                the Orient, possess perennial charm." It is possible to find in rabbinical sources a large number of
-                brief stories that have the power of entertaining as well as of emphasizing some qualities of character
-                that are important in all ages. The plan of this book does not include the wonderful stories of the Old
-                Testament, which are easy of access to any teacher and may be used as experience directs. The Hebrew
-                stories following correspond very nearly to the folk anecdote and are placed in this section because of
-                their literary form.</p>
+				<p class="intro">The rabbis of old were good story-tellers. They were essentially teachers and they
+					understood that the best sermon is a story. "They were fond of the parable, the anecdote, the apt
+					illustration, and their legends that have been transmitted to us, all aglow with the light and life of
+					the Orient, possess perennial charm." It is possible to find in rabbinical sources a large number of
+					brief stories that have the power of entertaining as well as of emphasizing some qualities of character
+					that are important in all ages. The plan of this book does not include the wonderful stories of the Old
+					Testament, which are easy of access to any teacher and may be used as experience directs. The Hebrew
+					stories following correspond very nearly to the folk anecdote and are placed in this section because of
+					their literary form.</p>
 
-            <p class="intro">Dr. Abram S. Isaacs (1851—) is a professor in New York University and is also a rabbi. The
-                selection that follows is from his <cite>Stories from the Rabbis</cite>. (Copyrighted. Used by special
-                permission of The Bloch Publishing Company, New York.) Taking advantage of the popular superstition that
-                a four-leaved clover is a sign of good luck, Dr. Isaacs has grouped together four parable-like stories,
-                each of which deals with wealth as a subject. The editors are responsible for the special titles given.
-                The messages of these stories might be summarized as follows: If you would be lucky, (1) be honest
-                because it is right to be honest, (2) value good friends more highly than gold, (3) let love accompany
-                each gift of charity, and (4) use common sense in your business ventures.</p>
-            <section id="pgepubid00504">
-                <h4>A FOUR-LEAVED CLOVER</h4>
+				<p class="intro">Dr. Abram S. Isaacs (1851—) is a professor in New York University and is also a rabbi. The
+					selection that follows is from his <cite>Stories from the Rabbis</cite>. (Copyrighted. Used by special
+					permission of The Bloch Publishing Company, New York.) Taking advantage of the popular superstition that
+					a four-leaved clover is a sign of good luck, Dr. Isaacs has grouped together four parable-like stories,
+					each of which deals with wealth as a subject. The editors are responsible for the special titles given.
+					The messages of these stories might be summarized as follows: If you would be lucky, (1) be honest
+					because it is right to be honest, (2) value good friends more highly than gold, (3) let love accompany
+					each gift of charity, and (4) use common sense in your business ventures.</p>
+				<section id="pgepubid00504">
+					<h4>A FOUR-LEAVED CLOVER</h4>
 
-                <div epub:type="z3998:author">ABRAM S. ISAACS</div>
-                <section id="pgepubid99001">
-                    <h5>1. The Rabbi and The Diadem</h5>
+					<div epub:type="z3998:author">ABRAM S. ISAACS</div>
+					<section id="pgepubid99001">
+						<h5>1. The Rabbi and The Diadem</h5>
 
-                    <p>Great was the alarm in the palace of Rome, which soon spread throughout the entire city. The
-                        Empress had lost her costly diadem, and it could not be found. They searched in every direction,
-                        but it was all in vain. Half distracted, for the mishap boded no good to her or her house, the
-                        Empress redoubled her exertions to regain her precious possession, but without result. As a last
-                        resource it was proclaimed in the public streets:</p>
+						<p>Great was the alarm in the palace of Rome, which soon spread throughout the entire city. The
+							Empress had lost her costly diadem, and it could not be found. They searched in every direction,
+							but it was all in vain. Half distracted, for the mishap boded no good to her or her house, the
+							Empress redoubled her exertions to regain her precious possession, but without result. As a last
+							resource it was proclaimed in the public streets:</p>
 
-                    <p>"The Empress has lost a priceless diadem. Whoever restores it within thirty days shall receive a
-                        princely reward. But he who delays, and brings it after thirty days, shall lose his head."</p>
+						<p>"The Empress has lost a priceless diadem. Whoever restores it within thirty days shall receive a
+							princely reward. But he who delays, and brings it after thirty days, shall lose his head."</p>
 
-                    <p>In those times all nationalities flocked toward Rome; all classes and creeds could be met in its
-                        stately halls and crowded thoroughfares. Among the rest was a rabbi, a learnèd sage from the
-                        East, who loved goodness and lived a righteous life, in the stir and turmoil of the Western
-                        world. It chanced one night as he was strolling up and down, in busy meditation, beneath the
-                        clear, moonlit sky, he saw the diadem sparkling at his feet. He seized it quickly, brought it to
-                        his dwelling, where he guarded it carefully until the thirty days had expired, when he resolved
-                        to return it to the owner.</p>
+						<p>In those times all nationalities flocked toward Rome; all classes and creeds could be met in its
+							stately halls and crowded thoroughfares. Among the rest was a rabbi, a learnèd sage from the
+							East, who loved goodness and lived a righteous life, in the stir and turmoil of the Western
+							world. It chanced one night as he was strolling up and down, in busy meditation, beneath the
+							clear, moonlit sky, he saw the diadem sparkling at his feet. He seized it quickly, brought it to
+							his dwelling, where he guarded it carefully until the thirty days had expired, when he resolved
+							to return it to the owner.</p>
 
-                    <p>He proceeded to the palace, and, undismayed at sight of long lines of soldiery and officials,
-                        asked for an audience with the Empress.</p>
+						<p>He proceeded to the palace, and, undismayed at sight of long lines of soldiery and officials,
+							asked for an audience with the Empress.</p>
 
-                    <p>"What dost thou mean by this?" she inquired, when he told her his story and gave her the diadem.
-                        "Why didst thou delay until this hour? Dost thou know the penalty? Thy head must be
-                        forfeited."</p>
+						<p>"What dost thou mean by this?" she inquired, when he told her his story and gave her the diadem.
+							"Why didst thou delay until this hour? Dost thou know the penalty? Thy head must be
+							forfeited."</p>
 
-                    <p>"I delayed until now," the rabbi answered calmly, "so that thou mightst know that I return thy
-                        diadem, not for the sake of the reward, still less out of fear of punishment; but solely to
-                        comply <span epub:type="pagebreak" title="175" id="Page_175">175</span> with the Divine command
-                        not to withhold from another the property which belongs to him."</p>
+						<p>"I delayed until now," the rabbi answered calmly, "so that thou mightst know that I return thy
+							diadem, not for the sake of the reward, still less out of fear of punishment; but solely to
+							comply <span epub:type="pagebreak" title="175" id="Page_175">175</span> with the Divine command
+							not to withhold from another the property which belongs to him."</p>
 
-                    <p>"Blessed be thy God!" the Empress answered, and dismissed the rabbi without further reproof; for
-                        had he not done right for right's sake?</p>
-                </section>
-                <section id="pgepubid99002">
-                    <h5>2. Friendship</h5>
+						<p>"Blessed be thy God!" the Empress answered, and dismissed the rabbi without further reproof; for
+							had he not done right for right's sake?</p>
+					</section>
+					<section id="pgepubid99002">
+						<h5>2. Friendship</h5>
 
-                    <p>A certain father was doubly blessed—he had reached a good old age, and had ten sons. One day he
-                        called them to his side, and after repeated expressions of affection, told them that he had
-                        acquired a fortune by industry and economy, and would give them one hundred gold pieces each
-                        before his death, so that they might begin business for themselves, and not be obliged to wait
-                        until he had passed away. It happened, however, that, soon after, he lost a portion of his
-                        property, much to his regret, and had only nine hundred and fifty gold pieces left. So he gave
-                        one hundred to each of his nine sons. When his youngest son, whom he loved most of all, asked
-                        naturally what was to be his share, the father replied:</p>
+						<p>A certain father was doubly blessed—he had reached a good old age, and had ten sons. One day he
+							called them to his side, and after repeated expressions of affection, told them that he had
+							acquired a fortune by industry and economy, and would give them one hundred gold pieces each
+							before his death, so that they might begin business for themselves, and not be obliged to wait
+							until he had passed away. It happened, however, that, soon after, he lost a portion of his
+							property, much to his regret, and had only nine hundred and fifty gold pieces left. So he gave
+							one hundred to each of his nine sons. When his youngest son, whom he loved most of all, asked
+							naturally what was to be his share, the father replied:</p>
 
-                    <p>"My son, I promised to give each of thy brothers one hundred gold pieces. I shall keep my word to
-                        them. I have fifty left. Thirty I shall reserve for my funeral expenses, and twenty will be thy
-                        portion. But understand this—I possess, in addition, ten friends, whom I give over to thee as
-                        compensation for the loss of the eighty gold pieces. Believe me, they are worth more than all
-                        the gold and silver."</p>
+						<p>"My son, I promised to give each of thy brothers one hundred gold pieces. I shall keep my word to
+							them. I have fifty left. Thirty I shall reserve for my funeral expenses, and twenty will be thy
+							portion. But understand this—I possess, in addition, ten friends, whom I give over to thee as
+							compensation for the loss of the eighty gold pieces. Believe me, they are worth more than all
+							the gold and silver."</p>
 
-                    <p>The youth tenderly embraced his parent, and assured him that he was content, such was his
-                        confidence and affection. In a few days the father died, and the nine sons took their money, and
-                        without a thought of their youngest brother and the small amount he had received, followed each
-                        his own fancy. But the youngest son, although his portion was the least, resolved to heed his
-                        father's words, and hold fast to the ten friends. When a short time had elapsed he prepared a
-                        simple feast, went to the ten friends of his father, and said to them: "My father, almost in his
-                        last words, asked me to keep you, his friends, in honor. Before I leave this place to seek my
-                        fortune elsewhere, will you not share with me a farewell meal, and aid me thus to comply with
-                        his dying request?"</p>
+						<p>The youth tenderly embraced his parent, and assured him that he was content, such was his
+							confidence and affection. In a few days the father died, and the nine sons took their money, and
+							without a thought of their youngest brother and the small amount he had received, followed each
+							his own fancy. But the youngest son, although his portion was the least, resolved to heed his
+							father's words, and hold fast to the ten friends. When a short time had elapsed he prepared a
+							simple feast, went to the ten friends of his father, and said to them: "My father, almost in his
+							last words, asked me to keep you, his friends, in honor. Before I leave this place to seek my
+							fortune elsewhere, will you not share with me a farewell meal, and aid me thus to comply with
+							his dying request?"</p>
 
-                    <p>The ten friends, stirred by his earnestness and cordiality, accepted his invitation with
-                        pleasure, and enjoyed the repast, although they were used to richer fare. When the moment for
-                        parting arrived, however, one of them rose and spoke: "My friends, it seems to me that of all
-                        the sons of our dear friend that has gone, the youngest alone is mindful of his father's
-                        friendship for us, and reverences his memory. Let us, then, be true friends to him, for his own
-                        sake as well, and provide for him a generous sum, that he may begin business here, and not be
-                        forced to live among strangers."</p>
+						<p>The ten friends, stirred by his earnestness and cordiality, accepted his invitation with
+							pleasure, and enjoyed the repast, although they were used to richer fare. When the moment for
+							parting arrived, however, one of them rose and spoke: "My friends, it seems to me that of all
+							the sons of our dear friend that has gone, the youngest alone is mindful of his father's
+							friendship for us, and reverences his memory. Let us, then, be true friends to him, for his own
+							sake as well, and provide for him a generous sum, that he may begin business here, and not be
+							forced to live among strangers."</p>
 
-                    <p>The proposal, so unexpected and yet so merited, was received with applause. The youth, proud of
-                        their friendship, soon became a prosperous merchant, who never forgot that faithful friends were
-                        more valuable than gold or silver, and left an honored name to his descendants.</p>
-                </section>
-                <section id="pgepubid99003">
-                    <h5>3. True Charity</h5>
+						<p>The proposal, so unexpected and yet so merited, was received with applause. The youth, proud of
+							their friendship, soon became a prosperous merchant, who never forgot that faithful friends were
+							more valuable than gold or silver, and left an honored name to his descendants.</p>
+					</section>
+					<section id="pgepubid99003">
+						<h5>3. True Charity</h5>
 
-                    <p>There lived once a very wealthy man, who cared little for money, except as <span
-                            epub:type="pagebreak" title="176" id="Page_176">176</span> a means for helping others. He
-                        used to adopt a peculiar plan in his method of charitable relief. He had three boxes made for
-                        the three different classes of people whom he desired to assist. In one box he put gold pieces,
-                        which he distributed among artists and scholars, for he honored knowledge and learning as the
-                        highest possession. In the second box he placed silver pieces for widows and orphans, for whom
-                        his sympathies were readily awakened. In the third were copper coins for the general poor and
-                        beggars—no one was turned away from his dwelling without some gift, however small.</p>
+						<p>There lived once a very wealthy man, who cared little for money, except as <span
+								epub:type="pagebreak" title="176" id="Page_176">176</span> a means for helping others. He
+							used to adopt a peculiar plan in his method of charitable relief. He had three boxes made for
+							the three different classes of people whom he desired to assist. In one box he put gold pieces,
+							which he distributed among artists and scholars, for he honored knowledge and learning as the
+							highest possession. In the second box he placed silver pieces for widows and orphans, for whom
+							his sympathies were readily awakened. In the third were copper coins for the general poor and
+							beggars—no one was turned away from his dwelling without some gift, however small.</p>
 
-                    <p>That the man was beloved by all, need hardly be said. He rejoiced that he was enabled to do so
-                        much good, retained his modest bearing, and continued to regard his wealth as only an incentive
-                        to promote the happiness of mankind, without distinction of creed or nationality. Unhappily, his
-                        wife was just the opposite. She rarely gave food or raiment to the poor, and felt angry at her
-                        husband's liberality, which she considered shameless extravagance.</p>
+						<p>That the man was beloved by all, need hardly be said. He rejoiced that he was enabled to do so
+							much good, retained his modest bearing, and continued to regard his wealth as only an incentive
+							to promote the happiness of mankind, without distinction of creed or nationality. Unhappily, his
+							wife was just the opposite. She rarely gave food or raiment to the poor, and felt angry at her
+							husband's liberality, which she considered shameless extravagance.</p>
 
-                    <p>The day came when in the pressure of various duties he had to leave his house, and could not
-                        return until the morrow. Unaware of his sudden departure, the poor knocked at the door as usual
-                        for his kind gifts; but when they found him absent, they were about to go away or remain in the
-                        street, being terrified at the thought of asking his wife for alms. Vexed at their conduct, she
-                        exclaimed impetuously: "I will give to the poor according to my husband's method."</p>
+						<p>The day came when in the pressure of various duties he had to leave his house, and could not
+							return until the morrow. Unaware of his sudden departure, the poor knocked at the door as usual
+							for his kind gifts; but when they found him absent, they were about to go away or remain in the
+							street, being terrified at the thought of asking his wife for alms. Vexed at their conduct, she
+							exclaimed impetuously: "I will give to the poor according to my husband's method."</p>
 
-                    <p>She seized the keys of the boxes, and first opened the box of gold. But how great was her terror
-                        when she gazed at its contents—frogs jumping here and there. Then she went to the silver box,
-                        and it was full of ants. With troubled heart, she opened the copper box, and it was crowded with
-                        creeping bugs. Loud then were her complaints, and bitter her tears, at the deception, and she
-                        kept her room until her husband returned.</p>
+						<p>She seized the keys of the boxes, and first opened the box of gold. But how great was her terror
+							when she gazed at its contents—frogs jumping here and there. Then she went to the silver box,
+							and it was full of ants. With troubled heart, she opened the copper box, and it was crowded with
+							creeping bugs. Loud then were her complaints, and bitter her tears, at the deception, and she
+							kept her room until her husband returned.</p>
 
-                    <p>No sooner did the man enter the room, annoyed that so many poor people were kept waiting outside,
-                        than she asked him: "Why did you give me keys to boxes of frogs, ants, and bugs, instead of
-                        gold, silver, and copper? Was it right thus to deceive your wife, and disappoint the poor?"</p>
+						<p>No sooner did the man enter the room, annoyed that so many poor people were kept waiting outside,
+							than she asked him: "Why did you give me keys to boxes of frogs, ants, and bugs, instead of
+							gold, silver, and copper? Was it right thus to deceive your wife, and disappoint the poor?"</p>
 
-                    <p>"Not so," rejoined her husband. "The mistake must be yours, not mine. I have given you the right
-                        keys. I do not know what you have done with them. Come, let me have them. I am guiltless of any
-                        deception." He took the keys, quickly opened the boxes, and found the coins as he had left them.
-                        "Ah, dear wife," said he, when she had regained her composure, "your heart, I fear, was not in
-                        the gift, when you wished to give to the poor. It is the feeling that prompts us to aid, not the
-                        mere money, which is the chief thing after all."</p>
+						<p>"Not so," rejoined her husband. "The mistake must be yours, not mine. I have given you the right
+							keys. I do not know what you have done with them. Come, let me have them. I am guiltless of any
+							deception." He took the keys, quickly opened the boxes, and found the coins as he had left them.
+							"Ah, dear wife," said he, when she had regained her composure, "your heart, I fear, was not in
+							the gift, when you wished to give to the poor. It is the feeling that prompts us to aid, not the
+							mere money, which is the chief thing after all."</p>
 
-                    <p>And ever after, her heart was changed. Her gifts blessed the poor of the land, and aroused their
-                        love and reverence.</p>
-                </section>
-                <section id="pgepubid99004">
-                    <h5>4. An Eastern Garden</h5>
+						<p>And ever after, her heart was changed. Her gifts blessed the poor of the land, and aroused their
+							love and reverence.</p>
+					</section>
+					<section id="pgepubid99004">
+						<h5>4. An Eastern Garden</h5>
 
-                    <p>In an Eastern city a lovely garden flourished, whose beauty and luxuriance awakened much
-                        admiration. It was the owner's greatest pleasure to watch its growth, as leaf, flower, and tree
-                        seemed daily to unfold to brighter bloom. One morning, while taking his usual stroll through the
-                        well-kept paths, <span epub:type="pagebreak" title="177" id="Page_177">177</span> he was
-                        surprised to find that some blossoms were picked to pieces. The next day he noticed more signs
-                        of mischief, and rendered thus more observant he gave himself no rest until he had discovered
-                        the culprit. It was a little trembling bird, whom he managed to capture, and was about to kill
-                        in his anger, when it exclaimed: "Do not kill me, I beg you, kind sir. I am only a wee, tiny
-                        bird. My flesh is too little to satisfy you. I would not furnish one-hundredth of a meal to a
-                        man of your size. Let me free without any hesitation, and I shall teach you something that will
-                        be of much use to you and your friends."</p>
+						<p>In an Eastern city a lovely garden flourished, whose beauty and luxuriance awakened much
+							admiration. It was the owner's greatest pleasure to watch its growth, as leaf, flower, and tree
+							seemed daily to unfold to brighter bloom. One morning, while taking his usual stroll through the
+							well-kept paths, <span epub:type="pagebreak" title="177" id="Page_177">177</span> he was
+							surprised to find that some blossoms were picked to pieces. The next day he noticed more signs
+							of mischief, and rendered thus more observant he gave himself no rest until he had discovered
+							the culprit. It was a little trembling bird, whom he managed to capture, and was about to kill
+							in his anger, when it exclaimed: "Do not kill me, I beg you, kind sir. I am only a wee, tiny
+							bird. My flesh is too little to satisfy you. I would not furnish one-hundredth of a meal to a
+							man of your size. Let me free without any hesitation, and I shall teach you something that will
+							be of much use to you and your friends."</p>
 
-                    <p>"I would dearly like to put an end to you," replied the man, "for you were rapidly putting an end
-                        to my garden. It is a good thing to rid the world of such annoyances. But as I am not
-                        revengeful, and am always glad to learn something useful, I shall set you free this time." And
-                        he opened his hand to give the bird more air.</p>
+						<p>"I would dearly like to put an end to you," replied the man, "for you were rapidly putting an end
+							to my garden. It is a good thing to rid the world of such annoyances. But as I am not
+							revengeful, and am always glad to learn something useful, I shall set you free this time." And
+							he opened his hand to give the bird more air.</p>
 
-                    <p>"Attention!" cried the bird. "Here are three rules which should guide you through life, and if
-                        you observe them you will find your path made easier: Do not cry over spilt milk; do not desire
-                        what is unattainable, and do not believe what is impossible."</p>
+						<p>"Attention!" cried the bird. "Here are three rules which should guide you through life, and if
+							you observe them you will find your path made easier: Do not cry over spilt milk; do not desire
+							what is unattainable, and do not believe what is impossible."</p>
 
-                    <p>The man was satisfied with the advice, and let the bird escape; but it had scarcely regained its
-                        liberty, when, from a high tree opposite, it exclaimed:</p>
+						<p>The man was satisfied with the advice, and let the bird escape; but it had scarcely regained its
+							liberty, when, from a high tree opposite, it exclaimed:</p>
 
-                    <p>"What a silly man! The idea of letting me escape! If you only knew what you have lost! But it is
-                        too late now."</p>
+						<p>"What a silly man! The idea of letting me escape! If you only knew what you have lost! But it is
+							too late now."</p>
 
-                    <p>"What have I lost?" the man asked, angrily.</p>
+						<p>"What have I lost?" the man asked, angrily.</p>
 
-                    <p>"Why, if you had killed me, as you intended, you would have found inside of me a huge pearl, as
-                        large as a goose's egg, and you would have been a wealthy man forever."</p>
+						<p>"Why, if you had killed me, as you intended, you would have found inside of me a huge pearl, as
+							large as a goose's egg, and you would have been a wealthy man forever."</p>
 
-                    <p>"Dear little bird," the man said in his blandest tones; "sweet little bird, I will not harm you.
-                        Only come down to me, and I will treat you as if you were my own child, and give you fruit and
-                        flowers all day. I assure you of this most sacredly."</p>
+						<p>"Dear little bird," the man said in his blandest tones; "sweet little bird, I will not harm you.
+							Only come down to me, and I will treat you as if you were my own child, and give you fruit and
+							flowers all day. I assure you of this most sacredly."</p>
 
-                    <p>But the bird shook its head sagely, and replied: "What a silly man, to forget so soon the advice
-                        which was given him in all seriousness. I told you not to cry over spilt milk, and here you are,
-                        worrying over what has happened. I urged you not to desire the unattainable, and now you wish to
-                        capture me again. And, finally, I asked you not to believe what is impossible, and you are
-                        rashly imagining that I have a huge pearl inside of me, when a goose's egg is larger than my
-                        whole body. You ought to learn your lessons better in the future, if you would become wise,"
-                        added the bird, as with another twist of its head it flew away, and was lost in the
-                        distance.</p>
-                </section>
-            </section>
-        </section>
-    </section>
-</div>
+						<p>But the bird shook its head sagely, and replied: "What a silly man, to forget so soon the advice
+							which was given him in all seriousness. I told you not to cry over spilt milk, and here you are,
+							worrying over what has happened. I urged you not to desire the unattainable, and now you wish to
+							capture me again. And, finally, I asked you not to believe what is impossible, and you are
+							rashly imagining that I have a huge pearl inside of me, when a goose's egg is larger than my
+							whole body. You ought to learn your lessons better in the future, if you would become wise,"
+							added the bird, as with another twist of its head it flew away, and was lost in the
+							distance.</p>
+					</section>
+				</section>
+			</section>
+		</section>
+	</div>
 
 </body>
 
