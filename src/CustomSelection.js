@@ -3,7 +3,6 @@
 
 	// Default configuration
 	var settings, defaults = {
-		markerClass: 'marker',
 		holdThreshold: 4,
 		holdTimeout: 500,
 		useMarkers: ON_TOUCH_DEVICES,
@@ -38,8 +37,8 @@
 		} else {
 			enableMouseSelectionFor(this);
 		}
-		startMarker = createMarker(settings.markerClass);
-		endMarker = createMarker(settings.markerClass);
+		startMarker = createMarkerInside(this);
+		endMarker = createMarkerInside(this);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
@@ -210,7 +209,7 @@
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			mark(eventAnchor, lastPoint, getMarkerToMove(jqueryEvent));
-			makeSelection();
+			makeSelectionOn();
 		});
 	}
 
@@ -253,12 +252,11 @@
 
 	function tryToInitNewSelection(e) {
 		var element = getTargetElementFromPointerEvent(e);
-
 		if (!isMarker(element)) {
 			var point = getTouchPoint(e, {shift: false});
 			clearSelection();
-			wrapWithMarkersWordAtPoint(element, point);
-			makeSelection();
+			var range = getRangeWrappingWordAtPoint(element, point);
+			makeSelectionOn(range);
 			rejectTouchEnd = true;
 		}
 	}
@@ -276,11 +274,11 @@
 
 //	-- Creating Selection
 
-	function makeSelection() {
-		var range = createSelectionRange();
-		if (hasRangeChanged(range)) {
+	function makeSelectionOn(range) {
+		// TODO: refactor caching ranges
+		//if (hasRangeChanged(range)) {
 			drawSelectionRange(range);
-		}
+		//}
 	}
 
 	function drawSelectionRange(range) {
@@ -357,10 +355,12 @@
 		return element;
 	}
 
-	function createMarker(kind) {
-		var span = contextDocument.createElement('span');
-		span.setAttribute('class', kind);
-		return span;
+	function createMarkerInside($parent) {
+		var element = contextDocument.createElement('div');
+		element.setAttribute('class', 'jcs-marker');
+		element.setAttribute('style', 'position: absolute;');
+		$parent.append(element);
+		return element;
 	}
 
 	function hideMarkers() {
@@ -377,46 +377,42 @@
 
 //	-- Extracting a word under the pointer
 
-	function wrapWithMarkersWordAtPoint(element, point) {
+	function getRangeWrappingWordAtPoint(element, point) {
+		window.initCanvas();
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			textNode = trimTextNodeWhileContainsPoint(textNode, point);
-			putMarkerBeforeWhitespaceOnLeftOf(textNode, startMarker);
-			putMarkerBeforeWhitespaceOnRightOf(textNode, endMarker);
-			textNode.parentNode.normalize();
+			window.drawPoint(point, 'orange');
+			var pointerRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			window.drawRange(pointerRange, 'red');
+			expandRangeToStartAfterTheWhitespaceOnLeft(pointerRange);
+			expandRangeToEndBeforeTheWhitespaceOnRight(pointerRange);
+			window.drawRange(pointerRange, 'blue');
 		}
 	}
 
-	function putMarkerBeforeWhitespaceOnLeftOf(textNode, marker) {
+	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
 		// searching space backwards
-		var node = textNode;
-		while (!nodeEndsWith(node, WHITESPACE)) {
-			if (node.data.length > 1) {
-				node = removeLastLetter(node);
-			} else if (node.previousSibling && nodeIsText(node.previousSibling)) {
-				node = node.previousSibling;
-			} else {
-				putMarkerBefore(node, marker);
+		while (!rangeStartsWith(range, WHITESPACE)) {
+			if (range.startOffset < 1) {
 				return;
+			} else {
+				range.setStart(range.startContainer, range.startOffset - 1);
 			}
 		}
-		putMarkerAfter(node, marker);
+		range.setStart(range.startContainer, range.startOffset + 1);
 	}
 
-	function putMarkerBeforeWhitespaceOnRightOf(textNode, marker) {
+	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
 		// searching space forwards
-		var node = textNode;
-		while (!nodeStartsWith(node, WHITESPACE)) {
-			if (node.length > 1) {
-				node = removeFirstLetter(node);
-			} else if (node.nextSibling && nodeIsText(node.nextSibling)) {
-				node = node.nextSibling;
-			} else {
-				putMarkerAfter(node, marker);
+		var maxIndex = Math.max(range.endContainer.data.length - 1, 0);
+		while (!rangeEndsWith(range, WHITESPACE)) {
+			if (range.endOffset >= maxIndex) {
 				return;
+			} else {
+				range.setEnd(range.endContainer, range.endOffset + 1);
 			}
 		}
-		putMarkerBefore(node, marker);
+		range.setEnd(range.endContainer, range.endOffset - 1);
 	}
 
 	function removeLastLetter(textNode) {
@@ -428,12 +424,13 @@
 		return textNode.splitText(1);
 	}
 
-	function nodeStartsWith(node, letter) {
-		return node.data[0] === letter;
+	function rangeStartsWith(range, letter) {
+		return range.toString()[0] === letter;
 	}
 
-	function nodeEndsWith(node, letter) {
-		return node.data[node.length - 1] === letter;
+	function rangeEndsWith(range, letter) {
+		var stringified = range.toString();
+		return stringified[stringified.length - 1] === letter;
 	}
 
 //	-- Marking
@@ -441,7 +438,7 @@
 	function mark(el, point, marker) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(el, point)) {
-			textNode = trimTextNodeWhileContainsPoint(textNode, point);
+			textNode = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
 			putMarkerBefore(textNode, marker);
 		} else if (textNode = getClosestTextNodeFromEl(el, point)) {
 			putMarkerAfter(textNode, marker);
@@ -451,15 +448,25 @@
 		marker.parentNode.normalize();
 	}
 
-	function trimTextNodeWhileContainsPoint(textNode, point) {
-		while (textNode.length > 1) {
-			var trimPosition = textNode.length >> 1;
-			var subNode = textNode.splitText(trimPosition);
-			if (nodeContainsPoint(subNode, point)) {
-				textNode = subNode;
+	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
+		var range = contextDocument.createRange();
+		range.selectNode(textNode);
+		var startIndex = 0;
+		var endIndex = range.toString().length;
+		while (startIndex < endIndex) {
+			var middle = (startIndex + endIndex) >> 1;
+			range.setStart(textNode, startIndex);
+			range.setEnd(textNode, middle);
+			if (rangeContainsPoint(range, point)) {
+				endIndex = middle;
+			} else {
+				startIndex = middle + 1;
+				range.setStart(textNode, startIndex);
+				range.setEnd(textNode, endIndex);
 			}
+			window.drawRange(range, 'lightgreen');
 		}
-		return textNode;
+		return range;
 	}
 
 	function putMarkerBefore(node, marker) {
@@ -492,6 +499,16 @@
 			}
 		}
 		return null;
+	}
+
+	function rangeContainsPoint(range, point) {
+		var rects = range.getClientRects();
+		for (var j = 0, rect; rect = rects[j++];) {
+			if (rectContainsPoint(rect, point)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	function nodeContainsPoint(node, point) {
@@ -609,7 +626,7 @@
 				clientX: clientRect.right - 1,
 				clientY: clientRect.bottom - 1
 			};
-			return trimTextNodeWhileContainsPoint(node, point);
+			return getFromTextNodeMinimalRangeContainingPoint(node, point);
 		}
 	}
 
