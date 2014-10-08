@@ -386,7 +386,7 @@
 			window.drawRange(pointerRange, 'red');
 			expandRangeToStartAfterTheWhitespaceOnLeft(pointerRange);
 			expandRangeToEndBeforeTheWhitespaceOnRight(pointerRange);
-			window.drawRange(pointerRange, 'blue');
+			window.drawRange(pointerRange, 'rgba(0,0,255,0.3)');
 		}
 	}
 
@@ -450,13 +450,12 @@
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
 		var range = contextDocument.createRange();
-		range.selectNode(textNode);
 		var startIndex = 0;
-		var endIndex = range.toString().length;
+		var endIndex = textNode.data.length;
 		while (startIndex < endIndex) {
 			var middle = (startIndex + endIndex) >> 1;
 			range.setStart(textNode, startIndex);
-			range.setEnd(textNode, middle);
+			range.setEnd(textNode, middle + 1);
 			if (rangeContainsPoint(range, point)) {
 				endIndex = middle;
 			} else {
@@ -464,7 +463,11 @@
 				range.setStart(textNode, startIndex);
 				range.setEnd(textNode, endIndex);
 			}
-			window.drawRange(range, 'lightgreen');
+			if (rangeContainsPoint(range, point)) {
+				window.drawRange(range, 'lightgreen');
+			} else {
+				window.drawRange(range, 'red');
+			}
 		}
 		return range;
 	}
@@ -528,9 +531,18 @@
 	}
 
 	function rectContainsPoint(rect, point) {
-		var x = isAppleDevice ? point.pageX : point.clientX;
+		return rectContainsPointVertically(rect, point) &&
+		rectOrItsBoundsContainPointHorizontally(rect, point);
+	}
+
+	function rectContainsPointVertically(rect, point) {
 		var y = isAppleDevice ? point.pageY : point.clientY;
-		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
+		return y > rect.top && y < rect.bottom;
+	}
+
+	function rectOrItsBoundsContainPointHorizontally(rect, point) {
+		var x = isAppleDevice ? point.pageX : point.clientX;
+		return x >= rect.left && x <= rect.right;
 	}
 
 	function nodeIsText(node) {
