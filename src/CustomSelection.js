@@ -29,27 +29,18 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
+		if (!shouldLeaveNativeSelection()) {
 
-		if (shouldLeaveNativeSelection()) {
-			return;
+			useContextOf(this);
+			frameRequester = new CustomSelection.Lib.FrameRequester();
+			selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
+				$element: this,
+				contextWindow: contextWindow,
+				contextDocument: contextDocument,
+				fillStyle: settings.selectionColor
+			});
+			enableSelectionFor(this);
 		}
-
-		useContextOf(this);
-
-		if (isTouchDevice()) {
-			enableTouchSelectionFor(this);
-		} else {
-			enableMouseSelectionFor(this);
-		}
-		startMarker = createMarkerInside(this, MARKER_START_CLASS);
-		endMarker = createMarkerInside(this, MARKER_END_CLASS);
-		frameRequester = new CustomSelection.Lib.FrameRequester();
-		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
-			$element: this,
-			contextWindow: contextWindow,
-			contextDocument: contextDocument,
-			fillStyle: settings.selectionColor
-		});
 		return this;
 	};
 
@@ -59,17 +50,10 @@
 	};
 
 	$.fn.disableCustomSelection = function() {
-		if (shouldLeaveNativeSelection()) {
-			return;
+		if (!shouldLeaveNativeSelection()) {
+			clearSelection();
+			disableSelectionFor(this);
 		}
-
-		if (isTouchDevice()) {
-			disableTouchSelectionFor(this);
-		} else {
-			disableMouseSelectionFor(this);
-		}
-
-		clearSelection();
 		return this;
 	};
 
@@ -104,6 +88,25 @@
 		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
 	}
 
+	function enableSelectionFor($element) {
+		startMarker = createMarkerInside($element, MARKER_START_CLASS);
+		endMarker = createMarkerInside($element, MARKER_END_CLASS);
+
+		if (isTouchDevice()) {
+			enableTouchSelectionFor($element);
+		} else {
+			enableMouseSelectionFor($element);
+		}
+	}
+
+	function disableSelectionFor($element) {
+		if (isTouchDevice()) {
+			disableTouchSelectionFor($element);
+		} else {
+			disableMouseSelectionFor($element);
+		}
+	}
+
 	function enableMouseSelectionFor($element) {
 		disableNativeSelection($element);
 		$element
@@ -134,6 +137,7 @@
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
+		$(startMarker).add(endMarker).on('touchstart', handleMarkerTouchStart);
 		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
@@ -214,8 +218,6 @@
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
-		movedMarker = jqueryEvent.target;
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			expandSelectionRangeToIncludePointInElement(lastPoint, eventAnchor);
@@ -223,10 +225,23 @@
 		});
 	}
 
-	function clearSelection() {
-		lastSelectionRange = null;
-		selectionDrawer.clearSelection();
-		settings.onSelectionChange(contextDocument.createRange());
+	function handleMarkerTouchStart(jqueryEvent) {
+		movedMarker = jqueryEvent.target;
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+		$(getBodyOf(movedMarker))
+			.on('touchmove', handleMarkerTouchMove)
+			.on('touchend', handleMarkerTouchMoveEnd);
+	}
+
+	function handleMarkerTouchMove(jqueryEvent) {
+
+	}
+
+	function handleMarkerTouchMoveEnd(jqueryEvent) {
+		$(getBodyOf(movedMarker))
+			.off('touchmove', handleMarkerTouchMove)
+			.off('touchend', handleMarkerTouchMoveEnd);
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
 	}
 
 	function handleResize() {
@@ -254,19 +269,12 @@
 		return 'ontouchend' in document;
 	}
 
-	function getMarkerToMove(jqueryEvent) {
-		return movedMarker || jqueryEvent.target;
+	function getBodyOf(element) {
+		return element.ownerDocument.body;
 	}
 
-	function selectWordUnderPointer(pointerEvent) {
-		var element = getTargetElementFromPointerEvent(pointerEvent);
-		if (!isMarker(element)) {
-			clearSelection();
-			var point = createPointerPoint(pointerEvent, {shift: false});
-			var range = getRangeWrappingWordAtPoint(element, point);
-			makeSelectionFor(range);
-			rejectTouchEnd = true;
-		}
+	function getMarkerToMove(jqueryEvent) {
+		return movedMarker || jqueryEvent.target;
 	}
 
 	// -- Dealing with native selection
@@ -282,12 +290,29 @@
 
 //	-- Creating Selection
 
+	function selectWordUnderPointer(pointerEvent) {
+		var element = getTargetElementFromPointerEvent(pointerEvent);
+		if (!isMarker(element)) {
+			clearSelection();
+			var point = createPointerPoint(pointerEvent, {shift: false});
+			var range = getRangeWrappingWordAtPoint(element, point);
+			makeSelectionFor(range);
+			rejectTouchEnd = true;
+		}
+	}
+
 	function makeSelectionFor(theRange) {
 		lastSelectionRange = theRange;
 		// TODO: refactor caching ranges
 		//if (hasRangeChanged(theRange)) {
 		drawSelectionRange(theRange);
 		//}
+	}
+
+	function clearSelection() {
+		lastSelectionRange = null;
+		selectionDrawer.clearSelection();
+		settings.onSelectionChange(contextDocument.createRange());
 	}
 
 	function drawSelectionRange(range) {
@@ -337,8 +362,6 @@
 		startMarker.style.left = firstRect.left + 'px';
 		endMarker.style.top = lastRect.top + offsetY + 'px';
 		endMarker.style.left = lastRect.right + 'px';
-		$(startMarker).removeClass(MARKER_MOVING_CLASS);
-		$(endMarker).removeClass(MARKER_MOVING_CLASS);
 	}
 
 	function getRangeBoundAt(element) {
@@ -405,8 +428,6 @@
 		var range = null;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			range = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			window.initCanvas();
-			window.drawRange(range);
 			expandRangeToStartAfterTheWhitespaceOnLeft(range);
 			expandRangeToEndBeforeTheWhitespaceOnRight(range);
 		}
