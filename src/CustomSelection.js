@@ -71,6 +71,7 @@
 	var contextDocument = null;
 	var lastSelectionRange = null;
 	var movedMarker = null;
+	var selectionAnchor = null;
 	var mouseDownTime = 0;
 	var mouseDownPoint = null;
 	var userSelectBeforeEnablingSelection = null;
@@ -133,7 +134,6 @@
 			});
 		});
 		$element
-			.on('touchmove', handleGlobalTouchMove)
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
@@ -143,7 +143,6 @@
 
 	function disableTouchSelectionFor($element) {
 		$element
-			.off('touchmove', handleGlobalTouchMove)
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
 			.off('tap', clearSelection);
@@ -201,13 +200,6 @@
 		selectWordUnderPointer(e);
 	}
 
-	function handleGlobalTouchMove(jqueryEvent) {
-		if (isMarker(jqueryEvent.target)) {
-			handleMarkerPointerMove(jqueryEvent);
-			rejectTouchEnd = true;
-		}
-	}
-
 	function handleGlobalTouchEnd(jqueryEvent) {
 		if (rejectTouchEnd) {
 			jqueryEvent.preventDefault();
@@ -226,22 +218,24 @@
 	}
 
 	function handleMarkerTouchStart(jqueryEvent) {
-		movedMarker = jqueryEvent.target;
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+		setMovedMarker(jqueryEvent.target);
 		$(getBodyOf(movedMarker))
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
+		selectionAnchor = getSelectionAnchor();
 	}
 
 	function handleMarkerTouchMove(jqueryEvent) {
-
+		handleMarkerPointerMove(jqueryEvent);
+		rejectTouchEnd = true;
 	}
 
 	function handleMarkerTouchMoveEnd(jqueryEvent) {
 		$(getBodyOf(movedMarker))
 			.off('touchmove', handleMarkerTouchMove)
 			.off('touchend', handleMarkerTouchMoveEnd);
-		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		unsetMovedMarker();
+		selectionAnchor = null;
 	}
 
 	function handleResize() {
@@ -265,6 +259,26 @@
 		return element === startMarker || element === endMarker;
 	}
 
+	function setMovedMarker(element) {
+		movedMarker = element;
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+	}
+
+	function unsetMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		movedMarker = null;
+	}
+
+	function toggleMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		if (movedMarker === startMarker) {
+			movedMarker = endMarker;
+		} else {
+			movedMarker = startMarker;
+		}
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+	}
+
 	function isTouchDevice() {
 		return 'ontouchend' in document;
 	}
@@ -273,8 +287,16 @@
 		return element.ownerDocument.body;
 	}
 
-	function getMarkerToMove(jqueryEvent) {
-		return movedMarker || jqueryEvent.target;
+	function getSelectionAnchor() {
+		var selectionAnchor = {};
+		if (movedMarker === startMarker) {
+			selectionAnchor.container = lastSelectionRange.endContainer;
+			selectionAnchor.offset = lastSelectionRange.endOffset;
+		} else {
+			selectionAnchor.container = lastSelectionRange.startContainer;
+			selectionAnchor.offset = lastSelectionRange.startOffset;
+		}
+		return selectionAnchor;
 	}
 
 	// -- Dealing with native selection
@@ -476,8 +498,9 @@
 			if (movedMarker === startMarker) {
 				tempRange.setStart(pointRange.startContainer, pointRange.startOffset);
 				if (tempRange.collapsed) {
-					lastSelectionRange.setStart(lastSelectionRange.endContainer, lastSelectionRange.endOffset);
+					lastSelectionRange.setStart(selectionAnchor.container, selectionAnchor.offset);
 					lastSelectionRange.setEnd(pointRange.startContainer, pointRange.startOffset);
+					toggleMovedMarker();
 				} else {
 					lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
 				}
@@ -485,7 +508,8 @@
 				tempRange.setEnd(pointRange.startContainer, pointRange.startOffset);
 				if (tempRange.collapsed) {
 					lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
-					lastSelectionRange.setEnd(lastSelectionRange.startContainer, lastSelectionRange.startOffset);
+					lastSelectionRange.setEnd(selectionAnchor.container, selectionAnchor.offset);
+					toggleMovedMarker();
 				} else {
 					lastSelectionRange.setEnd(pointRange.startContainer, pointRange.startOffset);
 				}
