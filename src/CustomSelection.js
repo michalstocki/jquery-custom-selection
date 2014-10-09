@@ -111,7 +111,6 @@
 
 	function disableMouseSelectionFor($element) {
 		restoreNativeSelection($element);
-
 		$element
 			.off('mousedown', handleGlobalMouseDown)
 			.off('mouseup', handleGlobalMouseUp)
@@ -211,16 +210,15 @@
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
+		$(movedMarker).addClass('moving');
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			mark(eventAnchor, lastPoint, getMarkerToMove(jqueryEvent));
-			makeSelectionFor();
+			expandSelectionRangeToIncludePointInElement(lastPoint, eventAnchor, getMarkerToMove(jqueryEvent));
+			makeSelectionFor(lastSelectionRange);
 		});
 	}
 
 	function clearSelection() {
-		//$(startMarker).detach();
-		//$(endMarker).detach();
 		lastSelectionRange = null;
 		selectionDrawer.clearSelection();
 		settings.onSelectionChange(contextDocument.createRange());
@@ -258,8 +256,8 @@
 	function selectWordUnderPointer(pointerEvent) {
 		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!isMarker(element)) {
-			var point = createPointerPoint(pointerEvent, {shift: false});
 			clearSelection();
+			var point = createPointerPoint(pointerEvent, {shift: false});
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
 			rejectTouchEnd = true;
@@ -280,6 +278,7 @@
 //	-- Creating Selection
 
 	function makeSelectionFor(theRange) {
+		lastSelectionRange = theRange;
 		// TODO: refactor caching ranges
 		//if (hasRangeChanged(theRange)) {
 		drawSelectionRange(theRange);
@@ -289,7 +288,7 @@
 	function drawSelectionRange(range) {
 		if (range) {
 			settings.onSelectionChange(range);
-			lastSelectionRange = range;
+			//lastSelectionRange = range;
 			selectionDrawer.redraw(range);
 			adjustMarkerPositionsTo(range);
 		}
@@ -333,6 +332,8 @@
 		startMarker.style.left = firstRect.left + 'px';
 		endMarker.style.top = lastRect.top + offsetY + 'px';
 		endMarker.style.left = lastRect.right + 'px';
+		$(startMarker).removeClass('moving');
+		$(endMarker).removeClass('moving');
 	}
 
 	function getRangeBoundAt(element) {
@@ -399,6 +400,8 @@
 		var range = null;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			range = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			window.initCanvas();
+			window.drawRange(range);
 			expandRangeToStartAfterTheWhitespaceOnLeft(range);
 			expandRangeToEndBeforeTheWhitespaceOnRight(range);
 		}
@@ -441,17 +444,20 @@
 
 //	-- Marking
 
-	function mark(el, point, marker) {
+	function expandSelectionRangeToIncludePointInElement(point, element, marker) {
 		var textNode;
-		if (textNode = getFromElNodeContainingPoint(el, point)) {
-			textNode = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			putMarkerBefore(textNode, marker);
-		} else if (textNode = getClosestTextNodeFromEl(el, point)) {
-			putMarkerAfter(textNode, marker);
-		} else {
-			return null;
+		if (textNode = getFromElNodeContainingPoint(element, point)) {
+			var pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			if (pointRange.compareBoundaryPoints(Range.START_TO_START, lastSelectionRange) < 0 ||
+				(pointRange.compareBoundaryPoints(Range.END_TO_START, lastSelectionRange) < 0 &&
+				marker === startMarker)) {
+				lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
+			} else if ((pointRange.compareBoundaryPoints(Range.START_TO_END, lastSelectionRange) > 0 &&
+				marker === endMarker) ||
+				pointRange.compareBoundaryPoints(Range.END_TO_END, lastSelectionRange) > 0) {
+				lastSelectionRange.setEnd(pointRange.endContainer, pointRange.endOffset);
+			}
 		}
-		marker.parentNode.normalize();
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
@@ -471,18 +477,6 @@
 			}
 		}
 		return range;
-	}
-
-	function putMarkerBefore(node, marker) {
-		node.parentNode.insertBefore(marker, node);
-	}
-
-	function putMarkerAfter(node, marker) {
-		if (node.nextSibling) {
-			node.parentNode.insertBefore(marker, node.nextSibling);
-		} else {
-			node.parentNode.appendChild(marker);
-		}
 	}
 
 	function getIndexOfElement(element) {
