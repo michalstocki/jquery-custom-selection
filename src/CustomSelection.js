@@ -1,5 +1,9 @@
 (function($) {
 	var ON_TOUCH_DEVICES = 'onTouchDevices';
+	var MARKER_CLASS = 'jcs-marker';
+	var MARKER_START_CLASS = 'jcs-beginning-marker';
+	var MARKER_END_CLASS = 'jcs-end-marker';
+	var MARKER_MOVING_CLASS = 'jcs-marker-moving';
 
 	// Default configuration
 	var settings, defaults = {
@@ -37,8 +41,8 @@
 		} else {
 			enableMouseSelectionFor(this);
 		}
-		startMarker = createMarkerInside(this);
-		endMarker = createMarkerInside(this);
+		startMarker = createMarkerInside(this, MARKER_START_CLASS);
+		endMarker = createMarkerInside(this, MARKER_END_CLASS);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
@@ -82,7 +86,7 @@
 	var contextWindow = null;
 	var contextDocument = null;
 	var lastSelectionRange = null;
-	var movedMarker = false;
+	var movedMarker = null;
 	var mouseDownTime = 0;
 	var mouseDownPoint = null;
 	var userSelectBeforeEnablingSelection = null;
@@ -210,10 +214,11 @@
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
-		$(movedMarker).addClass('moving');
+		movedMarker = jqueryEvent.target;
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			expandSelectionRangeToIncludePointInElement(lastPoint, eventAnchor, getMarkerToMove(jqueryEvent));
+			expandSelectionRangeToIncludePointInElement(lastPoint, eventAnchor);
 			makeSelectionFor(lastSelectionRange);
 		});
 	}
@@ -332,8 +337,8 @@
 		startMarker.style.left = firstRect.left + 'px';
 		endMarker.style.top = lastRect.top + offsetY + 'px';
 		endMarker.style.left = lastRect.right + 'px';
-		$(startMarker).removeClass('moving');
-		$(endMarker).removeClass('moving');
+		$(startMarker).removeClass(MARKER_MOVING_CLASS);
+		$(endMarker).removeClass(MARKER_MOVING_CLASS);
 	}
 
 	function getRangeBoundAt(element) {
@@ -373,9 +378,9 @@
 		return element;
 	}
 
-	function createMarkerInside($parent) {
+	function createMarkerInside($parent, className) {
 		var element = contextDocument.createElement('div');
-		element.setAttribute('class', 'jcs-marker');
+		element.setAttribute('class', MARKER_CLASS + ' ' + className);
 		element.setAttribute('style', 'position: absolute;');
 		$parent.append(element);
 		return element;
@@ -444,18 +449,27 @@
 
 //	-- Marking
 
-	function expandSelectionRangeToIncludePointInElement(point, element, marker) {
+	function expandSelectionRangeToIncludePointInElement(point, element) {
 		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			var pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			if (pointRange.compareBoundaryPoints(Range.START_TO_START, lastSelectionRange) < 0 ||
-				(pointRange.compareBoundaryPoints(Range.END_TO_START, lastSelectionRange) < 0 &&
-				marker === startMarker)) {
-				lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
-			} else if ((pointRange.compareBoundaryPoints(Range.START_TO_END, lastSelectionRange) > 0 &&
-				marker === endMarker) ||
-				pointRange.compareBoundaryPoints(Range.END_TO_END, lastSelectionRange) > 0) {
-				lastSelectionRange.setEnd(pointRange.endContainer, pointRange.endOffset);
+			var tempRange = lastSelectionRange.cloneRange();
+			if (movedMarker === startMarker) {
+				tempRange.setStart(pointRange.startContainer, pointRange.startOffset);
+				if (tempRange.collapsed) {
+					lastSelectionRange.setStart(lastSelectionRange.endContainer, lastSelectionRange.endOffset);
+					lastSelectionRange.setEnd(pointRange.startContainer, pointRange.startOffset);
+				} else {
+					lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
+				}
+			} else if (movedMarker === endMarker) {
+				tempRange.setEnd(pointRange.startContainer, pointRange.startOffset);
+				if (tempRange.collapsed) {
+					lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
+					lastSelectionRange.setEnd(lastSelectionRange.startContainer, lastSelectionRange.startOffset);
+				} else {
+					lastSelectionRange.setEnd(pointRange.startContainer, pointRange.startOffset);
+				}
 			}
 		}
 	}
