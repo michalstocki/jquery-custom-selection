@@ -307,10 +307,12 @@
 		//if (hasRangeChanged(theRange)) {
 		drawSelectionRange(theRange);
 		//}
+		showMarkers();
 	}
 
 	function clearSelection() {
 		lastSelectionRange = null;
+		hideMarkers();
 		selectionDrawer.clearSelection();
 		settings.onSelectionChange(contextDocument.createRange());
 	}
@@ -410,15 +412,11 @@
 	}
 
 	function hideMarkers() {
-		var css = {visibility: 'hidden'};
-		$(startMarker).css(css);
-		$(endMarker).css(css);
+		$(startMarker).add(endMarker).css({visibility: 'hidden'});
 	}
 
 	function showMarkers() {
-		var css = {visibility: 'visible'};
-		$(startMarker).css(css);
-		$(endMarker).css(css);
+		$(startMarker).add(endMarker).css({visibility: 'visible'});
 	}
 
 //	-- Extracting a word under the pointer
