@@ -72,7 +72,12 @@
 //	Private methods ------------------------------------------------------------
 
 	var lastPoint = null;
-	var WHITESPACE = ' ';
+	var WHITESPACE_LIST = {
+		32: ' ',
+		9: '\t',
+		13: '\r',
+		10: '\n'
+	};
 	var rejectTouchEnd = false;
 	var contextWindow = null;
 	var contextDocument = null;
@@ -383,16 +388,15 @@
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			window.drawPoint(point, 'orange');
 			var pointerRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			window.drawRange(pointerRange, 'red');
 			expandRangeToStartAfterTheWhitespaceOnLeft(pointerRange);
 			expandRangeToEndBeforeTheWhitespaceOnRight(pointerRange);
-			window.drawRange(pointerRange, 'rgba(0,0,255,0.3)');
+			window.drawRange(pointerRange, 'blue');
 		}
 	}
 
 	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
 		// searching space backwards
-		while (!rangeStartsWith(range, WHITESPACE)) {
+		while (!rangeStartsWithWhitespace(range)) {
 			if (range.startOffset < 1) {
 				return;
 			} else {
@@ -404,8 +408,8 @@
 
 	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
 		// searching space forwards
-		var maxIndex = Math.max(range.endContainer.data.length - 1, 0);
-		while (!rangeEndsWith(range, WHITESPACE)) {
+		var maxIndex = Math.max(range.endContainer.data.length, 0);
+		while (!rangeEndsWithWhitespace(range)) {
 			if (range.endOffset >= maxIndex) {
 				return;
 			} else {
@@ -424,13 +428,13 @@
 		return textNode.splitText(1);
 	}
 
-	function rangeStartsWith(range, letter) {
-		return range.toString()[0] === letter;
+	function rangeStartsWithWhitespace(range) {
+		return range.toString().charCodeAt(0) in WHITESPACE_LIST;
 	}
 
-	function rangeEndsWith(range, letter) {
+	function rangeEndsWithWhitespace(range) {
 		var stringified = range.toString();
-		return stringified[stringified.length - 1] === letter;
+		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
 	}
 
 //	-- Marking
@@ -462,11 +466,6 @@
 				startIndex = middle + 1;
 				range.setStart(textNode, startIndex);
 				range.setEnd(textNode, endIndex);
-			}
-			if (rangeContainsPoint(range, point)) {
-				window.drawRange(range, 'lightgreen');
-			} else {
-				window.drawRange(range, 'red');
 			}
 		}
 		return range;
