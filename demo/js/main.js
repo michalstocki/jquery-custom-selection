@@ -13,7 +13,7 @@ $(function() {
 
 	window.enableSelection = function() {
 		$content.customSelection({
-			selectionColor: 'lightgreen',
+			selectionColor: '#CAE0C0',
 			useMarkers: 'always',
 			onSelectionChange: onSelectionChange
 		});

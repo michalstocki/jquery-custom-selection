@@ -157,7 +157,7 @@
 		}
 
 		mouseDownTime = Date.now();
-		mouseDownPoint = getTouchPoint(jqueryEvent, {shift: false});
+		mouseDownPoint = createPointerPoint(jqueryEvent, {shift: false});
 		hasMovedOverThreshold = false;
 
 		timeoutId = setTimeout(handleGlobalMouseHoldDown, settings.holdTimeout, jqueryEvent);
@@ -165,7 +165,7 @@
 
 	function handleGlobalMouseHoldDown(jqueryEvent) {
 		if (!hasMovedOverThreshold) {
-			tryToInitNewSelection(jqueryEvent);
+			selectWordUnderPointer(jqueryEvent);
 		}
 
 		mouseDownPoint = null;
@@ -191,7 +191,7 @@
 		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		tryToInitNewSelection(e);
+		selectWordUnderPointer(e);
 	}
 
 	function handleGlobalTouchMove(jqueryEvent) {
@@ -210,17 +210,17 @@
 
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		lastPoint = getTouchPoint(jqueryEvent.originalEvent);
+		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventAnchor = getTouchedElementByPoint(lastPoint);
 			mark(eventAnchor, lastPoint, getMarkerToMove(jqueryEvent));
-			makeSelectionOn();
+			makeSelectionFor();
 		});
 	}
 
 	function clearSelection() {
-		$(startMarker).detach();
-		$(endMarker).detach();
+		//$(startMarker).detach();
+		//$(endMarker).detach();
 		lastSelectionRange = null;
 		selectionDrawer.clearSelection();
 		settings.onSelectionChange(contextDocument.createRange());
@@ -255,13 +255,13 @@
 		return movedMarker || jqueryEvent.target;
 	}
 
-	function tryToInitNewSelection(e) {
-		var element = getTargetElementFromPointerEvent(e);
+	function selectWordUnderPointer(pointerEvent) {
+		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!isMarker(element)) {
-			var point = getTouchPoint(e, {shift: false});
+			var point = createPointerPoint(pointerEvent, {shift: false});
 			clearSelection();
 			var range = getRangeWrappingWordAtPoint(element, point);
-			makeSelectionOn(range);
+			makeSelectionFor(range);
 			rejectTouchEnd = true;
 		}
 	}
@@ -279,10 +279,10 @@
 
 //	-- Creating Selection
 
-	function makeSelectionOn(range) {
+	function makeSelectionFor(theRange) {
 		// TODO: refactor caching ranges
-		//if (hasRangeChanged(range)) {
-			drawSelectionRange(range);
+		//if (hasRangeChanged(theRange)) {
+		drawSelectionRange(theRange);
 		//}
 	}
 
@@ -291,6 +291,7 @@
 			settings.onSelectionChange(range);
 			lastSelectionRange = range;
 			selectionDrawer.redraw(range);
+			adjustMarkerPositionsTo(range);
 		}
 	}
 
@@ -323,6 +324,17 @@
 		return null;
 	}
 
+	function adjustMarkerPositionsTo(range) {
+		var rects = range.getClientRects();
+		var offsetY = $(contextWindow).scrollTop();
+		var firstRect = rects[0];
+		var lastRect = rects[rects.length - 1];
+		startMarker.style.top = firstRect.top + offsetY + 'px';
+		startMarker.style.left = firstRect.left + 'px';
+		endMarker.style.top = lastRect.top + offsetY + 'px';
+		endMarker.style.left = lastRect.right + 'px';
+	}
+
 	function getRangeBoundAt(element) {
 		var offset = getIndexOfElement(element);
 		var anchor = element.parentNode;
@@ -344,8 +356,8 @@
 
 //	-- Preparing Markers
 
-	function getTouchPoint(touchEvent, options) {
-		return new CustomSelection.Lib.Point(touchEvent, options);
+	function createPointerPoint(pointerEvent, options) {
+		return new CustomSelection.Lib.Point(pointerEvent, options);
 	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
@@ -383,15 +395,14 @@
 //	-- Extracting a word under the pointer
 
 	function getRangeWrappingWordAtPoint(element, point) {
-		window.initCanvas();
 		var textNode;
+		var range = null;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			window.drawPoint(point, 'orange');
-			var pointerRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			expandRangeToStartAfterTheWhitespaceOnLeft(pointerRange);
-			expandRangeToEndBeforeTheWhitespaceOnRight(pointerRange);
-			window.drawRange(pointerRange, 'blue');
+			range = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			expandRangeToStartAfterTheWhitespaceOnLeft(range);
+			expandRangeToEndBeforeTheWhitespaceOnRight(range);
 		}
+		return range;
 	}
 
 	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
@@ -417,15 +428,6 @@
 			}
 		}
 		range.setEnd(range.endContainer, range.endOffset - 1);
-	}
-
-	function removeLastLetter(textNode) {
-		var subNode = textNode.splitText(textNode.length - 1);
-		return subNode.previousSibling;
-	}
-
-	function removeFirstLetter(textNode) {
-		return textNode.splitText(1);
 	}
 
 	function rangeStartsWithWhitespace(range) {

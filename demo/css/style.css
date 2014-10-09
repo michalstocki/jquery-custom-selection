@@ -11,20 +11,21 @@
     top: 0;
     left: 0;
     pointer-events: none;
+	background-color: #c8ebbe;
 }
 
 span.selection {
     background-color: yellow;
 }
 
-span.marker {
+.jcs-marker {
     display: inline-block;
     height: 0.9em;
     position: relative;
     width: 0;
 }
 
-span.marker:after {
+.jcs-marker:after {
     background: linear-gradient(#34a727 0, darkgreen 18px);
     background-color: darkgreen;
     border-radius: 12px 12px 0 0;
@@ -33,7 +34,7 @@ span.marker:after {
     display: block;
     height: 35px;
     left: -12px;
-    opacity: 0.9;
+    opacity: 0.95;
     position: absolute;
     top: 100%;
     width: 24px;
