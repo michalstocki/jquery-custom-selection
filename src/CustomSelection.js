@@ -30,7 +30,6 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		if (!shouldLeaveNativeSelection()) {
-
 			useContextOf(this);
 			frameRequester = new CustomSelection.Lib.FrameRequester();
 			selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
@@ -94,22 +93,25 @@
 		endMarker = createMarkerInside($element, MARKER_END_CLASS);
 
 		if (isTouchDevice()) {
+			disableNativeSelection(getBodyOf($element));
 			enableTouchSelectionFor($element);
 		} else {
+			disableNativeSelection($element);
 			enableMouseSelectionFor($element);
 		}
 	}
 
 	function disableSelectionFor($element) {
 		if (isTouchDevice()) {
+			restoreNativeSelection(getBodyOf($element));
 			disableTouchSelectionFor($element);
 		} else {
+			restoreNativeSelection($element);
 			disableMouseSelectionFor($element);
 		}
 	}
 
 	function enableMouseSelectionFor($element) {
-		disableNativeSelection($element);
 		$element
 			.on('mousedown', handleGlobalMouseDown)
 			.on('mouseup', handleGlobalMouseUp)
@@ -118,7 +120,6 @@
 	}
 
 	function disableMouseSelectionFor($element) {
-		restoreNativeSelection($element);
 		$element
 			.off('mousedown', handleGlobalMouseDown)
 			.off('mouseup', handleGlobalMouseUp)
@@ -284,7 +285,7 @@
 	}
 
 	function getBodyOf(element) {
-		return element.ownerDocument.body;
+		return (element.ownerDocument || element[0].ownerDocument).body;
 	}
 
 	function getSelectionAnchor() {
@@ -302,11 +303,13 @@
 	// -- Dealing with native selection
 
 	function disableNativeSelection($element) {
+		$element = $($element);
 		userSelectBeforeEnablingSelection = $element.css('user-select');
 		$element.css('user-select', 'none');
 	}
 
 	function restoreNativeSelection($element) {
+		$element = $($element);
 		$element.css('user-select', userSelectBeforeEnablingSelection);
 	}
 
