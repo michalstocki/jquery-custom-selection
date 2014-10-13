@@ -458,10 +458,15 @@
 //	-- Marking
 
 	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
-		var textNode;
+		var pointRange;
 		var coveringRange = lastSelectionRange.cloneRange();
+		var textNode;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			var pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+		} else {
+			pointRange = getClosestPointRangeFormElement(element, point);
+		}
+		if (pointRange) {
 			var tempRange = coveringRange.cloneRange();
 			if (movedMarker === startMarker) {
 				tempRange.setStart(pointRange.startContainer, pointRange.startOffset);
@@ -571,11 +576,20 @@
 
 //  ------ Finding the closest node to the pointer
 
-	function getClosestTextNodeFromEl(el, point) {
-		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
-		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
-		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-			searchTextNode(el, nearestAbovePoint);
+	function getClosestPointRangeFormElement(el, point) {
+		var storage = {
+			textNode: null,
+			rect: null
+		};
+		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point, storage);
+		//var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point, storage);
+		searchTextNode(el, nearestOnTheLeftOfPoint); // ||
+		//searchTextNode(el, nearestAbovePoint);
+		if (storage.textNode) {
+			return createRangeAtTheEndOfRectInTextNode(storage.textNode, storage.rect);
+		} else {
+			return null;
+		}
 	}
 
 	function searchTextNode(el, comparator) {
@@ -607,17 +621,21 @@
 
 //	-------- Finding node on the **left** of the pointer
 
-	function getNodeNearerPointOnLeft(point, winner, rival) {
+	function getNodeNearerPointOnLeft(point, storage, winner, rival) {
 		var newWinner = winner;
 		var nearestRivalRect = getRectNearestOnLeftOfPoint(rival, point);
 		if (winner) {
 			var nearestWinnerRect = getRectNearestOnLeftOfPoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.right > nearestWinnerRect.right) {
-				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+				newWinner = rival;
+				storage.rect = nearestRivalRect;
+				storage.textNode = rival;
 			}
 		} else if (nearestRivalRect) {
-			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+			newWinner = rival;
+			storage.rect = nearestRivalRect;
+			storage.textNode = rival;
 		}
 		return newWinner;
 	}
@@ -644,11 +662,13 @@
 		return rect.right < x && rect.top <= y && rect.bottom >= y;
 	}
 
-	function splitNodeAfterRect(node, clientRect) {
+	function createRangeAtTheEndOfRectInTextNode(node, clientRect) {
 		var rects = getRectsForNode(node);
 		var lastRect = rects[rects.length - 1];
 		if (clientRect === lastRect || !nodeIsText(node)) {
-			return node;
+			var range = document.createRange();
+			range.selectNode(node);
+			return range;
 		} else {
 			var point = {
 				clientX: clientRect.right - 1,
@@ -667,10 +687,10 @@
 			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.top >= nearestWinnerRect.top) {
-				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+				newWinner = rival;
 			}
 		} else if (nearestRivalRect) {
-			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+			newWinner = rival;
 		}
 		return newWinner;
 	}
