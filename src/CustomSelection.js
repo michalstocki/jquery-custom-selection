@@ -365,7 +365,7 @@
 
 	function adjustMarkerPositionsTo(range) {
 		var rects = range.getClientRects();
-		var offsetY = $(contextWindow).scrollTop();
+		var offsetY = isAppleDevice ? 0 : $(contextWindow).scrollTop();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
 		startMarker.style.top = firstRect.top + offsetY + 'px';
