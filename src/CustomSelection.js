@@ -138,8 +138,10 @@
 			.on('touchend', handleGlobalTouchEnd)
 			.hammer().on('press', handleGlobalTapHold)
 			.on('tap', clearSelection);
-		$(startMarker).add(endMarker).on('touchstart', handleMarkerTouchStart);
-		$(contextWindow).on('orientationchange resize', handleResize);
+		$(startMarker).add(endMarker)
+			.on('touchstart', handleMarkerTouchStart);
+		$(contextWindow)
+			.on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -219,6 +221,7 @@
 	}
 
 	function handleMarkerTouchStart(jqueryEvent) {
+		jqueryEvent.preventDefault();
 		setMovedMarker(jqueryEvent.target);
 		$(getBodyOf(movedMarker))
 			.on('touchmove', handleMarkerTouchMove)
@@ -231,7 +234,7 @@
 		rejectTouchEnd = true;
 	}
 
-	function handleMarkerTouchMoveEnd(jqueryEvent) {
+	function handleMarkerTouchMoveEnd() {
 		$(getBodyOf(movedMarker))
 			.off('touchmove', handleMarkerTouchMove)
 			.off('touchend', handleMarkerTouchMoveEnd);
