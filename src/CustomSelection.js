@@ -214,9 +214,9 @@
 		jqueryEvent.preventDefault();
 		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
-			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			expandSelectionRangeToIncludePointInElement(lastPoint, eventAnchor);
-			makeSelectionFor(lastSelectionRange);
+			var eventTarget = getTouchedElementByPoint(lastPoint);
+			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint, eventTarget);
+			makeSelectionFor(range);
 		});
 	}
 
@@ -329,12 +329,12 @@
 		}
 	}
 
-	function makeSelectionFor(theRange) {
-		lastSelectionRange = theRange;
-		// TODO: refactor caching ranges
-		//if (hasRangeChanged(theRange)) {
-		drawSelectionRange(theRange);
-		//}
+	function makeSelectionFor(range) {
+		if (rangeDiffersFromLastSelection(range)) {
+			lastSelectionRange = range;
+			drawSelectionRange();
+			settings.onSelectionChange(lastSelectionRange);
+		}
 		showMarkers();
 	}
 
@@ -345,27 +345,23 @@
 		settings.onSelectionChange(contextDocument.createRange());
 	}
 
-	function drawSelectionRange(range) {
-		if (range) {
-			settings.onSelectionChange(range);
-			//lastSelectionRange = range;
-			selectionDrawer.redraw(range);
-			adjustMarkerPositionsTo(range);
-		}
+	function drawSelectionRange() {
+		selectionDrawer.redraw(lastSelectionRange);
+		adjustMarkerPositionsTo(lastSelectionRange);
 	}
 
-	function hasEndOfSelectionChanged(range) {
+	function hasEndOtherThanLastSelectionEnd(range) {
 		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
 	}
 
-	function hasStartOfSelectionChanged(range) {
+	function hasStartOtherThanLastSelectionStart(range) {
 		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
 	}
 
-	function hasRangeChanged(range) {
+	function rangeDiffersFromLastSelection(range) {
 		return !lastSelectionRange ||
-			hasEndOfSelectionChanged(range) ||
-			hasStartOfSelectionChanged(range);
+			hasEndOtherThanLastSelectionEnd(range) ||
+			hasStartOtherThanLastSelectionStart(range);
 	}
 
 	function createSelectionRange() {
@@ -496,31 +492,33 @@
 
 //	-- Marking
 
-	function expandSelectionRangeToIncludePointInElement(point, element) {
+	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
 		var textNode;
+		var coveringRange = lastSelectionRange.cloneRange();
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			var pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			var tempRange = lastSelectionRange.cloneRange();
+			var tempRange = coveringRange.cloneRange();
 			if (movedMarker === startMarker) {
 				tempRange.setStart(pointRange.startContainer, pointRange.startOffset);
 				if (tempRange.collapsed) {
-					lastSelectionRange.setStart(selectionAnchor.container, selectionAnchor.offset);
-					lastSelectionRange.setEnd(pointRange.startContainer, pointRange.startOffset);
+					coveringRange.setStart(selectionAnchor.container, selectionAnchor.offset);
+					coveringRange.setEnd(pointRange.startContainer, pointRange.startOffset);
 					toggleMovedMarker();
 				} else {
-					lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
+					coveringRange = tempRange;
 				}
 			} else if (movedMarker === endMarker) {
 				tempRange.setEnd(pointRange.startContainer, pointRange.startOffset);
 				if (tempRange.collapsed) {
-					lastSelectionRange.setStart(pointRange.startContainer, pointRange.startOffset);
-					lastSelectionRange.setEnd(selectionAnchor.container, selectionAnchor.offset);
+					coveringRange.setStart(pointRange.startContainer, pointRange.startOffset);
+					coveringRange.setEnd(selectionAnchor.container, selectionAnchor.offset);
 					toggleMovedMarker();
 				} else {
-					lastSelectionRange.setEnd(pointRange.startContainer, pointRange.startOffset);
+					coveringRange = tempRange;
 				}
 			}
 		}
+		return coveringRange;
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
