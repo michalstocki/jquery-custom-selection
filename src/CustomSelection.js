@@ -243,8 +243,7 @@
 	}
 
 	function handleResize() {
-		var range = createSelectionRange();
-		drawSelectionRange(range);
+		drawSelectionRange();
 	}
 
 	function movedOverThreshold(e) {
@@ -364,21 +363,6 @@
 			hasStartOtherThanLastSelectionStart(range);
 	}
 
-	function createSelectionRange() {
-		if (existInDOM(startMarker, endMarker)) {
-			var range = contextDocument.createRange();
-			range.setStart.apply(range, getRangeBoundAt(startMarker));
-			range.setEnd.apply(range, getRangeBoundAt(endMarker));
-			if (range.collapsed) {
-				range.setStart.apply(range, getRangeBoundAt(endMarker));
-				range.setEnd.apply(range, getRangeBoundAt(startMarker));
-			}
-
-			return range;
-		}
-		return null;
-	}
-
 	function adjustMarkerPositionsTo(range) {
 		var rects = range.getClientRects();
 		var offsetY = $(contextWindow).scrollTop();
@@ -388,25 +372,6 @@
 		startMarker.style.left = firstRect.left + 'px';
 		endMarker.style.top = lastRect.top + offsetY + 'px';
 		endMarker.style.left = lastRect.right + 'px';
-	}
-
-	function getRangeBoundAt(element) {
-		var offset = getIndexOfElement(element);
-		var anchor = element.parentNode;
-		if (element.nextSibling) {
-			offset += 1;
-		}
-		return [anchor, offset];
-	}
-
-	function existInDOM() {
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (!element.parentNode) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 //	-- Preparing Markers
@@ -538,11 +503,6 @@
 			}
 		}
 		return range;
-	}
-
-	function getIndexOfElement(element) {
-		var elements = element.parentElement.childNodes;
-		return Array.prototype.indexOf.call(elements, element);
 	}
 
 //  ---- Finding a text node
