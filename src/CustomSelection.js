@@ -584,9 +584,8 @@
 			rect: null
 		};
 		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point, storage);
-		//var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point, storage);
-		searchTextNode(el, nearestOnTheLeftOfPoint); // ||
-		//searchTextNode(el, nearestAbovePoint);
+		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point, storage);
+		searchTextNode(el, nearestOnTheLeftOfPoint) || searchTextNode(el, nearestAbovePoint);
 		if (storage.textNode) {
 			return createRangeAtTheEndOfRectInTextNode(storage.textNode, storage.rect);
 		} else {
@@ -682,7 +681,7 @@
 
 //	-------- Finding node **above** the pointer
 
-	function getNodeNearerPointAbove(point, winner, rival) {
+	function getNodeNearerPointAbove(point, storage, winner, rival) {
 		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
 		var newWinner = winner;
 		if (winner) {
@@ -690,9 +689,13 @@
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
 				nearestRivalRect.top >= nearestWinnerRect.top) {
 				newWinner = rival;
+				storage.rect = nearestRivalRect;
+				storage.textNode = rival;
 			}
 		} else if (nearestRivalRect) {
 			newWinner = rival;
+			storage.rect = nearestRivalRect;
+			storage.textNode = rival;
 		}
 		return newWinner;
 	}
