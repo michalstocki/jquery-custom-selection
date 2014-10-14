@@ -243,7 +243,9 @@
 	}
 
 	function handleResize() {
-		drawSelectionRange();
+		if (lastSelectionRange) {
+			drawSelectionRange();
+		}
 	}
 
 	function movedOverThreshold(e) {
