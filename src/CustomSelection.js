@@ -631,6 +631,25 @@
 		return closestNode;
 	}
 
+	function createNodeComparator(point, getBetterRect, getBestRectFromNode) {
+		return function(winner, rival) {
+			var newWinner = winner;
+			var nearestRivalRect = getBestRectFromNode(rival, point);
+			if (winner) {
+				var nearestWinnerRect = getBestRectFromNode(winner, point);
+				if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
+						getBetterRect(nearestRivalRect, nearestWinnerRect) === nearestRivalRect) {
+					newWinner = rival;
+					setClosestNodeAndRect(rival, nearestRivalRect);
+				}
+			} else if (nearestRivalRect) {
+				newWinner = rival;
+				setClosestNodeAndRect(rival, nearestRivalRect);
+			}
+			return newWinner;
+		};
+	}
+
 //	-------- Finding node on the **left** of the pointer
 
 	function getNodeNearerPointOnLeft(point, winner, rival) {
@@ -639,7 +658,7 @@
 		if (winner) {
 			var nearestWinnerRect = getRectNearestOnLeftOfPoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
-				nearestRivalRect.right > nearestWinnerRect.right) {
+				getRectMoreOnTheRight(nearestRivalRect, nearestWinnerRect) === nearestRivalRect) {
 				newWinner = rival;
 				setClosestNodeAndRect(rival, nearestRivalRect);
 			}
@@ -648,6 +667,16 @@
 			setClosestNodeAndRect(rival, nearestRivalRect);
 		}
 		return newWinner;
+	}
+
+	function getRectMoreOnTheRight(rectA, rectB) {
+		if (rectA.right > rectB.right) {
+			return rectA;
+		} else if (rectB.right > rectA.right) {
+			return rectB;
+		} else {
+			return null;
+		}
 	}
 
 	function getRectNearestOnLeftOfPoint(node, point) {
@@ -696,7 +725,7 @@
 		if (winner) {
 			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
 			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
-				nearestRivalRect.top >= nearestWinnerRect.top) {
+					getLowerRect(nearestRivalRect, nearestWinnerRect) === nearestRivalRect) {
 				newWinner = rival;
 				setClosestNodeAndRect(rival, nearestRivalRect);
 			}
@@ -705,6 +734,16 @@
 			setClosestNodeAndRect(rival, nearestRivalRect);
 		}
 		return newWinner;
+	}
+
+	function getLowerRect(rectA, rectB) {
+		if (rectA.top >= rectB.top) {
+			return rectA;
+		} else if (rectB.top >= rectA.top) {
+			return rectB;
+		} else {
+			return null;
+		}
 	}
 
 	function getRectNearestAbovePoint(node, point) {
