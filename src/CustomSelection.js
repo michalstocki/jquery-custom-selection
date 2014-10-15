@@ -293,15 +293,11 @@
 	}
 
 	function getSelectionAnchor() {
-		var selectionAnchor = {};
 		if (movedMarker === startMarker) {
-			selectionAnchor.container = lastSelectionRange.endContainer;
-			selectionAnchor.offset = lastSelectionRange.endOffset;
+			return getEndAnchorOf(lastSelectionRange);
 		} else {
-			selectionAnchor.container = lastSelectionRange.startContainer;
-			selectionAnchor.offset = lastSelectionRange.startOffset;
+			return getStartAnchorOf(lastSelectionRange);
 		}
-		return selectionAnchor;
 	}
 
 	// -- Dealing with native selection
@@ -459,44 +455,52 @@
 
 //	-- Marking
 
+	var START_BOUNDARY = {
+		set: 'setStart',
+		setOpposite: 'setEnd'
+	};
+	var END_BOUNDARY = {
+		set: 'setEnd',
+		setOpposite: 'setStart'
+	};
+
 	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
 		var coveringRange = lastSelectionRange.cloneRange();
-		var pointRange;
-		if (pointRange = convertPointInElementToRange(element, point)) {
-			var tempRange = coveringRange.cloneRange();
+		var pointAnchor;
+		if (pointAnchor = convertPointInElementToAnchor(element, point)) {
 			if (movedMarker === startMarker) {
-				tempRange.setStart(pointRange.startContainer, pointRange.startOffset);
-				if (tempRange.collapsed) {
-					coveringRange.setStart(selectionAnchor.container, selectionAnchor.offset);
-					coveringRange.setEnd(pointRange.startContainer, pointRange.startOffset);
-					toggleMovedMarker();
-				} else {
-					coveringRange = tempRange;
-				}
+				moveRangeBoundToAnchor(coveringRange, START_BOUNDARY, pointAnchor);
 			} else if (movedMarker === endMarker) {
-				tempRange.setEnd(pointRange.startContainer, pointRange.startOffset);
-				if (tempRange.collapsed) {
-					coveringRange.setStart(pointRange.startContainer, pointRange.startOffset);
-					coveringRange.setEnd(selectionAnchor.container, selectionAnchor.offset);
-					toggleMovedMarker();
-				} else {
-					coveringRange = tempRange;
-				}
+				moveRangeBoundToAnchor(coveringRange, END_BOUNDARY, pointAnchor);
 			}
 		}
 		return coveringRange;
 	}
 
-	function convertPointInElementToRange(element, point) {
+	function moveRangeBoundToAnchor(range, boundaryAccessor, targetAnchor) {
+		var tempRange = range.cloneRange();
+		setRangeBoundUsingSetter(tempRange, targetAnchor, boundaryAccessor.set);
+		if (tempRange.collapsed) {
+			setRangeBoundUsingSetter(range, selectionAnchor, boundaryAccessor.set);
+			setRangeBoundUsingSetter(range, targetAnchor, boundaryAccessor.setOpposite);
+			toggleMovedMarker();
+		} else {
+			setRangeBoundUsingSetter(range, targetAnchor, boundaryAccessor.set);
+		}
+	}
+
+	function convertPointInElementToAnchor(element, point) {
 		var textNode;
 		var pointRange;
+		var pointAnchor = null;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
 			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-			pointRange.collapse(true);
+			pointAnchor = getStartAnchorOf(pointRange);
 		} else {
 			pointRange = getClosestPointRangeFormElement(element, point);
+			pointAnchor = getEndAnchorOf(pointRange);
 		}
-		return pointRange;
+		return pointAnchor;
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
@@ -516,6 +520,24 @@
 			}
 		}
 		return range;
+	}
+
+	function setRangeBoundUsingSetter(range, anchor, setter) {
+		range[setter](anchor.container, anchor.offset);
+	}
+
+	function getStartAnchorOf(range) {
+		return {
+			container: range.startContainer,
+			offset: range.startOffset
+		};
+	}
+
+	function getEndAnchorOf(range) {
+		return {
+			container: range.endContainer,
+			offset: range.endOffset
+		};
 	}
 
 //  ---- Finding a text node
@@ -606,7 +628,6 @@
 
 		if (closestNodeFound) {
 			pointRange = createRangeAtTheEndOfTheClosestNode();
-			pointRange.collapse(false);
 			setClosestNodeAndRect(null, null);
 		}
 		return pointRange;
