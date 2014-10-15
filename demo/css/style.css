@@ -13,8 +13,9 @@
     pointer-events: none;
 }
 
-span.selection {
-    background-color: yellow;
+.container {
+	width: 1000px;
+	margin: 50px auto;
 }
 
 .jcs-marker {
@@ -50,18 +51,21 @@ span.selection {
 	background: linear-gradient(#dddc00 0, darkgreen 18px);
 }
 
+aside.right {
+	float: right;
+}
+
 .settings {
-    background-color: #4679bd;
-    border-radius: 5px;
+    background-color: #3B8686;
+    border-radius: 15px;
     color: white;
     font-family: sans-serif;
     font-size: 12px;
-    left: 50%;
-    margin: 3px 3px 3px -250px;
-    padding: 2px 6px;
-    position: absolute;
-    top: 0;
-    width: 500px;
+	height: 50px;
+    margin: 0 0 10px 0 ;
+    padding: 5px 6px;
+	text-align: center;
+	width: 200px;
 }
 
 .touch_status {
@@ -69,21 +73,29 @@ span.selection {
 }
 
 .selected-text-status-panel {
-    background-color: #4679bd;
-    border-radius: 5px;
-    color: white;
+    background-color: #3B8686;
+    border-radius: 15px;
+    color: #CFF09E;
     font-family: sans-serif;
     font-size: 12px;
-    height: 150px;
+    height: 416px;
     overflow: auto;
     padding: 12px;
-    position: fixed;
     right: 0;
-    width: 250px;
+    width: 186px;
 }
 
 .selected-text-status-panel span:first-of-type {
     display: block;
     font-weight: bolder;
     padding-bottom: 6px;
+}
+
+iframe {
+	background-color: #ffffff;
+	padding: 0 20px;
+	width: 710px;
+	height: 500px;
+	border: 5px solid #A8DBA8;
+	border-radius: 15px;
 }
