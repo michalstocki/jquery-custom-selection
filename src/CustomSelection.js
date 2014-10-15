@@ -460,15 +460,9 @@
 //	-- Marking
 
 	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
-		var pointRange;
 		var coveringRange = lastSelectionRange.cloneRange();
-		var textNode;
-		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-		} else {
-			pointRange = getClosestPointRangeFormElement(element, point);
-		}
-		if (pointRange) {
+		var pointRange;
+		if (pointRange = convertPointInElementToRange(element, point)) {
 			var tempRange = coveringRange.cloneRange();
 			if (movedMarker === startMarker) {
 				tempRange.setStart(pointRange.startContainer, pointRange.startOffset);
@@ -491,6 +485,18 @@
 			}
 		}
 		return coveringRange;
+	}
+
+	function convertPointInElementToRange(element, point) {
+		var textNode;
+		var pointRange;
+		if (textNode = getFromElNodeContainingPoint(element, point)) {
+			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			pointRange.collapse(true);
+		} else {
+			pointRange = getClosestPointRangeFormElement(element, point);
+		}
+		return pointRange;
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
@@ -600,6 +606,7 @@
 
 		if (closestNodeFound) {
 			pointRange = createRangeAtTheEndOfTheClosestNode();
+			pointRange.collapse(false);
 			setClosestNodeAndRect(null, null);
 		}
 		return pointRange;
