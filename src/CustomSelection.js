@@ -455,37 +455,36 @@
 
 //	-- Marking
 
-	var START_BOUNDARY = {
-		set: 'setStart',
-		setOpposite: 'setEnd'
-	};
-	var END_BOUNDARY = {
-		set: 'setEnd',
-		setOpposite: 'setStart'
-	};
-
 	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
 		var coveringRange = lastSelectionRange.cloneRange();
-		var pointAnchor;
-		if (pointAnchor = convertPointInElementToAnchor(element, point)) {
-			if (movedMarker === startMarker) {
-				moveRangeBoundToAnchor(coveringRange, START_BOUNDARY, pointAnchor);
-			} else if (movedMarker === endMarker) {
-				moveRangeBoundToAnchor(coveringRange, END_BOUNDARY, pointAnchor);
+		var pointAnchor = convertPointInElementToAnchor(element, point);
+		if (pointAnchor) {
+			var bound = getNewSelectionBoundary(pointAnchor);
+			var protectedBound = getProtectedSelectionBoundary();
+			bound.applyTo(coveringRange);
+			if (coveringRange.collapsed) {
+				protectedBound.applyTo(coveringRange);
+				bound.applyOppositeTo(coveringRange);
+				toggleMovedMarker();
 			}
 		}
 		return coveringRange;
 	}
 
-	function moveRangeBoundToAnchor(range, boundaryAccessor, targetAnchor) {
-		var tempRange = range.cloneRange();
-		setRangeBoundUsingSetter(tempRange, targetAnchor, boundaryAccessor.set);
-		if (tempRange.collapsed) {
-			setRangeBoundUsingSetter(range, selectionAnchor, boundaryAccessor.set);
-			setRangeBoundUsingSetter(range, targetAnchor, boundaryAccessor.setOpposite);
-			toggleMovedMarker();
+	function getNewSelectionBoundary(anchor) {
+		if (movedMarker === startMarker) {
+			return createStartBoundary(anchor);
 		} else {
-			setRangeBoundUsingSetter(range, targetAnchor, boundaryAccessor.set);
+			return createEndBoundary(anchor);
+		}
+	}
+
+	function getProtectedSelectionBoundary() {
+		var selectionAnchor = getSelectionAnchor();
+		if (movedMarker === startMarker) {
+			return createStartBoundary(selectionAnchor);
+		} else {
+			return createEndBoundary(selectionAnchor);
 		}
 	}
 
@@ -493,11 +492,10 @@
 		var textNode;
 		var pointRange;
 		var pointAnchor = null;
-		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+		if ((textNode = getFromElNodeContainingPoint(element, point)) &&
+				(pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point))) {
 			pointAnchor = getStartAnchorOf(pointRange);
-		} else {
-			pointRange = getClosestPointRangeFormElement(element, point);
+		} else if (pointRange = getClosestPointRangeFormElement(element, point)) {
 			pointAnchor = getEndAnchorOf(pointRange);
 		}
 		return pointAnchor;
@@ -522,8 +520,12 @@
 		return range;
 	}
 
-	function setRangeBoundUsingSetter(range, anchor, setter) {
-		range[setter](anchor.container, anchor.offset);
+	function createStartBoundary(anchor) {
+		return new CustomSelection.Lib.StartBoundary(anchor);
+	}
+
+	function createEndBoundary(anchor) {
+		return new CustomSelection.Lib.EndBoundary(anchor);
 	}
 
 	function getStartAnchorOf(range) {
