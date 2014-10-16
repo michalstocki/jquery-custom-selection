@@ -227,7 +227,8 @@
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		setMovedMarker(jqueryEvent.target);
-		$(getBodyOf(movedMarker))
+
+		$(contextDocument.body)
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
 		selectionAnchor = getSelectionAnchor();
@@ -239,7 +240,7 @@
 	}
 
 	function handleMarkerTouchMoveEnd() {
-		$(getBodyOf(movedMarker))
+		$(contextDocument.body)
 			.off('touchmove', handleMarkerTouchMove)
 			.off('touchend', handleMarkerTouchMoveEnd);
 		unsetMovedMarker();
