@@ -21,7 +21,9 @@ $(function() {
 		$content.customSelection({
 			selectionColor: '#CAE0C0',
 			useMarkers: 'always',
-			onSelectionChange: onSelectionChange
+			onSelectionChange: onSelectionChange,
+			startMarker: $('.start-marker'),
+			endMarker: $('.end-marker')
 		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);

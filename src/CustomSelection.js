@@ -6,7 +6,8 @@
 	var MARKER_MOVING_CLASS = 'jcs-marker-moving';
 
 	// Default configuration
-	var settings, defaults = {
+	var settings;
+	var defaults = {
 		holdThreshold: 4,
 		holdTimeout: 500,
 		useMarkers: ON_TOUCH_DEVICES,
@@ -38,6 +39,7 @@
 				contextDocument: contextDocument,
 				fillStyle: settings.selectionColor
 			});
+			initMarkers(this);
 			enableSelectionFor(this);
 		}
 		return this;
@@ -71,9 +73,14 @@
 	var lastSelectionRange = null;
 	var movedMarker = null;
 	var selectionAnchor = null;
+	var userSelectBeforeEnablingSelection = null;
+	var markersOriginOffset = {
+		x: 0,
+		y: 0
+	};
+
 	var mouseDownTime = 0;
 	var mouseDownPoint = null;
-	var userSelectBeforeEnablingSelection = null;
 	var hasMovedOverThreshold = false;
 	var timeoutId = null;
 
@@ -85,13 +92,10 @@
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
-		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
+		contextWindow = getWindowOf($element[0]);
 	}
 
 	function enableSelectionFor($element) {
-		startMarker = createMarkerInside($element, MARKER_START_CLASS);
-		endMarker = createMarkerInside($element, MARKER_END_CLASS);
-
 		if (isTouchDevice()) {
 			disableNativeSelection(getBodyOf($element));
 			enableTouchSelectionFor($element);
@@ -260,20 +264,6 @@
 			mouseMoveYDiff > settings.holdThreshold;
 	}
 
-	function isMarker(element) {
-		return element === startMarker || element === endMarker;
-	}
-
-	function setMovedMarker(element) {
-		movedMarker = element;
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
-	}
-
-	function unsetMovedMarker() {
-		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
-		movedMarker = null;
-	}
-
 	function toggleMovedMarker() {
 		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
 		if (movedMarker === startMarker) {
@@ -290,6 +280,11 @@
 
 	function getBodyOf(element) {
 		return (element.ownerDocument || element[0].ownerDocument).body;
+	}
+
+	function getWindowOf(element) {
+		var doc = element.ownerDocument;
+		return doc.defaultView || doc.parentWindow;
 	}
 
 	function getSelectionAnchor() {
@@ -363,16 +358,40 @@
 
 	function adjustMarkerPositionsTo(range) {
 		var rects = range.getClientRects();
-		var offsetY = isAppleDevice ? 0 : $(contextWindow).scrollTop();
+		var offsetY = 0; //isAppleDevice ? 0 : $(contextWindow).scrollTop();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		startMarker.style.top = firstRect.top + offsetY + 'px';
-		startMarker.style.left = firstRect.left + 'px';
-		endMarker.style.top = lastRect.top + offsetY + 'px';
-		endMarker.style.left = lastRect.right + 'px';
+		startMarker.style.top = firstRect.bottom + offsetY + markersOriginOffset.y + 'px';
+		startMarker.style.left = firstRect.left + markersOriginOffset.x + 'px';
+		endMarker.style.top = lastRect.bottom + offsetY + markersOriginOffset.y + 'px';
+		endMarker.style.left = lastRect.right + markersOriginOffset.x + 'px';
 	}
 
 //	-- Preparing Markers
+
+	function initMarkers($element) {
+		startMarker = $(settings.startMarker)[0] ||
+			createMarkerInside($element, MARKER_START_CLASS);
+		endMarker = $(settings.endMarker)[0] ||
+			createMarkerInside($element, MARKER_END_CLASS);
+
+		markersOriginOffset = getMarkersOriginOffset($element);
+		hideMarkers();
+	}
+
+	function isMarker(element) {
+		return element === startMarker || element === endMarker;
+	}
+
+	function setMovedMarker(element) {
+		movedMarker = element;
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+	}
+
+	function unsetMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		movedMarker = null;
+	}
 
 	function createPointerPoint(pointerEvent, options) {
 		return new CustomSelection.Lib.Point(pointerEvent, options);
@@ -404,6 +423,58 @@
 
 	function showMarkers() {
 		$(startMarker).add(endMarker).css({visibility: 'visible'});
+	}
+
+	function hasTheSameOffsetParent(elementA, elementB) {
+		return elementA.offsetParent === elementB.offsetParent;
+	}
+
+	function getMarkersOriginOffset($element) {
+		if (hasTheSameOffsetParent(startMarker, endMarker)) {
+			return computeMarkerOffsetRelativeTo($element);
+		} else {
+			throw new Error('Both marker elements must have the same offset parent!');
+		}
+	}
+
+//	---- Synchronizing origin of the markers with origin of the $element
+
+	function computeMarkerOffsetRelativeTo($element) {
+		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0].offsetParent);
+		var markerAbsoluteOffset = getElementAbsoluteOffset(startMarker.offsetParent);
+		return {
+			x: elementAbsoluteOffset.x - markerAbsoluteOffset.x,
+			y: elementAbsoluteOffset.y - markerAbsoluteOffset.y
+		};
+	}
+
+	function getElementAbsoluteOffset(element) {
+		var win = getWindowOf(element);
+		var elementWindowOffset = computeFrameOffset(win);
+		var elementOffset = element.getBoundingClientRect();
+		return {
+			x: elementWindowOffset.left + elementOffset.left,
+			y: elementWindowOffset.top + elementOffset.top
+		};
+	}
+
+	function computeFrameOffset(win) {
+		var dims = {top: 0, left: 0};
+
+		// find our <iframe> tag within our parent window
+		var frame = win.frameElement;
+
+		// add the offset & recur up the frame chain
+		if (frame) {
+			var frameRect = frame.getBoundingClientRect();
+			var frameBodyRect = win.document.body.getBoundingClientRect();
+			dims.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
+			dims.top += frameRect.top + frame.clientTop - frameBodyRect.top;
+			if (win !== top) {
+				computeFrameOffset(win.parent, dims);
+			}
+		}
+		return dims;
 	}
 
 //	-- Extracting a word under the pointer
