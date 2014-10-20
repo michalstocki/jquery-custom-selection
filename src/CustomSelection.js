@@ -369,10 +369,10 @@
 		var offsetY = 0; //isAppleDevice ? 0 : $(contextWindow).scrollTop();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		startMarker.style.top = firstRect.bottom + offsetY + markersOriginOffset.y + 'px';
-		startMarker.style.left = firstRect.left + markersOriginOffset.x + 'px';
-		endMarker.style.top = lastRect.bottom + offsetY + markersOriginOffset.y + 'px';
-		endMarker.style.left = lastRect.right + markersOriginOffset.x + 'px';
+		startMarker.style.top = firstRect.bottom * getContextScale() + offsetY + markersOriginOffset.y + 'px';
+		startMarker.style.left = firstRect.left * getContextScale() + markersOriginOffset.x + 'px';
+		endMarker.style.top = lastRect.bottom * getContextScale() + offsetY + markersOriginOffset.y + 'px';
+		endMarker.style.left = lastRect.right * getContextScale() + markersOriginOffset.x + 'px';
 	}
 
 //	-- Preparing Markers
@@ -448,18 +448,30 @@
 //	---- Synchronizing origin of the markers with origin of the $element
 
 	function computeMarkerOffsetRelativeTo($element) {
-		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0].offsetParent);
-		var markerAbsoluteOffset = getElementAbsoluteOffset(startMarker.offsetParent);
+		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0]);
+		var markerAbsoluteOffset = getMarkersAbsoluteOffset(startMarker);
 		return {
-			x: elementAbsoluteOffset.x - (markerAbsoluteOffset.x),
-			y: elementAbsoluteOffset.y - (markerAbsoluteOffset.y)
+			x: elementAbsoluteOffset.x - markerAbsoluteOffset.x,
+			y: elementAbsoluteOffset.y - markerAbsoluteOffset.y
 		};
 	}
 
 	function getElementAbsoluteOffset(element) {
-		var win = getWindowOf(element);
+		var offsetParent = element.offsetParent;
+		var win = getWindowOf(offsetParent);
 		var elementWindowOffset = computeFrameOffset(win);
-		var elementOffset = element.getBoundingClientRect();
+		var elementOffset = offsetParent.getBoundingClientRect();
+		return {
+			x: elementWindowOffset.left + (elementOffset.left * getContextScale()),
+			y: elementWindowOffset.top + (elementOffset.top * getContextScale())
+		};
+	}
+
+	function getMarkersAbsoluteOffset(marker) {
+		var offsetParent = marker.offsetParent;
+		var win = getWindowOf(offsetParent);
+		var elementWindowOffset = computeFrameOffset(win);
+		var elementOffset = offsetParent.getBoundingClientRect();
 		return {
 			x: elementWindowOffset.left + elementOffset.left,
 			y: elementWindowOffset.top + elementOffset.top
