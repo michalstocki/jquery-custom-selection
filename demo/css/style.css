@@ -77,10 +77,19 @@ aside.right {
     padding-bottom: 6px;
 }
 
+.scaller {
+	width: 710px;
+	-webkit-transform-origin: left top;
+	-webkit-transform: scale(0.7);
+	-moz-transform: scale(0.7);
+	-ms-transform: scale(0.7);
+	transform: scale(0.7);
+}
+
 iframe {
 	background-color: #ffffff;
-	width: 710px;
-	height: 500px;
-	border: 5px solid #A8DBA8;
-	border-radius: 15px;
+	width: 1074px;
+	height: 713px;
+	border: 9px solid #A8DBA8;
+	border-radius: 23px;
 }

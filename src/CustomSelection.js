@@ -144,6 +144,9 @@
 			.on('tap', clearSelection);
 		$(startMarker).add(endMarker)
 			.on('touchstart', handleMarkerTouchStart);
+		$(getBodyOf(startMarker))
+			.on('touchmove', handleMarkerTouchMove)
+			.on('touchend', handleMarkerTouchMoveEnd);
 		$(contextWindow)
 			.on('orientationchange resize', handleResize);
 	}
@@ -227,24 +230,24 @@
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		setMovedMarker(jqueryEvent.target);
-
-		$(contextDocument.body)
-			.on('touchmove', handleMarkerTouchMove)
-			.on('touchend', handleMarkerTouchMoveEnd);
 		selectionAnchor = getSelectionAnchor();
 	}
 
 	function handleMarkerTouchMove(jqueryEvent) {
-		handleMarkerPointerMove(jqueryEvent);
-		rejectTouchEnd = true;
+		if (movedMarker) {
+			handleMarkerPointerMove(jqueryEvent);
+			rejectTouchEnd = true;
+		}
 	}
 
 	function handleMarkerTouchMoveEnd() {
-		$(contextDocument.body)
-			.off('touchmove', handleMarkerTouchMove)
-			.off('touchend', handleMarkerTouchMoveEnd);
-		unsetMovedMarker();
-		selectionAnchor = null;
+		if (movedMarker) {
+			$(contextDocument.body)
+				.off('touchmove', handleMarkerTouchMove)
+				.off('touchend', handleMarkerTouchMoveEnd);
+			unsetMovedMarker();
+			selectionAnchor = null;
+		}
 	}
 
 	function handleResize() {
@@ -277,6 +280,10 @@
 
 	function isTouchDevice() {
 		return 'ontouchend' in document;
+	}
+
+	function getContextScale() {
+		return 0.7;
 	}
 
 	function getBodyOf(element) {
@@ -444,8 +451,8 @@
 		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0].offsetParent);
 		var markerAbsoluteOffset = getElementAbsoluteOffset(startMarker.offsetParent);
 		return {
-			x: elementAbsoluteOffset.x - markerAbsoluteOffset.x,
-			y: elementAbsoluteOffset.y - markerAbsoluteOffset.y
+			x: elementAbsoluteOffset.x - (markerAbsoluteOffset.x),
+			y: elementAbsoluteOffset.y - (markerAbsoluteOffset.y)
 		};
 	}
 
