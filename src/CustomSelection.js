@@ -220,6 +220,10 @@
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
+		lastPoint.clientX = (lastPoint.clientX - markersOriginOffset.framesOffsetX) * (1 / getContextScale());
+		lastPoint.clientY = (lastPoint.clientY - markersOriginOffset.framesOffsetY) * (1 / getContextScale());
+		lastPoint.pageX = (lastPoint.pageX - markersOriginOffset.framesOffsetX) * (1 / getContextScale());
+		lastPoint.pageY = (lastPoint.pageY - markersOriginOffset.framesOffsetY) * (1 / getContextScale());
 		frameRequester.requestFrame(function() {
 			var eventTarget = getTouchedElementByPoint(lastPoint);
 			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint, eventTarget);
@@ -451,8 +455,10 @@
 		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0]);
 		var markerAbsoluteOffset = getMarkersAbsoluteOffset(startMarker);
 		return {
-			x: elementAbsoluteOffset.x - markerAbsoluteOffset.x,
-			y: elementAbsoluteOffset.y - markerAbsoluteOffset.y
+			x: elementAbsoluteOffset.elementX - markerAbsoluteOffset.elementX,
+			y: elementAbsoluteOffset.elementY - markerAbsoluteOffset.elementY,
+			framesOffsetX: elementAbsoluteOffset.frameX - markerAbsoluteOffset.frameX,
+			framesOffsetY: elementAbsoluteOffset.frameY - markerAbsoluteOffset.frameY
 		};
 	}
 
@@ -462,8 +468,10 @@
 		var elementWindowOffset = computeFrameOffset(win);
 		var elementOffset = offsetParent.getBoundingClientRect();
 		return {
-			x: elementWindowOffset.left + (elementOffset.left * getContextScale()),
-			y: elementWindowOffset.top + (elementOffset.top * getContextScale())
+			elementX: elementWindowOffset.left + (elementOffset.left * getContextScale()),
+			elementY: elementWindowOffset.top + (elementOffset.top * getContextScale()),
+			frameX: elementWindowOffset.left,
+			frameY: elementWindowOffset.top
 		};
 	}
 
@@ -473,8 +481,10 @@
 		var elementWindowOffset = computeFrameOffset(win);
 		var elementOffset = offsetParent.getBoundingClientRect();
 		return {
-			x: elementWindowOffset.left + elementOffset.left,
-			y: elementWindowOffset.top + elementOffset.top
+			elementX: elementWindowOffset.left + elementOffset.left,
+			elementY: elementWindowOffset.top + elementOffset.top,
+			frameX: elementWindowOffset.left,
+			frameY: elementWindowOffset.top
 		};
 	}
 
