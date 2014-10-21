@@ -9,7 +9,7 @@
 
 	function Point(pointerEvent, options) {
 		var settings = $.extend({}, defaults, options);
-		var touches = pointerEvent.touches || pointerEvent.pointers || [pointerEvent];
+		var touches = pointerEvent.touches || pointerEvent.pointers;
 		var touch = touches[0];
 		this.clientX = touch.clientX;
 		this.clientY = touch.clientY;

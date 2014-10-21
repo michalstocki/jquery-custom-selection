@@ -1,5 +1,4 @@
 (function($) {
-	var ON_TOUCH_DEVICES = 'onTouchDevices';
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
@@ -10,7 +9,6 @@
 	var defaults = {
 		holdThreshold: 4,
 		holdTimeout: 500,
-		useMarkers: ON_TOUCH_DEVICES,
 		onSelectionChange: function() {
 		}
 	};
@@ -30,18 +28,17 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		if (!shouldLeaveNativeSelection()) {
-			useContextOf(this);
-			frameRequester = new CustomSelection.Lib.FrameRequester();
-			selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
-				$element: this,
-				contextWindow: contextWindow,
-				contextDocument: contextDocument,
-				fillStyle: settings.selectionColor
-			});
-			initMarkers(this);
-			enableSelectionFor(this);
-		}
+		useContextOf(this);
+		frameRequester = new CustomSelection.Lib.FrameRequester();
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
+			$element: this,
+			contextWindow: contextWindow,
+			contextDocument: contextDocument,
+			fillStyle: settings.selectionColor
+		});
+		initMarkers(this);
+		disableNativeSelectionFor(contextDocument.body);
+		enableTouchSelectionFor(this);
 		return this;
 	};
 
@@ -51,10 +48,9 @@
 	};
 
 	$.fn.disableCustomSelection = function() {
-		if (!shouldLeaveNativeSelection()) {
-			clearSelection();
-			disableSelectionFor(this);
-		}
+		clearSelection();
+		restoreNativeSelectionFor(contextDocument.body);
+		disableTouchSelectionFor(this);
 		return this;
 	};
 
@@ -79,56 +75,11 @@
 		y: 0
 	};
 
-	var mouseDownTime = 0;
-	var mouseDownPoint = null;
-	var hasMovedOverThreshold = false;
-	var timeoutId = null;
-
 //	-- Binding events
-
-	function shouldLeaveNativeSelection() {
-		return settings.useMarkers === ON_TOUCH_DEVICES && !isTouchDevice();
-	}
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
 		contextWindow = getWindowOf($element[0]);
-	}
-
-	function enableSelectionFor($element) {
-		if (isTouchDevice()) {
-			disableNativeSelection(getBodyOf($element));
-			enableTouchSelectionFor($element);
-		} else {
-			disableNativeSelection($element);
-			enableMouseSelectionFor($element);
-		}
-	}
-
-	function disableSelectionFor($element) {
-		if (isTouchDevice()) {
-			restoreNativeSelection(getBodyOf($element));
-			disableTouchSelectionFor($element);
-		} else {
-			restoreNativeSelection($element);
-			disableMouseSelectionFor($element);
-		}
-	}
-
-	function enableMouseSelectionFor($element) {
-		$element
-			.on('mousedown', handleGlobalMouseDown)
-			.on('mouseup', handleGlobalMouseUp)
-			.on('mousemove', handleGlobalMouseMove);
-		$(contextWindow).on('resize', handleResize);
-	}
-
-	function disableMouseSelectionFor($element) {
-		$element
-			.off('mousedown', handleGlobalMouseDown)
-			.off('mouseup', handleGlobalMouseUp)
-			.off('mousemove', handleGlobalMouseMove);
-		$(contextWindow).off('resize', handleResize);
 	}
 
 	function enableTouchSelectionFor($element) {
@@ -156,51 +107,6 @@
 			.off('touchend', handleGlobalTouchEnd)
 			.hammer().off('press', handleGlobalTapHold)
 			.off('tap', clearSelection);
-	}
-
-	function handleGlobalMouseDown(jqueryEvent) {
-		if (isMarker(jqueryEvent.target)) {
-			movedMarker = jqueryEvent.target;
-		} else {
-			clearSelection();
-			handleGlobalMouseHoldDownStart(jqueryEvent);
-		}
-	}
-
-	function handleGlobalMouseHoldDownStart(jqueryEvent) {
-		if (timeoutId) {
-			clearInterval(timeoutId);
-		}
-
-		mouseDownTime = Date.now();
-		mouseDownPoint = createPointerPoint(jqueryEvent, {shift: false});
-		hasMovedOverThreshold = false;
-
-		timeoutId = setTimeout(handleGlobalMouseHoldDown, settings.holdTimeout, jqueryEvent);
-	}
-
-	function handleGlobalMouseHoldDown(jqueryEvent) {
-		if (!hasMovedOverThreshold) {
-			selectWordUnderPointer(jqueryEvent);
-		}
-
-		mouseDownPoint = null;
-		mouseDownTime = 0;
-		hasMovedOverThreshold = false;
-		timeoutId = null;
-	}
-
-	function handleGlobalMouseUp() {
-		movedMarker = null;
-	}
-
-	function handleGlobalMouseMove(e) {
-		if (movedMarker) {
-			handleMarkerPointerMove(e);
-		}
-		else if (movedOverThreshold(e)) {
-			hasMovedOverThreshold = true;
-		}
 	}
 
 	function handleGlobalTapHold(e) {
@@ -246,9 +152,6 @@
 
 	function handleMarkerTouchMoveEnd() {
 		if (movedMarker) {
-			$(contextDocument.body)
-				.off('touchmove', handleMarkerTouchMove)
-				.off('touchend', handleMarkerTouchMoveEnd);
 			unsetMovedMarker();
 			selectionAnchor = null;
 		}
@@ -260,18 +163,6 @@
 		}
 	}
 
-	function movedOverThreshold(e) {
-		if (!mouseDownPoint) {
-			return false;
-		}
-
-		var mouseMoveXDiff = Math.abs(e.clientX - mouseDownPoint.clientX);
-		var mouseMoveYDiff = Math.abs(e.clientY - mouseDownPoint.clientY);
-
-		return mouseMoveXDiff > settings.holdThreshold ||
-			mouseMoveYDiff > settings.holdThreshold;
-	}
-
 	function toggleMovedMarker() {
 		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
 		if (movedMarker === startMarker) {
@@ -280,10 +171,6 @@
 			movedMarker = startMarker;
 		}
 		$(movedMarker).addClass(MARKER_MOVING_CLASS);
-	}
-
-	function isTouchDevice() {
-		return 'ontouchend' in document;
 	}
 
 	function getContextScale() {
@@ -309,13 +196,13 @@
 
 	// -- Dealing with native selection
 
-	function disableNativeSelection($element) {
+	function disableNativeSelectionFor($element) {
 		$element = $($element);
 		userSelectBeforeEnablingSelection = $element.css('user-select');
 		$element.css('user-select', 'none');
 	}
 
-	function restoreNativeSelection($element) {
+	function restoreNativeSelectionFor($element) {
 		$element = $($element);
 		$element.css('user-select', userSelectBeforeEnablingSelection);
 	}
