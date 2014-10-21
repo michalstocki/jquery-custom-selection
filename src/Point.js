@@ -21,6 +21,20 @@
 		}
 	}
 
+	Point.prototype.translate = function(x, y) {
+		this.clientX = this.clientX + x;
+		this.clientY = this.clientY + y;
+		this.pageX = this.pageX + x;
+		this.pageY = this.pageY + y;
+	};
+
+	Point.prototype.scale = function(scale) {
+		this.clientX = this.clientX * scale;
+		this.clientY = this.clientY * scale;
+		this.pageX = this.pageX * scale;
+		this.pageY = this.pageY * scale;
+	};
+
 	global.CustomSelection.Lib.Point = Point;
 
 })(this);

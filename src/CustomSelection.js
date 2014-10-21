@@ -125,11 +125,7 @@
 
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		lastPoint = createPointerPoint(jqueryEvent.originalEvent);
-		lastPoint.clientX = (lastPoint.clientX - markersOriginOffset.framesOffsetX) * (1 / getContextScale());
-		lastPoint.clientY = (lastPoint.clientY - markersOriginOffset.framesOffsetY) * (1 / getContextScale());
-		lastPoint.pageX = (lastPoint.pageX - markersOriginOffset.framesOffsetX) * (1 / getContextScale());
-		lastPoint.pageY = (lastPoint.pageY - markersOriginOffset.framesOffsetY) * (1 / getContextScale());
+		lastPoint = createPointFromMarkerEvent(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventTarget = getTouchedElementByPoint(lastPoint);
 			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint, eventTarget);
@@ -213,7 +209,7 @@
 		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!isMarker(element)) {
 			clearSelection();
-			var point = createPointerPoint(pointerEvent, {shift: false});
+			var point = createPointFromEvent(pointerEvent, {shift: false});
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
 			rejectTouchEnd = true;
@@ -292,8 +288,24 @@
 		movedMarker = null;
 	}
 
-	function createPointerPoint(pointerEvent, options) {
+	function createPointFromMarkerEvent(pointerEvent) {
+		var point = createPointFromEvent(pointerEvent);
+		point.translate.apply(point, getVectorOfMarkersOrigin());
+		point.scale(getScaleOfMarkersContext());
+		return point;
+	}
+
+	function createPointFromEvent(pointerEvent, options) {
 		return new CustomSelection.Lib.Point(pointerEvent, options);
+	}
+
+	function getVectorOfMarkersOrigin() {
+		var offset = markersOriginOffset;
+		return [-offset.framesOffsetX, -offset.framesOffsetY];
+	}
+
+	function getScaleOfMarkersContext() {
+		return 1 / getContextScale();
 	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
