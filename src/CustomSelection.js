@@ -253,12 +253,11 @@
 
 	function adjustMarkerPositionsTo(range) {
 		var rects = range.getClientRects();
-		var offsetY = 0; //isAppleDevice ? 0 : $(contextWindow).scrollTop();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		startMarker.style.top = firstRect.bottom * getContextScale() + offsetY + markersOriginOffset.y + 'px';
+		startMarker.style.top = firstRect.bottom * getContextScale() + markersOriginOffset.y + 'px';
 		startMarker.style.left = firstRect.left * getContextScale() + markersOriginOffset.x + 'px';
-		endMarker.style.top = lastRect.bottom * getContextScale() + offsetY + markersOriginOffset.y + 'px';
+		endMarker.style.top = lastRect.bottom * getContextScale() + markersOriginOffset.y + 'px';
 		endMarker.style.left = lastRect.right * getContextScale() + markersOriginOffset.x + 'px';
 	}
 
