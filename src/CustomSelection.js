@@ -21,6 +21,7 @@
 	var startMarker = null;
 	var endMarker = null;
 	var selectionDrawer = null;
+	var hammer;
 
 	window.CustomSelection = {
 		Lib: {}
@@ -84,35 +85,42 @@
 		contextWindow = getWindowOf($element[0]);
 	}
 
-	function enableTouchSelectionFor($element) {
-		$element.each(function() {
-			new Hammer(this, {
-				holdThreshold: settings.holdThreshold,
-				holdTimeout: settings.holdTimeout
-			});
+	function initializeHammerFor($element) {
+		hammer = new Hammer.Manager($element[0], {
+			recognizers: [
+				[Hammer.Press],
+				[Hammer.Tap]
+			]
 		});
-		$element
-			.on('touchend', handleGlobalTouchEnd)
-			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', clearSelection);
+		hammer.set({
+			holdThreshold: settings.holdThreshold,
+			holdTimeout: settings.holdTimeout
+		});
+	}
+
+	function enableTouchSelectionFor($element) {
+		initializeHammerFor($element);
 		$(startMarker).add(endMarker)
 			.on('touchstart', handleMarkerTouchStart);
 		$(getBodyOf(startMarker))
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
-		$(contextWindow)
-			.on('orientationchange resize', handleResize);
+		$element.on('touchend', handleGlobalTouchEnd);
+		hammer.on('press', handleGlobalTapHold);
+		hammer.on('tap', clearSelection);
+		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
+		$(getBodyOf(startMarker))
+			.off('touchmove', handleMarkerTouchMove)
+			.off('touchend', handleMarkerTouchMoveEnd);
 		$element
-			.off('touchend', handleGlobalTouchEnd)
-			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', clearSelection);
+			.off('touchend', handleGlobalTouchEnd);
+		hammer.destroy();
 	}
 
 	function handleGlobalTapHold(e) {
-		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
 		selectWordUnderPointer(e);

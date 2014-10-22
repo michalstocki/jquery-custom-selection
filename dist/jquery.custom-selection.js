@@ -1,8 +1,17 @@
-/*! jquery-custom-selection - v0.2.0 - 2014-09-29 */(function($) {
+/*! jquery-custom-selection - v0.2.2 - 2014-10-22 */(function($) {
+	var MARKER_CLASS = 'jcs-marker';
+	var MARKER_START_CLASS = 'jcs-beginning-marker';
+	var MARKER_END_CLASS = 'jcs-end-marker';
+	var MARKER_MOVING_CLASS = 'jcs-marker-moving';
+
 	// Default configuration
-	var settings, defaults = {
-		markerClass: 'marker',
-		onSelectionChange: function() {
+	var settings;
+	var defaults = {
+		holdThreshold: 4,
+		holdTimeout: 500,
+		onSelectionChange: function() {},
+		scaleGetter: function() {
+			return 1;
 		}
 	};
 	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
@@ -12,6 +21,7 @@
 	var startMarker = null;
 	var endMarker = null;
 	var selectionDrawer = null;
+	var hammer;
 
 	window.CustomSelection = {
 		Lib: {}
@@ -22,9 +32,6 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		useContextOf(this);
-		enableTouchSelectionFor(this);
-		startMarker = createMarker(settings.markerClass);
-		endMarker = createMarker(settings.markerClass);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
@@ -32,6 +39,9 @@
 			contextDocument: contextDocument,
 			fillStyle: settings.selectionColor
 		});
+		initMarkers(this);
+		disableNativeSelectionFor(contextDocument.body);
+		enableTouchSelectionFor(this);
 		return this;
 	};
 
@@ -41,69 +51,79 @@
 	};
 
 	$.fn.disableCustomSelection = function() {
-		disableTouchSelectionFor(this);
 		clearSelection();
+		restoreNativeSelectionFor(contextDocument.body);
+		disableTouchSelectionFor(this);
 		return this;
 	};
 
 //	Private methods ------------------------------------------------------------
 
 	var lastPoint = null;
-	var WHITESPACE = ' ';
+	var WHITESPACE_LIST = {
+		32: ' ',
+		9: '\t',
+		13: '\r',
+		10: '\n'
+	};
 	var rejectTouchEnd = false;
 	var contextWindow = null;
 	var contextDocument = null;
 	var lastSelectionRange = null;
+	var movedMarker = null;
+	var selectionAnchor = null;
+	var userSelectBeforeEnablingSelection = null;
+	var markersOriginOffset = {
+		x: 0,
+		y: 0
+	};
 
 //	-- Binding events
 
 	function useContextOf($element) {
 		contextDocument = $element[0].ownerDocument;
-		contextWindow = contextDocument.defaultView || contextDocument.parentWindow;
+		contextWindow = getWindowOf($element[0]);
+	}
+
+	function initializeHammerFor($element) {
+		hammer = new Hammer.Manager($element[0], {
+			recognizers: [
+				[Hammer.Press],
+				[Hammer.Tap]
+			]
+		});
+		hammer.set({
+			holdThreshold: settings.holdThreshold,
+			holdTimeout: settings.holdTimeout
+		});
 	}
 
 	function enableTouchSelectionFor($element) {
-		$element.each(function() {
-			new Hammer(this, {
-				holdThreshold: 2,
-				holdTimeout: 500
-			});
-		});
-		$element
-			.on('touchmove', handleGlobalTouchMove)
-			.on('touchend', handleGlobalTouchEnd)
-			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', clearSelection);
+		initializeHammerFor($element);
+		$(startMarker).add(endMarker)
+			.on('touchstart', handleMarkerTouchStart);
+		$(getBodyOf(startMarker))
+			.on('touchmove', handleMarkerTouchMove)
+			.on('touchend', handleMarkerTouchMoveEnd);
+		$element.on('touchend', handleGlobalTouchEnd);
+		hammer.on('press', handleGlobalTapHold);
+		hammer.on('tap', clearSelection);
 		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
+		$(getBodyOf(startMarker))
+			.off('touchmove', handleMarkerTouchMove)
+			.off('touchend', handleMarkerTouchMoveEnd);
 		$element
-			.off('touchmove', handleGlobalTouchMove)
-			.off('touchend', handleGlobalTouchEnd)
-			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', clearSelection);
+			.off('touchend', handleGlobalTouchEnd);
+		hammer.destroy();
 	}
 
 	function handleGlobalTapHold(e) {
-		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		if (!isMarker(e.target)) {
-			var element = getTouchedElementFromEvent(e);
-			var point = getTouchPoint(e, {shift: false});
-			clearSelection();
-			wrapWithMarkersWordAtPoint(element, point);
-			makeSelection();
-			rejectTouchEnd = true;
-		}
-	}
-
-	function handleGlobalTouchMove(jqueryEvent) {
-		if (isMarker(jqueryEvent.target)) {
-			handleMarkerTouchMove(jqueryEvent);
-			rejectTouchEnd = true;
-		}
+		selectWordUnderPointer(e);
 	}
 
 	function handleGlobalTouchEnd(jqueryEvent) {
@@ -113,106 +133,192 @@
 		}
 	}
 
-	function handleMarkerTouchMove(jqueryEvent) {
+	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		lastPoint = getTouchPoint(jqueryEvent.originalEvent);
+		lastPoint = createPointFromMarkerEvent(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
-			var eventAnchor = getTouchedElementByPoint(lastPoint);
-			mark(eventAnchor, lastPoint, jqueryEvent.target);
-			makeSelection();
+			var eventTarget = getTouchedElementByPoint(lastPoint);
+			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint, eventTarget);
+			makeSelectionFor(range);
 		});
 	}
 
+	function handleMarkerTouchStart(jqueryEvent) {
+		jqueryEvent.preventDefault();
+		setMovedMarker(jqueryEvent.target);
+		selectionAnchor = getSelectionAnchor();
+	}
+
+	function handleMarkerTouchMove(jqueryEvent) {
+		if (movedMarker) {
+			handleMarkerPointerMove(jqueryEvent);
+			rejectTouchEnd = true;
+		}
+	}
+
+	function handleMarkerTouchMoveEnd() {
+		if (movedMarker) {
+			unsetMovedMarker();
+			selectionAnchor = null;
+		}
+	}
+
+	function handleResize() {
+		if (lastSelectionRange) {
+			drawSelectionRange();
+		}
+	}
+
+	function toggleMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		if (movedMarker === startMarker) {
+			movedMarker = endMarker;
+		} else {
+			movedMarker = startMarker;
+		}
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+	}
+
+	function getContextScale() {
+		return settings.scaleGetter();
+	}
+
+	function getBodyOf(element) {
+		return (element.ownerDocument || element[0].ownerDocument).body;
+	}
+
+	function getWindowOf(element) {
+		var doc = element.ownerDocument;
+		return doc.defaultView || doc.parentWindow;
+	}
+
+	function getSelectionAnchor() {
+		if (movedMarker === startMarker) {
+			return getEndAnchorOf(lastSelectionRange);
+		} else {
+			return getStartAnchorOf(lastSelectionRange);
+		}
+	}
+
+	// -- Dealing with native selection
+
+	function disableNativeSelectionFor($element) {
+		$element = $($element);
+		userSelectBeforeEnablingSelection = $element.css('user-select');
+		$element.css('user-select', 'none');
+	}
+
+	function restoreNativeSelectionFor($element) {
+		$element = $($element);
+		$element.css('user-select', userSelectBeforeEnablingSelection);
+	}
+
+//	-- Creating Selection
+
+	function selectWordUnderPointer(pointerEvent) {
+		var element = getTargetElementFromPointerEvent(pointerEvent);
+		if (!isMarker(element)) {
+			clearSelection();
+			var point = createPointFromEvent(pointerEvent, {shift: false});
+			var range = getRangeWrappingWordAtPoint(element, point);
+			makeSelectionFor(range);
+			rejectTouchEnd = true;
+		}
+	}
+
+	function makeSelectionFor(range) {
+		if (rangeDiffersFromLastSelection(range)) {
+			lastSelectionRange = range;
+			drawSelectionRange();
+			settings.onSelectionChange(lastSelectionRange);
+		}
+		showMarkers();
+	}
+
 	function clearSelection() {
-		$(startMarker).detach();
-		$(endMarker).detach();
 		lastSelectionRange = null;
+		hideMarkers();
 		selectionDrawer.clearSelection();
 		settings.onSelectionChange(contextDocument.createRange());
 	}
 
-	function handleResize() {
-		var range = createSelectionRange();
-		drawSelectionRange(range);
+	function drawSelectionRange() {
+		selectionDrawer.redraw(lastSelectionRange);
+		adjustMarkerPositionsTo(lastSelectionRange);
+	}
+
+	function hasEndOtherThanLastSelectionEnd(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
+	}
+
+	function hasStartOtherThanLastSelectionStart(range) {
+		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
+	}
+
+	function rangeDiffersFromLastSelection(range) {
+		return !lastSelectionRange ||
+			hasEndOtherThanLastSelectionEnd(range) ||
+			hasStartOtherThanLastSelectionStart(range);
+	}
+
+	function adjustMarkerPositionsTo(range) {
+		var rects = range.getClientRects();
+		var firstRect = rects[0];
+		var lastRect = rects[rects.length - 1];
+		startMarker.style.top = yToMarkersContext(firstRect.bottom) + 'px';
+		startMarker.style.left = xToMarkersContext(firstRect.left) + 'px';
+		endMarker.style.top = yToMarkersContext(lastRect.bottom) + 'px';
+		endMarker.style.left = xToMarkersContext(lastRect.right) + 'px';
+	}
+
+//	-- Preparing Markers
+
+	function initMarkers($element) {
+		startMarker = $(settings.startMarker)[0] ||
+			createMarkerInside($element, MARKER_START_CLASS);
+		endMarker = $(settings.endMarker)[0] ||
+			createMarkerInside($element, MARKER_END_CLASS);
+
+		markersOriginOffset = getMarkersOriginOffset($element);
+		hideMarkers();
 	}
 
 	function isMarker(element) {
 		return element === startMarker || element === endMarker;
 	}
 
-//	-- Creating Selection
-
-	function makeSelection() {
-		var range = createSelectionRange();
-		if (hasRangeChanged(range)) {
-			drawSelectionRange(range);
-		}
+	function setMovedMarker(element) {
+		movedMarker = element;
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
 	}
 
-	function drawSelectionRange(range) {
-		if (range) {
-			settings.onSelectionChange(range);
-			lastSelectionRange = range;
-			selectionDrawer.redraw(range);
-		}
+	function unsetMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		movedMarker = null;
 	}
 
-	function hasEndOfSelectionChanged(range) {
-		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
+	function createPointFromMarkerEvent(pointerEvent) {
+		var point = createPointFromEvent(pointerEvent);
+		point.translate.apply(point, getVectorOfMarkersOrigin());
+		point.scale(getScaleOfMarkersContext());
+		return point;
 	}
 
-	function hasStartOfSelectionChanged(range) {
-		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
+	function createPointFromEvent(pointerEvent, options) {
+		return new CustomSelection.Lib.Point(pointerEvent, options);
 	}
 
-	function hasRangeChanged(range) {
-		return !lastSelectionRange ||
-			hasEndOfSelectionChanged(range) ||
-			hasStartOfSelectionChanged(range);
+	function getVectorOfMarkersOrigin() {
+		var offset = markersOriginOffset;
+		return [-offset.framesOffsetX, -offset.framesOffsetY];
 	}
 
-	function createSelectionRange() {
-		if (existInDOM(startMarker, endMarker)) {
-			var range = contextDocument.createRange();
-			range.setStart.apply(range, getRangeBoundAt(startMarker));
-			range.setEnd.apply(range, getRangeBoundAt(endMarker));
-			if (range.collapsed) {
-				range.setStart.apply(range, getRangeBoundAt(endMarker));
-				range.setEnd.apply(range, getRangeBoundAt(startMarker));
-			}
-
-			return range;
-		}
-		return null;
+	function getScaleOfMarkersContext() {
+		return 1 / getContextScale();
 	}
 
-	function getRangeBoundAt(element) {
-		var offset = getIndexOfElement(element);
-		var anchor = element.parentNode;
-		if (element.nextSibling) {
-			offset += 1;
-		}
-		return [anchor, offset];
-	}
-
-	function existInDOM() {
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (!element.parentNode) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-//	-- Preparing Markers
-
-	function getTouchPoint(touchEvent, options) {
-		return new CustomSelection.Lib.Point(touchEvent, options);
-	}
-
-	function getTouchedElementFromEvent(touchEvent) {
-		var touches = touchEvent.touches || touchEvent.pointers;
+	function getTargetElementFromPointerEvent(pointerEvent) {
+		var touches = pointerEvent.touches || pointerEvent.pointers || [pointerEvent];
 		return touches[0].target;
 	}
 
@@ -223,126 +329,234 @@
 		return element;
 	}
 
-	function createMarker(kind) {
-		var span = contextDocument.createElement('span');
-		span.setAttribute('class', kind);
-		return span;
+	function createMarkerInside($parent, className) {
+		var element = contextDocument.createElement('div');
+		element.setAttribute('class', MARKER_CLASS + ' ' + className);
+		element.setAttribute('style', 'position: absolute;');
+		$parent.append(element);
+		return element;
 	}
 
 	function hideMarkers() {
-		var css = {visibility: 'hidden'};
-		$(startMarker).css(css);
-		$(endMarker).css(css);
+		$(startMarker).add(endMarker).css({visibility: 'hidden'});
 	}
 
 	function showMarkers() {
-		var css = {visibility: 'visible'};
-		$(startMarker).css(css);
-		$(endMarker).css(css);
+		$(startMarker).add(endMarker).css({visibility: 'visible'});
+	}
+
+	function hasTheSameOffsetParent(elementA, elementB) {
+		return elementA.offsetParent === elementB.offsetParent;
+	}
+
+	function getMarkersOriginOffset($element) {
+		if (hasTheSameOffsetParent(startMarker, endMarker)) {
+			return computeMarkerOffsetRelativeTo($element);
+		} else {
+			throw new Error('Both marker elements must have the same offset parent!');
+		}
+	}
+
+//	---- Synchronizing origin of the markers with origin of the $element
+
+	function computeMarkerOffsetRelativeTo($element) {
+		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0]);
+		var markerAbsoluteOffset = getMarkersAbsoluteOffset(startMarker);
+		return {
+			x: elementAbsoluteOffset.elementX - markerAbsoluteOffset.elementX,
+			y: elementAbsoluteOffset.elementY - markerAbsoluteOffset.elementY,
+			framesOffsetX: elementAbsoluteOffset.frameX - markerAbsoluteOffset.frameX,
+			framesOffsetY: elementAbsoluteOffset.frameY - markerAbsoluteOffset.frameY
+		};
+	}
+
+	function getElementAbsoluteOffset(element) {
+		var offsetParent = element.offsetParent;
+		var win = getWindowOf(offsetParent);
+		var elementWindowOffset = computeFrameOffset(win);
+		var elementOffset = offsetParent.getBoundingClientRect();
+		return {
+			elementX: elementWindowOffset.left + (elementOffset.left * getContextScale()),
+			elementY: elementWindowOffset.top + (elementOffset.top * getContextScale()),
+			frameX: elementWindowOffset.left,
+			frameY: elementWindowOffset.top
+		};
+	}
+
+	function getMarkersAbsoluteOffset(marker) {
+		var offsetParent = marker.offsetParent;
+		var win = getWindowOf(offsetParent);
+		var elementWindowOffset = computeFrameOffset(win);
+		var elementOffset = offsetParent.getBoundingClientRect();
+		return {
+			elementX: elementWindowOffset.left + elementOffset.left,
+			elementY: elementWindowOffset.top + elementOffset.top,
+			frameX: elementWindowOffset.left,
+			frameY: elementWindowOffset.top
+		};
+	}
+
+	function computeFrameOffset(win) {
+		var dims = {top: 0, left: 0};
+
+		// find our <iframe> tag within our parent window
+		var frame = win.frameElement;
+
+		// add the offset & recur up the frame chain
+		if (frame) {
+			var frameRect = frame.getBoundingClientRect();
+			var frameBodyRect = win.document.body.getBoundingClientRect();
+			dims.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
+			dims.top += frameRect.top + frame.clientTop - frameBodyRect.top;
+			if (win !== top) {
+				computeFrameOffset(win.parent, dims);
+			}
+		}
+		return dims;
+	}
+
+	function xToMarkersContext(x) {
+		return x * getContextScale() + markersOriginOffset.x;
+	}
+
+	function yToMarkersContext(y) {
+		return y * getContextScale() + markersOriginOffset.y;
 	}
 
 //	-- Extracting a word under the pointer
 
-	function wrapWithMarkersWordAtPoint(element, point) {
+	function getRangeWrappingWordAtPoint(element, point) {
 		var textNode;
+		var range = null;
 		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			textNode = trimTextNodeWhileContainsPoint(textNode, point);
-			putMarkerBeforeWhitespaceOnLeftOf(textNode, startMarker);
-			putMarkerBeforeWhitespaceOnRightOf(textNode, endMarker);
-			textNode.parentNode.normalize();
+			range = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+			expandRangeToStartAfterTheWhitespaceOnLeft(range);
+			expandRangeToEndBeforeTheWhitespaceOnRight(range);
 		}
+		return range;
 	}
 
-	function putMarkerBeforeWhitespaceOnLeftOf(textNode, marker) {
+	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
 		// searching space backwards
-		var node = textNode;
-		while (!nodeEndsWith(node, WHITESPACE)) {
-			if (node.data.length > 1) {
-				node = removeLastLetter(node);
-			} else if (node.previousSibling && nodeIsText(node.previousSibling)) {
-				node = node.previousSibling;
-			} else {
-				putMarkerBefore(node, marker);
+		while (!rangeStartsWithWhitespace(range)) {
+			if (range.startOffset < 1) {
 				return;
+			} else {
+				range.setStart(range.startContainer, range.startOffset - 1);
 			}
 		}
-		putMarkerAfter(node, marker);
+		range.setStart(range.startContainer, range.startOffset + 1);
 	}
 
-	function putMarkerBeforeWhitespaceOnRightOf(textNode, marker) {
+	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
 		// searching space forwards
-		var node = textNode;
-		while (!nodeStartsWith(node, WHITESPACE)) {
-			if (node.length > 1) {
-				node = removeFirstLetter(node);
-			} else if (node.nextSibling && nodeIsText(node.nextSibling)) {
-				node = node.nextSibling;
-			} else {
-				putMarkerAfter(node, marker);
+		var maxIndex = Math.max(range.endContainer.data.length, 0);
+		while (!rangeEndsWithWhitespace(range)) {
+			if (range.endOffset >= maxIndex) {
 				return;
+			} else {
+				range.setEnd(range.endContainer, range.endOffset + 1);
 			}
 		}
-		putMarkerBefore(node, marker);
+		range.setEnd(range.endContainer, range.endOffset - 1);
 	}
 
-	function removeLastLetter(textNode) {
-		var subNode = textNode.splitText(textNode.length - 1);
-		return subNode.previousSibling;
+	function rangeStartsWithWhitespace(range) {
+		return range.toString().charCodeAt(0) in WHITESPACE_LIST;
 	}
 
-	function removeFirstLetter(textNode) {
-		return textNode.splitText(1);
-	}
-
-	function nodeStartsWith(node, letter) {
-		return node.data[0] === letter;
-	}
-
-	function nodeEndsWith(node, letter) {
-		return node.data[node.length - 1] === letter;
+	function rangeEndsWithWhitespace(range) {
+		var stringified = range.toString();
+		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
 	}
 
 //	-- Marking
 
-	function mark(el, point, marker) {
-		var textNode;
-		if (textNode = getFromElNodeContainingPoint(el, point)) {
-			textNode = trimTextNodeWhileContainsPoint(textNode, point);
-			putMarkerBefore(textNode, marker);
-		} else if (textNode = getClosestTextNodeFromEl(el, point)) {
-			putMarkerAfter(textNode, marker);
-		} else {
-			return null;
-		}
-		marker.parentNode.normalize();
-	}
-
-	function trimTextNodeWhileContainsPoint(textNode, point) {
-		while (textNode.length > 1) {
-			var trimPosition = textNode.length >> 1;
-			var subNode = textNode.splitText(trimPosition);
-			if (nodeContainsPoint(subNode, point)) {
-				textNode = subNode;
+	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
+		var coveringRange = lastSelectionRange.cloneRange();
+		var pointAnchor = convertPointInElementToAnchor(element, point);
+		if (pointAnchor) {
+			var bound = getNewSelectionBoundary(pointAnchor);
+			var protectedBound = getProtectedSelectionBoundary();
+			bound.applyTo(coveringRange);
+			if (coveringRange.collapsed) {
+				protectedBound.applyTo(coveringRange);
+				bound.applyOppositeTo(coveringRange);
+				toggleMovedMarker();
 			}
 		}
-		return textNode;
+		return coveringRange;
 	}
 
-	function putMarkerBefore(node, marker) {
-		node.parentNode.insertBefore(marker, node);
-	}
-
-	function putMarkerAfter(node, marker) {
-		if (node.nextSibling) {
-			node.parentNode.insertBefore(marker, node.nextSibling);
+	function getNewSelectionBoundary(anchor) {
+		if (movedMarker === startMarker) {
+			return createStartBoundary(anchor);
 		} else {
-			node.parentNode.appendChild(marker);
+			return createEndBoundary(anchor);
 		}
 	}
 
-	function getIndexOfElement(element) {
-		var elements = element.parentElement.childNodes;
-		return Array.prototype.indexOf.call(elements, element);
+	function getProtectedSelectionBoundary() {
+		var selectionAnchor = getSelectionAnchor();
+		if (movedMarker === startMarker) {
+			return createStartBoundary(selectionAnchor);
+		} else {
+			return createEndBoundary(selectionAnchor);
+		}
+	}
+
+	function convertPointInElementToAnchor(element, point) {
+		var textNode;
+		var pointRange;
+		var pointAnchor = null;
+		if ((textNode = getFromElNodeContainingPoint(element, point)) &&
+				(pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point))) {
+			pointAnchor = getStartAnchorOf(pointRange);
+		} else if (pointRange = getClosestPointRangeFormElement(element, point)) {
+			pointAnchor = getEndAnchorOf(pointRange);
+		}
+		return pointAnchor;
+	}
+
+	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
+		var range = contextDocument.createRange();
+		var startIndex = 0;
+		var endIndex = textNode.data.length;
+		while (startIndex < endIndex) {
+			var middle = (startIndex + endIndex) >> 1;
+			range.setStart(textNode, startIndex);
+			range.setEnd(textNode, middle + 1);
+			if (rangeContainsPoint(range, point)) {
+				endIndex = middle;
+			} else {
+				startIndex = middle + 1;
+				range.setStart(textNode, startIndex);
+				range.setEnd(textNode, endIndex);
+			}
+		}
+		return range;
+	}
+
+	function createStartBoundary(anchor) {
+		return new CustomSelection.Lib.StartBoundary(anchor);
+	}
+
+	function createEndBoundary(anchor) {
+		return new CustomSelection.Lib.EndBoundary(anchor);
+	}
+
+	function getStartAnchorOf(range) {
+		return {
+			container: range.startContainer,
+			offset: range.startOffset
+		};
+	}
+
+	function getEndAnchorOf(range) {
+		return {
+			container: range.endContainer,
+			offset: range.endOffset
+		};
 	}
 
 //  ---- Finding a text node
@@ -358,6 +572,16 @@
 			}
 		}
 		return null;
+	}
+
+	function rangeContainsPoint(range, point) {
+		var rects = range.getClientRects();
+		for (var j = 0, rect; rect = rects[j++];) {
+			if (rectContainsPoint(rect, point)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	function nodeContainsPoint(node, point) {
@@ -377,9 +601,18 @@
 	}
 
 	function rectContainsPoint(rect, point) {
-		var x = isAppleDevice ? point.pageX : point.clientX;
+		return rectContainsPointVertically(rect, point) &&
+		rectOrItsBoundsContainPointHorizontally(rect, point);
+	}
+
+	function rectContainsPointVertically(rect, point) {
 		var y = isAppleDevice ? point.pageY : point.clientY;
-		return x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
+		return y > rect.top && y < rect.bottom;
+	}
+
+	function rectOrItsBoundsContainPointHorizontally(rect, point) {
+		var x = isAppleDevice ? point.pageX : point.clientX;
+		return x >= rect.left && x <= rect.right;
 	}
 
 	function nodeIsText(node) {
@@ -392,11 +625,36 @@
 
 //  ------ Finding the closest node to the pointer
 
-	function getClosestTextNodeFromEl(el, point) {
-		var nearestOnTheLeftOfPoint = getNodeNearerPointOnLeft.bind(null, point);
-		var nearestAbovePoint = getNodeNearerPointAbove.bind(null, point);
-		return searchTextNode(el, nearestOnTheLeftOfPoint) ||
-			searchTextNode(el, nearestAbovePoint);
+	var closestNode;
+	var closestRectInNode;
+
+	function getClosestPointRangeFormElement(el, point) {
+		var pointRange = null;
+		var nearestOnTheLeftOfPoint = createNodeComparator({
+			point: point,
+			getBetterRect: getRectMoreOnTheRight,
+			getBestRectFromNode: getRectNearestOnLeftOfPoint
+		});
+		var nearestAbovePoint = createNodeComparator({
+			point: point,
+			getBetterRect: getLowerRect,
+			getBestRectFromNode: getRectNearestAbovePoint
+		});
+
+		var closestNodeFound =
+				searchTextNode(el, nearestOnTheLeftOfPoint) ||
+				searchTextNode(el, nearestAbovePoint);
+
+		if (closestNodeFound) {
+			pointRange = createRangeAtTheEndOfTheClosestNode();
+			setClosestNodeAndRect(null, null);
+		}
+		return pointRange;
+	}
+
+	function setClosestNodeAndRect(node, rect) {
+		closestNode = node;
+		closestRectInNode = rect;
 	}
 
 	function searchTextNode(el, comparator) {
@@ -426,21 +684,38 @@
 		return closestNode;
 	}
 
+	function createNodeComparator(options) {
+		var point = options.point;
+		var getBetterRect = options.getBetterRect;
+		var getBestRectFromNode = options.getBestRectFromNode;
+		return function(winner, rival) {
+			var newWinner = winner;
+			var nearestRivalRect = getBestRectFromNode(rival, point);
+			if (winner) {
+				var nearestWinnerRect = getBestRectFromNode(winner, point);
+				if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
+						getBetterRect(nearestRivalRect, nearestWinnerRect) === nearestRivalRect) {
+					newWinner = rival;
+					setClosestNodeAndRect(rival, nearestRivalRect);
+				}
+			} else if (nearestRivalRect) {
+				newWinner = rival;
+				setClosestNodeAndRect(rival, nearestRivalRect);
+			}
+			return newWinner;
+		};
+	}
+
 //	-------- Finding node on the **left** of the pointer
 
-	function getNodeNearerPointOnLeft(point, winner, rival) {
-		var newWinner = winner;
-		var nearestRivalRect = getRectNearestOnLeftOfPoint(rival, point);
-		if (winner) {
-			var nearestWinnerRect = getRectNearestOnLeftOfPoint(winner, point);
-			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
-				nearestRivalRect.right > nearestWinnerRect.right) {
-				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
-			}
-		} else if (nearestRivalRect) {
-			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+	function getRectMoreOnTheRight(rectA, rectB) {
+		if (rectA.right > rectB.right) {
+			return rectA;
+		} else if (rectB.right > rectA.right) {
+			return rectB;
+		} else {
+			return null;
 		}
-		return newWinner;
 	}
 
 	function getRectNearestOnLeftOfPoint(node, point) {
@@ -465,35 +740,32 @@
 		return rect.right < x && rect.top <= y && rect.bottom >= y;
 	}
 
-	function splitNodeAfterRect(node, clientRect) {
-		var rects = getRectsForNode(node);
+	function createRangeAtTheEndOfTheClosestNode() {
+		var rects = getRectsForNode(closestNode);
 		var lastRect = rects[rects.length - 1];
-		if (clientRect === lastRect || !nodeIsText(node)) {
-			return node;
+		if (closestRectInNode === lastRect || !nodeIsText(closestNode)) {
+			var range = document.createRange();
+			range.selectNode(closestNode);
+			return range;
 		} else {
 			var point = {
-				clientX: clientRect.right - 1,
-				clientY: clientRect.bottom - 1
+				clientX: closestRectInNode.right - 1,
+				clientY: closestRectInNode.bottom - 1
 			};
-			return trimTextNodeWhileContainsPoint(node, point);
+			return getFromTextNodeMinimalRangeContainingPoint(closestNode, point);
 		}
 	}
 
 //	-------- Finding node **above** the pointer
 
-	function getNodeNearerPointAbove(point, winner, rival) {
-		var nearestRivalRect = getRectNearestAbovePoint(rival, point);
-		var newWinner = winner;
-		if (winner) {
-			var nearestWinnerRect = getRectNearestAbovePoint(winner, point);
-			if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
-				nearestRivalRect.top >= nearestWinnerRect.top) {
-				newWinner = splitNodeAfterRect(rival, nearestRivalRect);
-			}
-		} else if (nearestRivalRect) {
-			newWinner = splitNodeAfterRect(rival, nearestRivalRect);
+	function getLowerRect(rectA, rectB) {
+		if (rectA.top >= rectB.top) {
+			return rectA;
+		} else if (rectB.top >= rectA.top) {
+			return rectB;
+		} else {
+			return null;
 		}
-		return newWinner;
 	}
 
 	function getRectNearestAbovePoint(node, point) {
@@ -510,6 +782,60 @@
 
 })(jQuery);
 
+
+
+(function(global) {
+	'use strict';
+	/**
+	 * Private class Boundary
+	 */
+
+	function Boundary(anchor) {
+		this._container = anchor.container;
+		this._offset = anchor.offset;
+	}
+
+	/**
+	 * Class StartBoundary extends Boundary
+	 */
+
+	function StartBoundary() {
+		Boundary.apply(this, arguments);
+	}
+	// Inheritance
+	StartBoundary.prototype = Object.create(Boundary.prototype);
+
+	StartBoundary.prototype.applyTo = function(range) {
+		range.setStart(this._container, this._offset);
+	};
+
+	StartBoundary.prototype.applyOppositeTo = function(range) {
+		range.setEnd(this._container, this._offset);
+	};
+
+	global.CustomSelection.Lib.StartBoundary = StartBoundary;
+
+	/**
+	 * Class StartBoundary extends Boundary
+	 */
+
+	function EndBoundary() {
+		Boundary.apply(this, arguments);
+	}
+	// Inheritance
+	EndBoundary.prototype = Object.create(Boundary.prototype);
+
+	EndBoundary.prototype.applyTo = function(range) {
+		range.setEnd(this._container, this._offset);
+	};
+
+	EndBoundary.prototype.applyOppositeTo = function(range) {
+		range.setStart(this._container, this._offset);
+	};
+
+	global.CustomSelection.Lib.EndBoundary = EndBoundary;
+
+})(this);
 
 /**
  * Class FrameRequester
@@ -545,9 +871,9 @@
 	var defaults = {shift: true};
 	var SHIFT_Y = -32;
 
-	function Point(touchEvent, options) {
+	function Point(pointerEvent, options) {
 		var settings = $.extend({}, defaults, options);
-		var touches = touchEvent.touches || touchEvent.pointers;
+		var touches = pointerEvent.touches || pointerEvent.pointers;
 		var touch = touches[0];
 		this.clientX = touch.clientX;
 		this.clientY = touch.clientY;
@@ -558,6 +884,20 @@
 			this.pageY += SHIFT_Y;
 		}
 	}
+
+	Point.prototype.translate = function(x, y) {
+		this.clientX = this.clientX + x;
+		this.clientY = this.clientY + y;
+		this.pageX = this.pageX + x;
+		this.pageY = this.pageY + y;
+	};
+
+	Point.prototype.scale = function(scale) {
+		this.clientX = this.clientX * scale;
+		this.clientY = this.clientY * scale;
+		this.pageX = this.pageX * scale;
+		this.pageY = this.pageY * scale;
+	};
 
 	global.CustomSelection.Lib.Point = Point;
 
@@ -596,6 +936,11 @@
 	'use strict';
 
 	var CUSTOM_SELECTION_CANVAS_CLASS = 'custom-selection-canvas';
+	var CUSTOM_SELECTION_CANVAS_STYLE = {
+		'position': 'absolute',
+		'pointer-events': 'none',
+		'z-index': -1
+	};
 
 	var canvas;
 	var context;
@@ -661,6 +1006,7 @@
 	function createCanvas() {
 		canvas = settings.contextDocument.createElement('canvas');
 		canvas.className = CUSTOM_SELECTION_CANVAS_CLASS;
+		$(canvas).css(CUSTOM_SELECTION_CANVAS_STYLE);
 		canvas.width = 0;
 		canvas.height = 0;
 		settings.$element[0].appendChild(canvas);
