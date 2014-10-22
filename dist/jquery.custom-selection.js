@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.2.1 - 2014-10-22 */(function($) {
+/*! jquery-custom-selection - v0.2.2 - 2014-10-22 */(function($) {
 	var ON_TOUCH_DEVICES = 'onTouchDevices';
 
 	// Default configuration
