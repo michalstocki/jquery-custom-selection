@@ -7,9 +7,9 @@
 	var defaults = {shift: true};
 	var SHIFT_Y = -32;
 
-	function Point(touchEvent, options) {
+	function Point(pointerEvent, options) {
 		var settings = $.extend({}, defaults, options);
-		var touches = touchEvent.touches || touchEvent.pointers;
+		var touches = pointerEvent.touches || pointerEvent.pointers || [pointerEvent];
 		var touch = touches[0];
 		this.clientX = touch.clientX;
 		this.clientY = touch.clientY;
