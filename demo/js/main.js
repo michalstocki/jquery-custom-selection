@@ -20,10 +20,10 @@ $(function() {
 	window.enableSelection = function() {
 		$content.customSelection({
 			selectionColor: '#CAE0C0',
-			useMarkers: 'always',
 			onSelectionChange: onSelectionChange,
 			startMarker: $('.start-marker'),
-			endMarker: $('.end-marker')
+			endMarker: $('.end-marker'),
+			scaleGetter: getScale
 		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
@@ -37,6 +37,10 @@ $(function() {
 
 	function onSelectionChange(range) {
 		$('.selected-text-status').text(range.toString());
+	}
+
+	function getScale() {
+		return 0.7;
 	}
 
 });

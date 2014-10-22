@@ -9,7 +9,9 @@
 	var defaults = {
 		holdThreshold: 4,
 		holdTimeout: 500,
-		onSelectionChange: function() {
+		onSelectionChange: function() {},
+		scaleGetter: function() {
+			return 1;
 		}
 	};
 	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
@@ -170,7 +172,7 @@
 	}
 
 	function getContextScale() {
-		return 0.7;
+		return settings.scaleGetter();
 	}
 
 	function getBodyOf(element) {
