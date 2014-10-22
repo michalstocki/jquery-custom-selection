@@ -17,6 +17,7 @@
 	var startMarker = null;
 	var endMarker = null;
 	var selectionDrawer = null;
+	var hammer;
 
 	window.CustomSelection = {
 		Lib: {}
@@ -115,27 +116,34 @@
 		$(contextWindow).off('resize', handleResize);
 	}
 
-	function enableTouchSelectionFor($element) {
-		$element.each(function() {
-			new Hammer(this, {
-				holdThreshold: settings.holdThreshold,
-				holdTimeout: settings.holdTimeout
-			});
+	function initializeHammerFor($element) {
+		hammer = new Hammer.Manager($element[0], {
+			recognizers: [
+				[Hammer.Press],
+				[Hammer.Tap]
+			]
 		});
+		hammer.set({
+			holdThreshold: settings.holdThreshold,
+			holdTimeout: settings.holdTimeout
+		});
+	}
+
+	function enableTouchSelectionFor($element) {
+		initializeHammerFor($element);
 		$element
 			.on('touchmove', handleGlobalTouchMove)
-			.on('touchend', handleGlobalTouchEnd)
-			.hammer().on('press', handleGlobalTapHold)
-			.on('tap', clearSelection);
+			.on('touchend', handleGlobalTouchEnd);
+		hammer.on('press', handleGlobalTapHold);
+		hammer.on('tap', clearSelection);
 		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
 		$element
 			.off('touchmove', handleGlobalTouchMove)
-			.off('touchend', handleGlobalTouchEnd)
-			.hammer().off('press', handleGlobalTapHold)
-			.off('tap', clearSelection);
+			.off('touchend', handleGlobalTouchEnd);
+		hammer.destroy();
 	}
 
 	function handleGlobalMouseDown(jqueryEvent) {
@@ -184,7 +192,6 @@
 	}
 
 	function handleGlobalTapHold(e) {
-		e = e.gesture;
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
 		tryToInitNewSelection(e);
