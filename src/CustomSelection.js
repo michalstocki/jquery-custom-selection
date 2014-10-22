@@ -255,10 +255,10 @@
 		var rects = range.getClientRects();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		startMarker.style.top = firstRect.bottom * getContextScale() + markersOriginOffset.y + 'px';
-		startMarker.style.left = firstRect.left * getContextScale() + markersOriginOffset.x + 'px';
-		endMarker.style.top = lastRect.bottom * getContextScale() + markersOriginOffset.y + 'px';
-		endMarker.style.left = lastRect.right * getContextScale() + markersOriginOffset.x + 'px';
+		startMarker.style.top = yToMarkersContext(firstRect.bottom) + 'px';
+		startMarker.style.left = xToMarkersContext(firstRect.left) + 'px';
+		endMarker.style.top = yToMarkersContext(lastRect.bottom) + 'px';
+		endMarker.style.left = xToMarkersContext(lastRect.right) + 'px';
 	}
 
 //	-- Preparing Markers
@@ -403,6 +403,14 @@
 			}
 		}
 		return dims;
+	}
+
+	function xToMarkersContext(x) {
+		return x * getContextScale() + markersOriginOffset.x;
+	}
+
+	function yToMarkersContext(y) {
+		return y * getContextScale() + markersOriginOffset.y;
 	}
 
 //	-- Extracting a word under the pointer
