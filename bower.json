@@ -15,7 +15,6 @@
 	],
 	"dependencies": {
 		"jquery": "~2.1.1",
-		"hammerjs": "~2.0.0",
-		"jquery.hammer.js": "https://github.com/hammerjs/jquery.hammer.js.git#master"
+		"hammerjs": "~2.0.0"
 	}
 }
