@@ -184,7 +184,7 @@
 	}
 
 	function getBodyOf(element) {
-		return (element.ownerDocument || element[0].ownerDocument).body;
+		return element.ownerDocument.body;
 	}
 
 	function getWindowOf(element) {
@@ -202,15 +202,14 @@
 
 	// -- Dealing with native selection
 
-	function disableNativeSelectionFor($element) {
-		$element = $($element);
+	function disableNativeSelectionFor(element) {
+		var $element = $(element);
 		userSelectBeforeEnablingSelection = $element.css('user-select');
 		$element.css('user-select', 'none');
 	}
 
-	function restoreNativeSelectionFor($element) {
-		$element = $($element);
-		$element.css('user-select', userSelectBeforeEnablingSelection);
+	function restoreNativeSelectionFor(element) {
+		$(element).css('user-select', userSelectBeforeEnablingSelection);
 	}
 
 //	-- Creating Selection
@@ -265,10 +264,14 @@
 		var rects = range.getClientRects();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		startMarker.style.top = yToMarkersContext(firstRect.bottom) + 'px';
-		startMarker.style.left = xToMarkersContext(firstRect.left) + 'px';
-		endMarker.style.top = yToMarkersContext(lastRect.bottom) + 'px';
-		endMarker.style.left = xToMarkersContext(lastRect.right) + 'px';
+		$(startMarker).css({
+			top: yToMarkersContext(firstRect.bottom),
+			left: xToMarkersContext(firstRect.left)
+		});
+		$(endMarker).css({
+			top: yToMarkersContext(lastRect.bottom),
+			left: xToMarkersContext(lastRect.right)
+		});
 	}
 
 //	-- Preparing Markers
