@@ -374,10 +374,8 @@
 	}
 
 	function getElementAbsoluteOffset(element) {
-		var offsetParent = element.offsetParent;
-		var win = getWindowOf(offsetParent);
-		var elementWindowOffset = computeFrameOffset(win);
-		var elementOffset = offsetParent.getBoundingClientRect();
+		var elementWindowOffset = getElementWindowOffset(element);
+		var elementOffset = getElementOriginOffset(element);
 		return {
 			elementX: elementWindowOffset.left + (elementOffset.left * getContextScale()),
 			elementY: elementWindowOffset.top + (elementOffset.top * getContextScale()),
@@ -387,16 +385,24 @@
 	}
 
 	function getMarkersAbsoluteOffset(marker) {
-		var offsetParent = marker.offsetParent;
-		var win = getWindowOf(offsetParent);
-		var elementWindowOffset = computeFrameOffset(win);
-		var elementOffset = offsetParent.getBoundingClientRect();
+		var elementWindowOffset = getElementWindowOffset(marker);
+		var elementOffset = getElementOriginOffset(marker);
 		return {
 			elementX: elementWindowOffset.left + elementOffset.left,
 			elementY: elementWindowOffset.top + elementOffset.top,
 			frameX: elementWindowOffset.left,
 			frameY: elementWindowOffset.top
 		};
+	}
+
+	function getElementOriginOffset(element) {
+		var offsetParent = element.offsetParent;
+		return offsetParent.getBoundingClientRect();
+	}
+
+	function getElementWindowOffset(element) {
+		var win = getWindowOf(element);
+		return computeFrameOffset(win);
 	}
 
 	function computeFrameOffset(win) {
