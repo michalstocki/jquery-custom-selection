@@ -399,22 +399,18 @@
 	}
 
 	function computeFrameOffset(win) {
-		var dims = {top: 0, left: 0};
-
-		// find our <iframe> tag within our parent window
+		var dimensions = {top: 0, left: 0};
 		var frame = win.frameElement;
-
-		// add the offset & recur up the frame chain
 		if (frame) {
 			var frameRect = frame.getBoundingClientRect();
 			var frameBodyRect = win.document.body.getBoundingClientRect();
-			dims.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
-			dims.top += frameRect.top + frame.clientTop - frameBodyRect.top;
+			dimensions.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
+			dimensions.top += frameRect.top + frame.clientTop - frameBodyRect.top;
 			if (win !== top) {
-				computeFrameOffset(win.parent, dims);
+				computeFrameOffset(win.parent, dimensions);
 			}
 		}
-		return dims;
+		return dimensions;
 	}
 
 	function xToMarkersContext(x) {
