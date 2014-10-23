@@ -302,7 +302,7 @@
 
 	function createPointFromMarkerEvent(pointerEvent) {
 		var point = createPointFromEvent(pointerEvent);
-		point.translate.apply(point, getVectorOfMarkersOrigin());
+		point.translate(getVectorOfMarkersOrigin());
 		point.scale(getScaleOfMarkersContext());
 		return point;
 	}
@@ -313,7 +313,7 @@
 
 	function getVectorOfMarkersOrigin() {
 		var offset = markersOriginOffset;
-		return [-offset.framesOffsetX, -offset.framesOffsetY];
+		return {x: -offset.framesOffsetX, y: -offset.framesOffsetY};
 	}
 
 	function getScaleOfMarkersContext() {
