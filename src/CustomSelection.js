@@ -499,16 +499,23 @@
 	}
 
 	function convertPointInElementToAnchor(element, point) {
-		var textNode;
 		var pointRange;
 		var pointAnchor = null;
-		if ((textNode = getFromElNodeContainingPoint(element, point)) &&
-				(pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point))) {
+		if (pointRange = getPointRangeFromElement(element, point)) {
 			pointAnchor = getStartAnchorOf(pointRange);
 		} else if (pointRange = getClosestPointRangeFormElement(element, point)) {
 			pointAnchor = getEndAnchorOf(pointRange);
 		}
 		return pointAnchor;
+	}
+
+	function getPointRangeFromElement(element, point) {
+		var textNode = getFromElNodeContainingPoint(element, point);
+		var pointRange = null;
+		if (textNode) {
+			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+		}
+		return pointRange;
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
