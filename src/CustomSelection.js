@@ -495,12 +495,7 @@
 	}
 
 	function getProtectedSelectionBoundary() {
-		var selectionAnchor = getSelectionAnchor();
-		if (movedMarker === startMarker) {
-			return createStartBoundary(selectionAnchor);
-		} else {
-			return createEndBoundary(selectionAnchor);
-		}
+		return getNewSelectionBoundary(getSelectionAnchor());
 	}
 
 	function convertPointInElementToAnchor(element, point) {
