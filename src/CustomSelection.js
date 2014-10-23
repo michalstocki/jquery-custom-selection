@@ -313,7 +313,7 @@
 
 	function getVectorOfMarkersOrigin() {
 		var offset = markersOriginOffset;
-		return {x: -offset.framesOffsetX, y: -offset.framesOffsetY};
+		return {x: -offset.framesOffset.x, y: -offset.framesOffset.y};
 	}
 
 	function getScaleOfMarkersContext() {
@@ -363,35 +363,28 @@
 //	---- Synchronizing origin of the markers with origin of the $element
 
 	function computeMarkerOffsetRelativeTo($element) {
-		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0]);
-		var markerAbsoluteOffset = getMarkersAbsoluteOffset(startMarker);
+		var elementWindowOffset = getElementWindowOffset($element[0]);
+		var markersWindowOffset = getElementWindowOffset(startMarker);
+
+		var framesOffset = {
+			x: elementWindowOffset.left - markersWindowOffset.left,
+			y: elementWindowOffset.top - markersWindowOffset.top
+		};
+
+		var markersRelativeOriginOffset = getElementOriginOffset(startMarker);
+		var elementRelativeOriginOffset = getScaledElementOriginOffset($element[0]);
 		return {
-			x: elementAbsoluteOffset.elementX - markerAbsoluteOffset.elementX,
-			y: elementAbsoluteOffset.elementY - markerAbsoluteOffset.elementY,
-			framesOffsetX: elementAbsoluteOffset.frameX - markerAbsoluteOffset.frameX,
-			framesOffsetY: elementAbsoluteOffset.frameY - markerAbsoluteOffset.frameY
+			x: framesOffset.x + elementRelativeOriginOffset.left - markersRelativeOriginOffset.left,
+			y: framesOffset.y + elementRelativeOriginOffset.top - markersRelativeOriginOffset.top,
+			framesOffset: framesOffset
 		};
 	}
 
-	function getElementAbsoluteOffset(element) {
-		var elementWindowOffset = getElementWindowOffset(element);
-		var elementOffset = getElementOriginOffset(element);
+	function getScaledElementOriginOffset(element) {
+		var relativeOriginOffset = getElementOriginOffset(element);
 		return {
-			elementX: elementWindowOffset.left + (elementOffset.left * getContextScale()),
-			elementY: elementWindowOffset.top + (elementOffset.top * getContextScale()),
-			frameX: elementWindowOffset.left,
-			frameY: elementWindowOffset.top
-		};
-	}
-
-	function getMarkersAbsoluteOffset(marker) {
-		var elementWindowOffset = getElementWindowOffset(marker);
-		var elementOffset = getElementOriginOffset(marker);
-		return {
-			elementX: elementWindowOffset.left + elementOffset.left,
-			elementY: elementWindowOffset.top + elementOffset.top,
-			frameX: elementWindowOffset.left,
-			frameY: elementWindowOffset.top
+			left: relativeOriginOffset.left * getContextScale(),
+			top: relativeOriginOffset.top * getContextScale()
 		};
 	}
 
