@@ -14,15 +14,12 @@ Custom Selection is still unstable and should not be used in production.
 
 1. Include dependencies:
     - jQuery
-        
+
         `<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>`
     - [Hammer.js](http://hammerjs.github.io/)
-        
+
         `<script src="bower_components/hammerjs/hammer.min.js"></script>`
-    - [jquery.hammer.js](https://github.com/hammerjs/jquery.hammer.js)
-        
-        `<script src="bower_components/jquery.hammer.js/jquery.hammer.js"></script>`
-    
+
 2. Include plugin's code:
 
         <script src="dist/jquery.custom-selection.min.js"></script>
