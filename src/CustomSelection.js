@@ -616,7 +616,7 @@
 	}
 
 	function nodeIsText(node) {
-		return node.nodeType === Node.TEXT_NODE && node.length;
+		return node.nodeType === Node.TEXT_NODE && node.length > 0;
 	}
 
 	function nodeHasChildren(node) {
@@ -742,17 +742,17 @@
 
 	function createRangeAtTheEndOfTheClosestNode() {
 		var rects = getRectsForNode(closestNode);
-		var lastRect = rects[rects.length - 1];
-		if (closestRectInNode === lastRect || !nodeIsText(closestNode)) {
+		var lastRectInNode = rects[rects.length - 1];
+		if (closestRectInNode === lastRectInNode) {
 			var range = document.createRange();
 			range.selectNode(closestNode);
 			return range;
 		} else {
-			var point = {
+			var pointAtRightBoundaryOfRect = {
 				clientX: closestRectInNode.right - 1,
 				clientY: closestRectInNode.bottom - 1
 			};
-			return getFromTextNodeMinimalRangeContainingPoint(closestNode, point);
+			return getFromTextNodeMinimalRangeContainingPoint(closestNode, pointAtRightBoundaryOfRect);
 		}
 	}
 
