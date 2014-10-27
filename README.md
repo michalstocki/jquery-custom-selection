@@ -26,9 +26,17 @@ Custom Selection is still unstable and should not be used in production.
 
 3. Call the plugin:
 
-        $("body").customSelection({
-            markerClass: "marker"
-        });
+        $('body').customSelection();
+
+### Advanced configuration ###
+
+		var iframe = $('iframe')[0];
+		$(iframe.contentDocument.body).customSelection({
+			startMarker: $('.selection-marker-start'),
+			endMarker: $('.selection-marker-end'),
+			scaleGetter: function() { return 0.7 },
+			onSelectionChange: function(range) {}
+		});
 
 ## Acknowledgements ##
 
