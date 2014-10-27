@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.2.2 - 2014-10-22 */(function($) {
+/*! jquery-custom-selection - v0.3.0 - 2014-10-27 */(function($) {
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
@@ -184,7 +184,7 @@
 	}
 
 	function getBodyOf(element) {
-		return (element.ownerDocument || element[0].ownerDocument).body;
+		return element.ownerDocument.body;
 	}
 
 	function getWindowOf(element) {
@@ -202,15 +202,14 @@
 
 	// -- Dealing with native selection
 
-	function disableNativeSelectionFor($element) {
-		$element = $($element);
+	function disableNativeSelectionFor(element) {
+		var $element = $(element);
 		userSelectBeforeEnablingSelection = $element.css('user-select');
 		$element.css('user-select', 'none');
 	}
 
-	function restoreNativeSelectionFor($element) {
-		$element = $($element);
-		$element.css('user-select', userSelectBeforeEnablingSelection);
+	function restoreNativeSelectionFor(element) {
+		$(element).css('user-select', userSelectBeforeEnablingSelection);
 	}
 
 //	-- Creating Selection
@@ -265,10 +264,14 @@
 		var rects = range.getClientRects();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		startMarker.style.top = yToMarkersContext(firstRect.bottom) + 'px';
-		startMarker.style.left = xToMarkersContext(firstRect.left) + 'px';
-		endMarker.style.top = yToMarkersContext(lastRect.bottom) + 'px';
-		endMarker.style.left = xToMarkersContext(lastRect.right) + 'px';
+		$(startMarker).css({
+			top: yToMarkersContext(firstRect.bottom),
+			left: xToMarkersContext(firstRect.left)
+		});
+		$(endMarker).css({
+			top: yToMarkersContext(lastRect.bottom),
+			left: xToMarkersContext(lastRect.right)
+		});
 	}
 
 //	-- Preparing Markers
@@ -299,7 +302,7 @@
 
 	function createPointFromMarkerEvent(pointerEvent) {
 		var point = createPointFromEvent(pointerEvent);
-		point.translate.apply(point, getVectorOfMarkersOrigin());
+		point.translate(getVectorOfMarkersOrigin());
 		point.scale(getScaleOfMarkersContext());
 		return point;
 	}
@@ -310,7 +313,7 @@
 
 	function getVectorOfMarkersOrigin() {
 		var offset = markersOriginOffset;
-		return [-offset.framesOffsetX, -offset.framesOffsetY];
+		return {x: -offset.framesOffset.x, y: -offset.framesOffset.y};
 	}
 
 	function getScaleOfMarkersContext() {
@@ -360,59 +363,54 @@
 //	---- Synchronizing origin of the markers with origin of the $element
 
 	function computeMarkerOffsetRelativeTo($element) {
-		var elementAbsoluteOffset = getElementAbsoluteOffset($element[0]);
-		var markerAbsoluteOffset = getMarkersAbsoluteOffset(startMarker);
+		var elementWindowOffset = getElementWindowOffset($element[0]);
+		var markersWindowOffset = getElementWindowOffset(startMarker);
+
+		var framesOffset = {
+			x: elementWindowOffset.left - markersWindowOffset.left,
+			y: elementWindowOffset.top - markersWindowOffset.top
+		};
+
+		var markersRelativeOriginOffset = getElementOriginOffset(startMarker);
+		var elementRelativeOriginOffset = getScaledElementOriginOffset($element[0]);
 		return {
-			x: elementAbsoluteOffset.elementX - markerAbsoluteOffset.elementX,
-			y: elementAbsoluteOffset.elementY - markerAbsoluteOffset.elementY,
-			framesOffsetX: elementAbsoluteOffset.frameX - markerAbsoluteOffset.frameX,
-			framesOffsetY: elementAbsoluteOffset.frameY - markerAbsoluteOffset.frameY
+			x: framesOffset.x + elementRelativeOriginOffset.left - markersRelativeOriginOffset.left,
+			y: framesOffset.y + elementRelativeOriginOffset.top - markersRelativeOriginOffset.top,
+			framesOffset: framesOffset
 		};
 	}
 
-	function getElementAbsoluteOffset(element) {
+	function getScaledElementOriginOffset(element) {
+		var relativeOriginOffset = getElementOriginOffset(element);
+		return {
+			left: relativeOriginOffset.left * getContextScale(),
+			top: relativeOriginOffset.top * getContextScale()
+		};
+	}
+
+	function getElementOriginOffset(element) {
 		var offsetParent = element.offsetParent;
-		var win = getWindowOf(offsetParent);
-		var elementWindowOffset = computeFrameOffset(win);
-		var elementOffset = offsetParent.getBoundingClientRect();
-		return {
-			elementX: elementWindowOffset.left + (elementOffset.left * getContextScale()),
-			elementY: elementWindowOffset.top + (elementOffset.top * getContextScale()),
-			frameX: elementWindowOffset.left,
-			frameY: elementWindowOffset.top
-		};
+		return offsetParent.getBoundingClientRect();
 	}
 
-	function getMarkersAbsoluteOffset(marker) {
-		var offsetParent = marker.offsetParent;
-		var win = getWindowOf(offsetParent);
-		var elementWindowOffset = computeFrameOffset(win);
-		var elementOffset = offsetParent.getBoundingClientRect();
-		return {
-			elementX: elementWindowOffset.left + elementOffset.left,
-			elementY: elementWindowOffset.top + elementOffset.top,
-			frameX: elementWindowOffset.left,
-			frameY: elementWindowOffset.top
-		};
+	function getElementWindowOffset(element) {
+		var win = getWindowOf(element);
+		return computeFrameOffset(win);
 	}
 
 	function computeFrameOffset(win) {
-		var dims = {top: 0, left: 0};
-
-		// find our <iframe> tag within our parent window
+		var dimensions = {top: 0, left: 0};
 		var frame = win.frameElement;
-
-		// add the offset & recur up the frame chain
 		if (frame) {
 			var frameRect = frame.getBoundingClientRect();
 			var frameBodyRect = win.document.body.getBoundingClientRect();
-			dims.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
-			dims.top += frameRect.top + frame.clientTop - frameBodyRect.top;
+			dimensions.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
+			dimensions.top += frameRect.top + frame.clientTop - frameBodyRect.top;
 			if (win !== top) {
-				computeFrameOffset(win.parent, dims);
+				computeFrameOffset(win.parent, dimensions);
 			}
 		}
-		return dims;
+		return dimensions;
 	}
 
 	function xToMarkersContext(x) {
@@ -497,25 +495,27 @@
 	}
 
 	function getProtectedSelectionBoundary() {
-		var selectionAnchor = getSelectionAnchor();
-		if (movedMarker === startMarker) {
-			return createStartBoundary(selectionAnchor);
-		} else {
-			return createEndBoundary(selectionAnchor);
-		}
+		return getNewSelectionBoundary(getSelectionAnchor());
 	}
 
 	function convertPointInElementToAnchor(element, point) {
-		var textNode;
 		var pointRange;
 		var pointAnchor = null;
-		if ((textNode = getFromElNodeContainingPoint(element, point)) &&
-				(pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point))) {
+		if (pointRange = getPointRangeFromElement(element, point)) {
 			pointAnchor = getStartAnchorOf(pointRange);
 		} else if (pointRange = getClosestPointRangeFormElement(element, point)) {
 			pointAnchor = getEndAnchorOf(pointRange);
 		}
 		return pointAnchor;
+	}
+
+	function getPointRangeFromElement(element, point) {
+		var textNode = getFromElNodeContainingPoint(element, point);
+		var pointRange = null;
+		if (textNode) {
+			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+		}
+		return pointRange;
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
@@ -616,7 +616,7 @@
 	}
 
 	function nodeIsText(node) {
-		return node.nodeType === Node.TEXT_NODE && node.length;
+		return node.nodeType === Node.TEXT_NODE && node.length > 0;
 	}
 
 	function nodeHasChildren(node) {
@@ -742,17 +742,17 @@
 
 	function createRangeAtTheEndOfTheClosestNode() {
 		var rects = getRectsForNode(closestNode);
-		var lastRect = rects[rects.length - 1];
-		if (closestRectInNode === lastRect || !nodeIsText(closestNode)) {
+		var lastRectInNode = rects[rects.length - 1];
+		if (closestRectInNode === lastRectInNode) {
 			var range = document.createRange();
 			range.selectNode(closestNode);
 			return range;
 		} else {
-			var point = {
+			var pointAtRightBoundaryOfRect = {
 				clientX: closestRectInNode.right - 1,
 				clientY: closestRectInNode.bottom - 1
 			};
-			return getFromTextNodeMinimalRangeContainingPoint(closestNode, point);
+			return getFromTextNodeMinimalRangeContainingPoint(closestNode, pointAtRightBoundaryOfRect);
 		}
 	}
 
@@ -885,18 +885,18 @@
 		}
 	}
 
-	Point.prototype.translate = function(x, y) {
-		this.clientX = this.clientX + x;
-		this.clientY = this.clientY + y;
-		this.pageX = this.pageX + x;
-		this.pageY = this.pageY + y;
+	Point.prototype.translate = function(vector) {
+		this.clientX += vector.x;
+		this.clientY += vector.y;
+		this.pageX += vector.x;
+		this.pageY += vector.y;
 	};
 
 	Point.prototype.scale = function(scale) {
-		this.clientX = this.clientX * scale;
-		this.clientY = this.clientY * scale;
-		this.pageX = this.pageX * scale;
-		this.pageY = this.pageY * scale;
+		this.clientX *= scale;
+		this.clientY *= scale;
+		this.pageX *= scale;
+		this.pageY *= scale;
 	};
 
 	global.CustomSelection.Lib.Point = Point;

@@ -1,6 +1,6 @@
 {
 	"name": "jquery-custom-selection",
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"description": "Overriding native text selection in HTML on mobile devices",
 	"keywords": [
 		"text",
