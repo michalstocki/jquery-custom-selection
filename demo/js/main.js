@@ -1,18 +1,13 @@
 $(function() {
-	var $content;
-	$('#main-frame').bind('load', function() {
-		$content = $(this.contentWindow.document).find('.content');
-		$content.on('touchstart', function(e) {
-			e = e.originalEvent;
-			logg('touchstart: ' + e.touches.length);
-		}).on('touchmove', function(e) {
-			e = e.originalEvent;
-			logg('touchmove: ' + e.touches[0].clientX + '/' + e.touches[0].clientY);
-		}).on('touchend', function(e) {
-			e = e.originalEvent;
-			logg('touchend: ' + e.touches.length);
-		});
+	var IFRAME_BORDER_WIDTH = 9;
+	var IFRAME_SCALE = 0.7;
 
+	var $content;
+	var $iframe = $('#main-frame');
+	var iframeOffset;
+	$iframe.bind('load', function() {
+		$content = $(this.contentWindow.document).find('.content');
+		iframeOffset = $iframe.offset();
 		window.enableSelection();
 
 	});
@@ -23,7 +18,7 @@ $(function() {
 			onSelectionChange: onSelectionChange,
 			startMarker: $('.start-marker'),
 			endMarker: $('.end-marker'),
-			scaleGetter: getScale
+			contextOriginGetter: getCustomSelectionOrigin
 		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
@@ -39,8 +34,14 @@ $(function() {
 		$('.selected-text-status').text(range.toString());
 	}
 
-	function getScale() {
-		return 0.7;
+
+
+	function getCustomSelectionOrigin() {
+		return {
+			offsetY: iframeOffset.top + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
+			offsetX: iframeOffset.left + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
+			scale: IFRAME_SCALE
+		};
 	}
 
 });
