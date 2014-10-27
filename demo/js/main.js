@@ -1,21 +1,29 @@
 $(function() {
-	var $content = $('.content');
-	$content.on('touchstart', function(e) {
-		e = e.originalEvent;
-		logg('touchstart: ' + e.touches.length);
-	}).on('touchmove', function(e) {
-		e = e.originalEvent;
-		logg('touchmove: ' + e.touches[0].clientX + '/' + e.touches[0].clientY);
-	}).on('touchend', function(e) {
-		e = e.originalEvent;
-		logg('touchend: ' + e.touches.length);
+	var $content;
+	$('#main-frame').bind('load', function() {
+		$content = $(this.contentWindow.document).find('.content');
+		$content.on('touchstart', function(e) {
+			e = e.originalEvent;
+			logg('touchstart: ' + e.touches.length);
+		}).on('touchmove', function(e) {
+			e = e.originalEvent;
+			logg('touchmove: ' + e.touches[0].clientX + '/' + e.touches[0].clientY);
+		}).on('touchend', function(e) {
+			e = e.originalEvent;
+			logg('touchend: ' + e.touches.length);
+		});
+
+		window.enableSelection();
+
 	});
 
 	window.enableSelection = function() {
 		$content.customSelection({
-			selectionColor: 'lightgreen',
-			useMarkers: 'always',
-			onSelectionChange: onSelectionChange
+			selectionColor: '#CAE0C0',
+			onSelectionChange: onSelectionChange,
+			startMarker: $('.start-marker'),
+			endMarker: $('.end-marker'),
+			scaleGetter: getScale
 		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
@@ -31,5 +39,8 @@ $(function() {
 		$('.selected-text-status').text(range.toString());
 	}
 
-	window.enableSelection();
+	function getScale() {
+		return 0.7;
+	}
+
 });

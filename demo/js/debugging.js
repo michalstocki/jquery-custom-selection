@@ -33,11 +33,22 @@ function drawRect(rect, color) {
 	context.stroke();
 }
 
-function drawCircle(x, y) {
+function drawRange(range, color) {
+	var rects = range.getClientRects();
+	for (var j = 0, rect; rect = rects[j++];) {
+		drawRect(rect, color);
+	}
+}
+
+function drawPoint(point, color) {
+	drawCircle(point.clientX, point.clientY, color);
+}
+
+function drawCircle(x, y, color) {
 	context.beginPath();
 	context.arc(x, y, 10, 0, 2 * Math.PI, false);
 	context.lineWidth = 2;
-	context.strokeStyle = 'green';
+	context.strokeStyle = color || 'green';
 	context.stroke();
 }
 
