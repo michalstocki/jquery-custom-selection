@@ -7,9 +7,9 @@
 	var defaults = {shift: true};
 	var SHIFT_Y = -32;
 
-	function Point(touchEvent, options) {
+	function Point(pointerEvent, options) {
 		var settings = $.extend({}, defaults, options);
-		var touches = touchEvent.touches || touchEvent.pointers;
+		var touches = pointerEvent.touches || pointerEvent.pointers;
 		var touch = touches[0];
 		this.clientX = touch.clientX;
 		this.clientY = touch.clientY;
@@ -20,6 +20,20 @@
 			this.pageY += SHIFT_Y;
 		}
 	}
+
+	Point.prototype.translate = function(vector) {
+		this.clientX += vector.x;
+		this.clientY += vector.y;
+		this.pageX += vector.x;
+		this.pageY += vector.y;
+	};
+
+	Point.prototype.scale = function(scale) {
+		this.clientX *= scale;
+		this.clientY *= scale;
+		this.pageX *= scale;
+		this.pageY *= scale;
+	};
 
 	global.CustomSelection.Lib.Point = Point;
 

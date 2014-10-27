@@ -12,18 +12,25 @@ module.exports = function(grunt) {
 		pkg: grunt.file.readJSON('package.json'),
 		jshint: {
 			all: [
-				SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE,
-				DEMO_DIR + ANY_SUB_DIR + ANY_JS_FILE
+					SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE,
+					DEMO_DIR + ANY_SUB_DIR + ANY_JS_FILE
 			],
 			options: {
 				jshintrc: '.jshintrc'
 			}
 		},
 		connect: {
-			server: {
+			serverKeepAlive: {
 				options: {
 					keepalive: true,
 					port: 8003,
+					hostname: 'localhost'
+				}
+			},
+			server: {
+				options: {
+					keepalive: false,
+					port: 8004,
 					hostname: 'localhost'
 				}
 			}
@@ -37,8 +44,8 @@ module.exports = function(grunt) {
 				files: [
 					{
 						src: [
-							SRC_DIR + 'CustomSelection.js',
-							SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE
+								SRC_DIR + 'CustomSelection.js',
+								SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE
 						],
 						dest: DIST_DIR + 'jquery.custom-selection.js'
 					}
@@ -59,6 +66,16 @@ module.exports = function(grunt) {
 					}
 				]
 			}
+		},
+		webdriver: {
+			options: {
+				desiredCapabilities: {
+					browserName: 'chrome'
+				}
+			},
+			customSelection: {
+				tests: ['test/e2e/*.js']
+			}
 		}
 	});
 
@@ -66,7 +83,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-webdriver');
 
 	grunt.registerTask('dist', ['jshint', 'concat:build', 'uglify:build']);
-	grunt.registerTask('server', ['connect:server']);
+	grunt.registerTask('server', ['connect:serverKeepAlive']);
+	grunt.registerTask('e2e', ['concat:build', 'uglify:build', 'connect:server', 'webdriver']);
 };

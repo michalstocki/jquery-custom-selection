@@ -2,6 +2,11 @@
 	'use strict';
 
 	var CUSTOM_SELECTION_CANVAS_CLASS = 'custom-selection-canvas';
+	var CUSTOM_SELECTION_CANVAS_STYLE = {
+		'position': 'absolute',
+		'pointer-events': 'none',
+		'z-index': -1
+	};
 
 	var canvas;
 	var context;
@@ -67,6 +72,7 @@
 	function createCanvas() {
 		canvas = settings.contextDocument.createElement('canvas');
 		canvas.className = CUSTOM_SELECTION_CANVAS_CLASS;
+		$(canvas).css(CUSTOM_SELECTION_CANVAS_STYLE);
 		canvas.width = 0;
 		canvas.height = 0;
 		settings.$element[0].appendChild(canvas);
