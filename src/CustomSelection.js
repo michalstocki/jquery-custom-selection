@@ -50,6 +50,14 @@
 		return this;
 	};
 
+	$.fn.refreshCustomSelection = function() {
+		if (lastSelectionRange) {
+			updateContextOrigin();
+			drawSelectionRange();
+		}
+		return this;
+	};
+
 	$.fn.clearCustomSelection = function() {
 		clearSelection();
 		return this;
@@ -110,7 +118,6 @@
 		$element.on('touchend', handleGlobalTouchEnd);
 		hammer.on('press', handleGlobalTapHold);
 		hammer.on('tap', clearSelection);
-		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -125,7 +132,7 @@
 	function handleGlobalTapHold(e) {
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		contextOrigin = getContextOrigin();
+		updateContextOrigin();
 		selectWordUnderPointer(e);
 	}
 
@@ -138,7 +145,7 @@
 
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		contextOrigin = getContextOrigin();
+		updateContextOrigin();
 		lastPoint = createPointFromMarkerEvent(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventTarget = getTouchedElementByPoint(lastPoint);
@@ -167,12 +174,6 @@
 		}
 	}
 
-	function handleResize() {
-		if (lastSelectionRange) {
-			drawSelectionRange();
-		}
-	}
-
 	function toggleMovedMarker() {
 		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
 		if (movedMarker === startMarker) {
@@ -183,8 +184,8 @@
 		$(movedMarker).addClass(MARKER_MOVING_CLASS);
 	}
 
-	function getContextOrigin() {
-		return settings.contextOriginGetter();
+	function updateContextOrigin() {
+		contextOrigin = settings.contextOriginGetter();
 	}
 
 	function getBodyOf(element) {
