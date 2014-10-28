@@ -51,9 +51,7 @@
 		if (contextOrigin) {
 			settings.contextOrigin = contextOrigin;
 		}
-		if (doesRangeExist(lastSelectionRange)) {
-			drawSelectionRange();
-		}
+		refreshSelection();
 		return this;
 	};
 
@@ -240,6 +238,12 @@
 			settings.onSelectionChange(contextDocument.createRange());
 		}
 		lastSelectionRange = null;
+	}
+
+	function refreshSelection() {
+		if (doesRangeExist(lastSelectionRange)) {
+			drawSelectionRange();
+		}
 	}
 
 	function drawSelectionRange() {
