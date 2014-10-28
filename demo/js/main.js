@@ -18,7 +18,11 @@ $(function() {
 			onSelectionChange: onSelectionChange,
 			startMarker: $('.start-marker'),
 			endMarker: $('.end-marker'),
-			contextOriginGetter: getCustomSelectionOrigin
+			contextOrigin: {
+				offsetY: iframeOffset.top + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
+				offsetX: iframeOffset.left + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
+				scale: IFRAME_SCALE
+			}
 		});
 		$('.settings .button-enable').attr('disabled', true);
 		$('.settings .button-disable').attr('disabled', false);
@@ -32,16 +36,6 @@ $(function() {
 
 	function onSelectionChange(range) {
 		$('.selected-text-status').text(range.toString());
-	}
-
-
-
-	function getCustomSelectionOrigin() {
-		return {
-			offsetY: iframeOffset.top + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
-			offsetX: iframeOffset.left + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
-			scale: IFRAME_SCALE
-		};
 	}
 
 });

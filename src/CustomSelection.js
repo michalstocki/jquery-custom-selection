@@ -10,14 +10,11 @@
 		holdThreshold: 4,
 		holdTimeout: 500,
 		onSelectionChange: function() {},
-		contextOriginGetter: function() {
-			return {
-				offsetX: 0,
-				offsetY: 0,
-				scale: 1
-			};
-		},
-		detectMarkersOrigin: true
+		contextOrigin: {
+			offsetX: 0,
+			offsetY: 0,
+			scale: 1
+		}
 	};
 	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
@@ -50,9 +47,11 @@
 		return this;
 	};
 
-	$.fn.refreshCustomSelection = function() {
+	$.fn.refreshCustomSelection = function(contextOrigin) {
+		if (contextOrigin) {
+			settings.contextOrigin = contextOrigin;
+		}
 		if (lastSelectionRange) {
-			updateContextOrigin();
 			drawSelectionRange();
 		}
 		return this;
@@ -86,7 +85,6 @@
 	var movedMarker = null;
 	var selectionAnchor = null;
 	var userSelectBeforeEnablingSelection = null;
-	var contextOrigin = null;
 
 //	-- Binding events
 
@@ -132,7 +130,6 @@
 	function handleGlobalTapHold(e) {
 		e.srcEvent.preventDefault();
 		e.srcEvent.stopPropagation();
-		updateContextOrigin();
 		selectWordUnderPointer(e);
 	}
 
@@ -145,7 +142,6 @@
 
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		updateContextOrigin();
 		lastPoint = createPointFromMarkerEvent(jqueryEvent.originalEvent);
 		frameRequester.requestFrame(function() {
 			var eventTarget = getTouchedElementByPoint(lastPoint);
@@ -182,10 +178,6 @@
 			movedMarker = startMarker;
 		}
 		$(movedMarker).addClass(MARKER_MOVING_CLASS);
-	}
-
-	function updateContextOrigin() {
-		contextOrigin = settings.contextOriginGetter();
 	}
 
 	function getBodyOf(element) {
@@ -231,12 +223,14 @@
 	}
 
 	function makeSelectionFor(range) {
-		if (rangeDiffersFromLastSelection(range)) {
-			lastSelectionRange = range;
-			drawSelectionRange();
-			settings.onSelectionChange(lastSelectionRange);
+		if (range) {
+			if (rangeDiffersFromLastSelection(range)) {
+				lastSelectionRange = range;
+				drawSelectionRange();
+				settings.onSelectionChange(lastSelectionRange);
+			}
+			showMarkers();
 		}
-		showMarkers();
 	}
 
 	function clearSelection() {
@@ -315,11 +309,12 @@
 	}
 
 	function getVectorOfMarkersOrigin() {
-		return {x: -contextOrigin.offsetX, y: -contextOrigin.offsetY};
+		var origin = settings.contextOrigin;
+		return {x: -origin.offsetX, y: -origin.offsetY};
 	}
 
 	function getScaleOfMarkersContext() {
-		return 1 / contextOrigin.scale;
+		return 1 / settings.contextOrigin.scale;
 	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
@@ -351,11 +346,11 @@
 	}
 
 	function xToMarkersContext(x) {
-		return x * contextOrigin.scale + contextOrigin.offsetX;
+		return x * settings.contextOrigin.scale + settings.contextOrigin.offsetX;
 	}
 
 	function yToMarkersContext(y) {
-		return y * contextOrigin.scale + contextOrigin.offsetY;
+		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
 	}
 
 //	-- Extracting a word under the pointer
