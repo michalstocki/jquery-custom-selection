@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.3.0 - 2014-10-27 */(function($) {
+/*! jquery-custom-selection - v0.4.0 - 2014-10-28 */(function($) {
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
@@ -10,8 +10,10 @@
 		holdThreshold: 4,
 		holdTimeout: 500,
 		onSelectionChange: function() {},
-		scaleGetter: function() {
-			return 1;
+		contextOrigin: {
+			offsetX: 0,
+			offsetY: 0,
+			scale: 1
 		}
 	};
 	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
@@ -45,6 +47,14 @@
 		return this;
 	};
 
+	$.fn.refreshCustomSelection = function(contextOrigin) {
+		if (contextOrigin) {
+			settings.contextOrigin = contextOrigin;
+		}
+		refreshSelection();
+		return this;
+	};
+
 	$.fn.clearCustomSelection = function() {
 		clearSelection();
 		return this;
@@ -73,10 +83,6 @@
 	var movedMarker = null;
 	var selectionAnchor = null;
 	var userSelectBeforeEnablingSelection = null;
-	var markersOriginOffset = {
-		x: 0,
-		y: 0
-	};
 
 //	-- Binding events
 
@@ -108,7 +114,6 @@
 		$element.on('touchend', handleGlobalTouchEnd);
 		hammer.on('press', handleGlobalTapHold);
 		hammer.on('tap', clearSelection);
-		$(contextWindow).on('orientationchange resize', handleResize);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -163,12 +168,6 @@
 		}
 	}
 
-	function handleResize() {
-		if (lastSelectionRange) {
-			drawSelectionRange();
-		}
-	}
-
 	function toggleMovedMarker() {
 		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
 		if (movedMarker === startMarker) {
@@ -177,10 +176,6 @@
 			movedMarker = startMarker;
 		}
 		$(movedMarker).addClass(MARKER_MOVING_CLASS);
-	}
-
-	function getContextScale() {
-		return settings.scaleGetter();
 	}
 
 	function getBodyOf(element) {
@@ -226,19 +221,29 @@
 	}
 
 	function makeSelectionFor(range) {
-		if (rangeDiffersFromLastSelection(range)) {
-			lastSelectionRange = range;
-			drawSelectionRange();
-			settings.onSelectionChange(lastSelectionRange);
+		if (range) {
+			if (rangeDiffersFromLastSelection(range)) {
+				lastSelectionRange = range;
+				drawSelectionRange();
+				settings.onSelectionChange(lastSelectionRange);
+			}
+			showMarkers();
 		}
-		showMarkers();
 	}
 
 	function clearSelection() {
+		if (doesRangeExist(lastSelectionRange)) {
+			hideMarkers();
+			selectionDrawer.clearSelection();
+			settings.onSelectionChange(contextDocument.createRange());
+		}
 		lastSelectionRange = null;
-		hideMarkers();
-		selectionDrawer.clearSelection();
-		settings.onSelectionChange(contextDocument.createRange());
+	}
+
+	function refreshSelection() {
+		if (doesRangeExist(lastSelectionRange)) {
+			drawSelectionRange();
+		}
 	}
 
 	function drawSelectionRange() {
@@ -274,6 +279,10 @@
 		});
 	}
 
+	function doesRangeExist(range) {
+		return !!range && range.getClientRects().length > 0;
+	}
+
 //	-- Preparing Markers
 
 	function initMarkers($element) {
@@ -281,8 +290,6 @@
 			createMarkerInside($element, MARKER_START_CLASS);
 		endMarker = $(settings.endMarker)[0] ||
 			createMarkerInside($element, MARKER_END_CLASS);
-
-		markersOriginOffset = getMarkersOriginOffset($element);
 		hideMarkers();
 	}
 
@@ -312,12 +319,12 @@
 	}
 
 	function getVectorOfMarkersOrigin() {
-		var offset = markersOriginOffset;
-		return {x: -offset.framesOffset.x, y: -offset.framesOffset.y};
+		var origin = settings.contextOrigin;
+		return {x: -origin.offsetX, y: -origin.offsetY};
 	}
 
 	function getScaleOfMarkersContext() {
-		return 1 / getContextScale();
+		return 1 / settings.contextOrigin.scale;
 	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
@@ -348,77 +355,12 @@
 		$(startMarker).add(endMarker).css({visibility: 'visible'});
 	}
 
-	function hasTheSameOffsetParent(elementA, elementB) {
-		return elementA.offsetParent === elementB.offsetParent;
-	}
-
-	function getMarkersOriginOffset($element) {
-		if (hasTheSameOffsetParent(startMarker, endMarker)) {
-			return computeMarkerOffsetRelativeTo($element);
-		} else {
-			throw new Error('Both marker elements must have the same offset parent!');
-		}
-	}
-
-//	---- Synchronizing origin of the markers with origin of the $element
-
-	function computeMarkerOffsetRelativeTo($element) {
-		var elementWindowOffset = getElementWindowOffset($element[0]);
-		var markersWindowOffset = getElementWindowOffset(startMarker);
-
-		var framesOffset = {
-			x: elementWindowOffset.left - markersWindowOffset.left,
-			y: elementWindowOffset.top - markersWindowOffset.top
-		};
-
-		var markersRelativeOriginOffset = getElementOriginOffset(startMarker);
-		var elementRelativeOriginOffset = getScaledElementOriginOffset($element[0]);
-		return {
-			x: framesOffset.x + elementRelativeOriginOffset.left - markersRelativeOriginOffset.left,
-			y: framesOffset.y + elementRelativeOriginOffset.top - markersRelativeOriginOffset.top,
-			framesOffset: framesOffset
-		};
-	}
-
-	function getScaledElementOriginOffset(element) {
-		var relativeOriginOffset = getElementOriginOffset(element);
-		return {
-			left: relativeOriginOffset.left * getContextScale(),
-			top: relativeOriginOffset.top * getContextScale()
-		};
-	}
-
-	function getElementOriginOffset(element) {
-		var offsetParent = element.offsetParent;
-		return offsetParent.getBoundingClientRect();
-	}
-
-	function getElementWindowOffset(element) {
-		var win = getWindowOf(element);
-		return computeFrameOffset(win);
-	}
-
-	function computeFrameOffset(win) {
-		var dimensions = {top: 0, left: 0};
-		var frame = win.frameElement;
-		if (frame) {
-			var frameRect = frame.getBoundingClientRect();
-			var frameBodyRect = win.document.body.getBoundingClientRect();
-			dimensions.left += frameRect.left + frame.clientLeft - frameBodyRect.left;
-			dimensions.top += frameRect.top + frame.clientTop - frameBodyRect.top;
-			if (win !== top) {
-				computeFrameOffset(win.parent, dimensions);
-			}
-		}
-		return dimensions;
-	}
-
 	function xToMarkersContext(x) {
-		return x * getContextScale() + markersOriginOffset.x;
+		return x * settings.contextOrigin.scale + settings.contextOrigin.offsetX;
 	}
 
 	function yToMarkersContext(y) {
-		return y * getContextScale() + markersOriginOffset.y;
+		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
 	}
 
 //	-- Extracting a word under the pointer
