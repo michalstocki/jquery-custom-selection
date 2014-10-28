@@ -51,7 +51,7 @@
 		if (contextOrigin) {
 			settings.contextOrigin = contextOrigin;
 		}
-		if (lastSelectionRange) {
+		if (doesRangeExist(lastSelectionRange)) {
 			drawSelectionRange();
 		}
 		return this;
@@ -234,10 +234,12 @@
 	}
 
 	function clearSelection() {
+		if (doesRangeExist(lastSelectionRange)) {
+			hideMarkers();
+			selectionDrawer.clearSelection();
+			settings.onSelectionChange(contextDocument.createRange());
+		}
 		lastSelectionRange = null;
-		hideMarkers();
-		selectionDrawer.clearSelection();
-		settings.onSelectionChange(contextDocument.createRange());
 	}
 
 	function drawSelectionRange() {
@@ -271,6 +273,10 @@
 			top: yToMarkersContext(lastRect.bottom),
 			left: xToMarkersContext(lastRect.right)
 		});
+	}
+
+	function doesRangeExist(range) {
+		return !!range && range.getClientRects().length > 0;
 	}
 
 //	-- Preparing Markers
