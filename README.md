@@ -28,15 +28,29 @@ Custom Selection is still unstable and should not be used in production.
 
         $('body').customSelection();
 
-### Advanced configuration ###
+## Advanced API ##
+
+### Initialization
 
 		var iframe = $('iframe')[0];
 		$(iframe.contentDocument.body).customSelection({
 			startMarker: $('.selection-marker-start'),
 			endMarker: $('.selection-marker-end'),
-			scaleGetter: function() { return 0.7 },
-			onSelectionChange: function(range) {}
+			onSelectionChange: function(range) {},
+			contextOrigin: {
+				scale: 0.7,
+				offsetX: 100,
+				offsetY: 35
+			}
 		});
+
+### Refreshing
+
+		$(iframe.contentDocument.body).refreshCustomSelection({
+			scale: 0.8,
+			offsetX: 80,
+			offsetY: 25
+		)};
 
 ## Acknowledgements ##
 
