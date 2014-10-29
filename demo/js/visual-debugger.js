@@ -11,6 +11,7 @@ function logg(m) {
 	'use strict';
 
 	var CANVAS_ID = 'jcs-visual-debugger';
+	var SUBPIXEL_OFFSET = 0.5;
 
 	function VisualDebugger(contextWindow) {
 		this.contextWindow = contextWindow;
@@ -33,7 +34,11 @@ function logg(m) {
 
 	VisualDebugger.prototype.drawRect = function(rect, color) {
 		this.context.beginPath();
-		this.context.rect(rect.left + 0.5, rect.top + 0.5, rect.width, rect.height);
+		this.context.rect(
+				rect.left + SUBPIXEL_OFFSET,
+				rect.top + SUBPIXEL_OFFSET,
+				rect.width,
+				rect.height);
 		this.context.lineWidth = 1;
 		this.context.strokeStyle = color || 'red';
 		this.context.stroke();
@@ -48,6 +53,24 @@ function logg(m) {
 
 	VisualDebugger.prototype.drawPoint = function(point, color) {
 		this.drawCircle(point.clientX, point.clientY, color);
+	};
+
+	VisualDebugger.prototype.drawIntersection = function(x, y, color) {
+		if (typeof x === 'object') {
+			color = y;
+			y = x.clientY;
+			x = x.clientX;
+		}
+		x += SUBPIXEL_OFFSET;
+		y += SUBPIXEL_OFFSET;
+		this.context.lineWidth = 1;
+		this.context.strokeStyle = color || 'red';
+		this.context.beginPath();
+		this.context.moveTo(0, y);
+		this.context.lineTo(this.canvas.width, y);
+		this.context.moveTo(x, 0);
+		this.context.lineTo(x, this.canvas.height);
+		this.context.stroke();
 	};
 
 	VisualDebugger.prototype.drawCircle = function(x, y, color) {
