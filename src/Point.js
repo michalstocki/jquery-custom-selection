@@ -5,7 +5,7 @@
 (function(global) {
 	'use strict';
 	var defaults = {shift: true};
-	var SHIFT_Y = -32;
+	var SHIFT_Y = -64;
 
 	function Point(pointerEvent, options) {
 		var settings = $.extend({}, defaults, options);
