@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.4.1 - 2014-10-28 */(function($) {
+/*! jquery-custom-selection - v0.4.1 - 2014-10-30 */(function($) {
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
@@ -16,13 +16,13 @@
 			scale: 1
 		}
 	};
-	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	// Collaborators
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
 	var selectionDrawer = null;
+	var environment;
 	var hammer;
 
 	window.CustomSelection = {
@@ -34,6 +34,7 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		useContextOf(this);
+		environment = environment || performEnvTests();
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
@@ -151,6 +152,7 @@
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		setMovedMarker(jqueryEvent.target);
+		disableMarkerEvents();
 		selectionAnchor = getSelectionAnchor();
 	}
 
@@ -166,16 +168,7 @@
 			unsetMovedMarker();
 			selectionAnchor = null;
 		}
-	}
-
-	function toggleMovedMarker() {
-		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
-		if (movedMarker === startMarker) {
-			movedMarker = endMarker;
-		} else {
-			movedMarker = startMarker;
-		}
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+		enableMarkerEvents();
 	}
 
 	function getBodyOf(element) {
@@ -307,10 +300,30 @@
 		movedMarker = null;
 	}
 
+	function toggleMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		if (movedMarker === startMarker) {
+			movedMarker = endMarker;
+		} else {
+			movedMarker = startMarker;
+		}
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+	}
+
+	function disableMarkerEvents() {
+		$(startMarker).add(endMarker).css('pointer-events', 'none');
+	}
+
+	function enableMarkerEvents() {
+		$(startMarker).add(endMarker).css('pointer-events', 'auto');
+	}
+
 	function createPointFromMarkerEvent(pointerEvent) {
 		var point = createPointFromEvent(pointerEvent);
-		point.translate(getVectorOfMarkersOrigin());
-		point.scale(getScaleOfMarkersContext());
+		if (shouldConvertPointerEvent()) {
+			point.translate(getVectorOfMarkersOrigin());
+			point.scale(getScaleOfMarkersContext());
+		}
 		return point;
 	}
 
@@ -335,6 +348,9 @@
 	function getTouchedElementByPoint(touchPoint) {
 		hideMarkers();
 		var element = contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		if (!element) {
+			element = contextDocument.body;
+		}
 		showMarkers();
 		return element;
 	}
@@ -361,6 +377,19 @@
 
 	function yToMarkersContext(y) {
 		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
+	}
+
+	function shouldConvertPointerEvent() {
+		return !(environment.isAndroidLowerThanKitkat && environment.isAndroidStackBrowser);
+	}
+
+	function performEnvTests() {
+		var env = new CustomSelection.Lib.EnvironmentChecker();
+		return {
+			isAppleDevice: env.isAppleDevice(),
+			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
+			isAndroidStackBrowser: env.isAndroidStackBrowser()
+		};
 	}
 
 //	-- Extracting a word under the pointer
@@ -548,12 +577,12 @@
 	}
 
 	function rectContainsPointVertically(rect, point) {
-		var y = isAppleDevice ? point.pageY : point.clientY;
+		var y = environment.isAppleDevice ? point.pageY : point.clientY;
 		return y > rect.top && y < rect.bottom;
 	}
 
 	function rectOrItsBoundsContainPointHorizontally(rect, point) {
-		var x = isAppleDevice ? point.pageX : point.clientX;
+		var x = environment.isAppleDevice ? point.pageX : point.clientX;
 		return x >= rect.left && x <= rect.right;
 	}
 
@@ -776,6 +805,55 @@
 	};
 
 	global.CustomSelection.Lib.EndBoundary = EndBoundary;
+
+})(this);
+
+/**
+ * Class EnvironmentChecker
+ */
+
+(function(global) {
+	'use strict';
+
+	function EnvironmentChecker() {
+		this.userAgent = global.navigator.userAgent;
+	}
+
+	EnvironmentChecker.prototype.isAppleDevice = function() {
+		return testUserAgent(/(iPad|iPhone|iPod)/g);
+	};
+
+	EnvironmentChecker.prototype.isAndroidStackBrowser = function() {
+		return this.isAndroid() && testUserAgent(/Version\/\d\.\d/g);
+	};
+
+	EnvironmentChecker.prototype.isAndroidLowerThan = function(versionString) {
+		if (!this.isAndroid()) {
+			return false;
+		}
+		var expectedVersion = versionString.split('.');
+		var expectedMajor = Number(expectedVersion[0]);
+		var expectedMinor = Number(expectedVersion[1]);
+		var actualVersion = userAgentMatch(/Android (\d)\.(\d)/g);
+		var actualMajor = Number(actualVersion[1]);
+		var actualMinor = Number(actualVersion[2]);
+		return actualMajor < expectedMajor ||
+				(actualMajor === expectedMajor && actualMinor < expectedMinor);
+	};
+
+	EnvironmentChecker.prototype.isAndroid = function() {
+		return testUserAgent(/Android/g);
+	};
+
+	function userAgentMatch(regExp) {
+		return regExp.exec(global.navigator.userAgent);
+	}
+
+	function testUserAgent(regExp) {
+		return regExp.test(global.navigator.userAgent);
+	}
+
+	global.CustomSelection.Lib.EnvironmentChecker = EnvironmentChecker;
 
 })(this);
 
