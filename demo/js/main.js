@@ -5,6 +5,9 @@ $(function() {
 	var $content;
 	var $iframe = $('#main-frame');
 	var iframeOffset;
+
+	window.dConsole(window);
+
 	$iframe.bind('load', function() {
 		$content = $(this.contentWindow.document).find('.content');
 		iframeOffset = $iframe.offset();
