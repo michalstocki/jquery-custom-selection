@@ -22,11 +22,11 @@
 			return false;
 		}
 		var expectedVersion = versionString.split('.');
-		var expectedMajor = parseInt(expectedVersion[0]);
-		var expectedMinor = parseInt(expectedVersion[1]);
+		var expectedMajor = Number(expectedVersion[0]);
+		var expectedMinor = Number(expectedVersion[1]);
 		var actualVersion = userAgentMatch(/Android (\d)\.(\d)/g);
-		var actualMajor = parseInt(actualVersion[1]);
-		var actualMinor = parseInt(actualVersion[2]);
+		var actualMajor = Number(actualVersion[1]);
+		var actualMinor = Number(actualVersion[2]);
 		return actualMajor < expectedMajor ||
 				(actualMajor === expectedMajor && actualMinor < expectedMinor);
 	};
