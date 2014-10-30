@@ -34,7 +34,7 @@
 
 	function drawSelection(range) {
 		var boundingClientRect = range.getBoundingClientRect();
-		var rects = range.getClientRects();
+		var rects = getClientRects(range);
 		var SUBPIXEL_OFFSET = 0.5;
 
 		var offsetX = SUBPIXEL_OFFSET - boundingClientRect.left;
@@ -43,7 +43,7 @@
 		context.translate(offsetX, offsetY);
 
 		context.beginPath();
-		Array.prototype.forEach.call(rects, function(rect) {
+		rects.forEach(function(rect) {
 			context.rect(rect.left,
 					rect.top,
 					rect.width,
@@ -76,6 +76,29 @@
 		canvas.width = 0;
 		canvas.height = 0;
 		settings.$element[0].appendChild(canvas);
+	}
+
+	function getClientRects(range) {
+		var rects = range.getClientRects();
+		return [].filter.call(rects, function(rect) {
+			for (var i = 0; i < rects.length; i++) {
+				var r = rects[i];
+				if (rectContainsRect(rect, r)) {
+					return false;
+				}
+			}
+			return true;
+		});
+	}
+
+	function rectContainsRect(possibleParent, possibleChild) {
+		var R = possibleParent;
+		var r = possibleChild;
+		return R !== r &&
+				R.top <= r.top &&
+				R.right >= r.right &&
+				R.bottom >= r.bottom &&
+				R.left <= r.left;
 	}
 
 	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
