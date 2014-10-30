@@ -16,13 +16,13 @@
 			scale: 1
 		}
 	};
-	var isAppleDevice = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	// Collaborators
 	var frameRequester = null;
 	var startMarker = null;
 	var endMarker = null;
 	var selectionDrawer = null;
+	var environment;
 	var hammer;
 
 	window.CustomSelection = {
@@ -34,6 +34,7 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		useContextOf(this);
+		environment = environment || performEnvTests();
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
@@ -151,6 +152,7 @@
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		setMovedMarker(jqueryEvent.target);
+		disableMarkerEvents();
 		selectionAnchor = getSelectionAnchor();
 	}
 
@@ -166,16 +168,7 @@
 			unsetMovedMarker();
 			selectionAnchor = null;
 		}
-	}
-
-	function toggleMovedMarker() {
-		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
-		if (movedMarker === startMarker) {
-			movedMarker = endMarker;
-		} else {
-			movedMarker = startMarker;
-		}
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+		enableMarkerEvents();
 	}
 
 	function getBodyOf(element) {
@@ -307,10 +300,30 @@
 		movedMarker = null;
 	}
 
+	function toggleMovedMarker() {
+		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
+		if (movedMarker === startMarker) {
+			movedMarker = endMarker;
+		} else {
+			movedMarker = startMarker;
+		}
+		$(movedMarker).addClass(MARKER_MOVING_CLASS);
+	}
+
+	function disableMarkerEvents() {
+		$(startMarker).add(endMarker).css('pointer-events', 'none');
+	}
+
+	function enableMarkerEvents() {
+		$(startMarker).add(endMarker).css('pointer-events', 'auto');
+	}
+
 	function createPointFromMarkerEvent(pointerEvent) {
 		var point = createPointFromEvent(pointerEvent);
-		point.translate(getVectorOfMarkersOrigin());
-		point.scale(getScaleOfMarkersContext());
+		if (shouldConvertPointerEvent()) {
+			point.translate(getVectorOfMarkersOrigin());
+			point.scale(getScaleOfMarkersContext());
+		}
 		return point;
 	}
 
@@ -364,6 +377,19 @@
 
 	function yToMarkersContext(y) {
 		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
+	}
+
+	function shouldConvertPointerEvent() {
+		return !(environment.isAndroidLowerThanKitkat && environment.isAndroidStackBrowser);
+	}
+
+	function performEnvTests() {
+		var env = new CustomSelection.Lib.EnvironmentChecker();
+		return {
+			isAppleDevice: env.isAppleDevice(),
+			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
+			isAndroidStackBrowser: env.isAndroidStackBrowser()
+		};
 	}
 
 //	-- Extracting a word under the pointer
@@ -551,12 +577,12 @@
 	}
 
 	function rectContainsPointVertically(rect, point) {
-		var y = isAppleDevice ? point.pageY : point.clientY;
+		var y = environment.isAppleDevice ? point.pageY : point.clientY;
 		return y > rect.top && y < rect.bottom;
 	}
 
 	function rectOrItsBoundsContainPointHorizontally(rect, point) {
-		var x = isAppleDevice ? point.pageX : point.clientX;
+		var x = environment.isAppleDevice ? point.pageX : point.clientX;
 		return x >= rect.left && x <= rect.right;
 	}
 

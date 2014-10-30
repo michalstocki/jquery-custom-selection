@@ -24,12 +24,14 @@ function logg(m) {
 		var $window = $(this.contextWindow);
 		this.canvas.width = $window.width();
 		this.canvas.height = $window.height();
+		return this;
 	};
 
 	VisualDebugger.prototype.drawNode = function(node, color) {
 		var range = this.contextWindow.document.createRange();
 		range.selectNode(node);
 		this.drawRange(range, color);
+		return this;
 	};
 
 	VisualDebugger.prototype.drawRect = function(rect, color) {
@@ -42,6 +44,7 @@ function logg(m) {
 		this.context.lineWidth = 1;
 		this.context.strokeStyle = color || 'red';
 		this.context.stroke();
+		return this;
 	};
 
 	VisualDebugger.prototype.drawRange = function(range, color) {
@@ -49,10 +52,12 @@ function logg(m) {
 		for (var j = 0, rect; rect = rects[j++];) {
 			this.drawRect(rect, color);
 		}
+		return this;
 	};
 
 	VisualDebugger.prototype.drawPoint = function(point, color) {
 		this.drawCircle(point.clientX, point.clientY, color);
+		return this;
 	};
 
 	VisualDebugger.prototype.drawIntersection = function(x, y, color) {
@@ -71,6 +76,7 @@ function logg(m) {
 		this.context.moveTo(x, 0);
 		this.context.lineTo(x, this.canvas.height);
 		this.context.stroke();
+		return this;
 	};
 
 	VisualDebugger.prototype.drawCircle = function(x, y, color) {
@@ -79,6 +85,7 @@ function logg(m) {
 		this.context.lineWidth = 2;
 		this.context.strokeStyle = color || 'green';
 		this.context.stroke();
+		return this;
 	};
 
 	function getCanvasFrom(doc) {
