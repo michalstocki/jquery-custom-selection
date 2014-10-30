@@ -335,6 +335,9 @@
 	function getTouchedElementByPoint(touchPoint) {
 		hideMarkers();
 		var element = contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		if (!element) {
+			element = contextDocument.body;
+		}
 		showMarkers();
 		return element;
 	}
