@@ -79,26 +79,53 @@
 	}
 
 	function getClientRects(range) {
-		var rects = range.getClientRects();
-		return [].filter.call(rects, function(rect) {
-			for (var i = 0; i < rects.length; i++) {
-				var r = rects[i];
-				if (rectContainsRect(rect, r)) {
-					return false;
-				}
-			}
-			return true;
+		var rects = [].slice.call(range.getClientRects());
+		if (settings.environment.isWebkit) {
+			rects = filterDuplicatedRects(rects);
+		}
+		return rects;
+	}
+
+	function filterDuplicatedRects(rects) {
+		var lastRect = rects[rects.length - 1];
+		return rects.filter(function(rect) {
+			return !(rectEndsAfterLastRect(rect, lastRect) ||
+			rectContainsOneOfRects(rect, rects));
 		});
 	}
 
-	function rectContainsRect(possibleParent, possibleChild) {
+	function rectEndsAfterLastRect(rect, lastRect) {
+		return rect.bottom === lastRect.bottom && rect.right > lastRect.right + 1;
+	}
+
+	function rectContainsOneOfRects(rect, rects) {
+		for (var i = 0; i < rects.length; i++) {
+			var r = rects[i];
+			if (rectContainsNotEmptyRect(rect, r)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function rectContainsNotEmptyRect(possibleParent, potentialChild) {
 		var R = possibleParent;
-		var r = possibleChild;
-		return R !== r &&
+		var r = potentialChild;
+		return !rectsAreEqual(R, r) &&
 				R.top <= r.top &&
 				R.right >= r.right &&
 				R.bottom >= r.bottom &&
-				R.left <= r.left;
+				R.left <= r.left &&
+				r.height > 0 &&
+				r.width > 0;
+	}
+
+	function rectsAreEqual(rectA, rectB) {
+		return rectA === rectB ||
+				(rectA.left === rectB.left &&
+				rectA.right === rectB.right &&
+				rectA.height === rectB.height &&
+				rectA.width === rectB.width);
 	}
 
 	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
