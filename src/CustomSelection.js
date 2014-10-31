@@ -234,14 +234,14 @@
 	}
 
 	function refreshSelection() {
-		if (doesRangeExist(lastSelectionRange)) {
-			drawSelectionRange();
-		}
+		drawSelectionRange();
 	}
 
 	function drawSelectionRange() {
-		selectionDrawer.redraw(lastSelectionRange);
-		adjustMarkerPositionsTo(lastSelectionRange);
+		if (doesRangeExist(lastSelectionRange)) {
+			selectionDrawer.redraw(lastSelectionRange);
+			adjustMarkerPositionsTo(lastSelectionRange);
+		}
 	}
 
 	function hasEndOtherThanLastSelectionEnd(range) {
@@ -273,7 +273,8 @@
 	}
 
 	function doesRangeExist(range) {
-		return !!range && range.getClientRects().length > 0;
+		return !!range && !!range.getBoundingClientRect() &&
+				range.getClientRects().length > 0;
 	}
 
 //	-- Preparing Markers
