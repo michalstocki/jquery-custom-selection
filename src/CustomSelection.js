@@ -210,6 +210,7 @@
 			var point = createPointFromEvent(pointerEvent, {shift: false});
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
+			enableMarkerEvents();
 			rejectTouchEnd = true;
 		}
 	}
@@ -222,7 +223,6 @@
 				settings.onSelectionChange(lastSelectionRange);
 			}
 			showMarkers();
-			enableMarkerEvents();
 		}
 	}
 
