@@ -38,6 +38,7 @@
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
+			environment: environment,
 			contextWindow: contextWindow,
 			contextDocument: contextDocument,
 			fillStyle: settings.selectionColor
@@ -209,6 +210,7 @@
 			var point = createPointFromEvent(pointerEvent, {shift: false});
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
+			enableMarkerEvents();
 			rejectTouchEnd = true;
 		}
 	}
@@ -387,6 +389,7 @@
 	function performEnvTests() {
 		var env = new CustomSelection.Lib.EnvironmentChecker();
 		return {
+			isWebkit: env.isWebkit(),
 			isAppleDevice: env.isAppleDevice(),
 			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
 			isAndroidStackBrowser: env.isAndroidStackBrowser()
