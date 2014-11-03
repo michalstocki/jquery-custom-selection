@@ -104,8 +104,7 @@
 
 	function rectContainsOneOfRects(rect, rects) {
 		for (var i = 0; i < rects.length; i++) {
-			var r = rects[i];
-			if (rectContainsNotEmptyRect(rect, r)) {
+			if (rectContainsNotEmptyRect(rect, rects[i])) {
 				return true;
 			}
 		}
