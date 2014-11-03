@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.4.2 - 2014-10-30 */(function($) {
+/*! jquery-custom-selection - v0.4.2 - 2014-11-03 */(function($) {
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
@@ -38,6 +38,7 @@
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
+			environment: environment,
 			contextWindow: contextWindow,
 			contextDocument: contextDocument,
 			fillStyle: settings.selectionColor
@@ -209,6 +210,7 @@
 			var point = createPointFromEvent(pointerEvent, {shift: false});
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
+			enableMarkerEvents();
 			rejectTouchEnd = true;
 		}
 	}
@@ -234,14 +236,14 @@
 	}
 
 	function refreshSelection() {
-		if (doesRangeExist(lastSelectionRange)) {
-			drawSelectionRange();
-		}
+		drawSelectionRange();
 	}
 
 	function drawSelectionRange() {
-		selectionDrawer.redraw(lastSelectionRange);
-		adjustMarkerPositionsTo(lastSelectionRange);
+		if (doesRangeExist(lastSelectionRange)) {
+			selectionDrawer.redraw(lastSelectionRange);
+			adjustMarkerPositionsTo(lastSelectionRange);
+		}
 	}
 
 	function hasEndOtherThanLastSelectionEnd(range) {
@@ -273,7 +275,8 @@
 	}
 
 	function doesRangeExist(range) {
-		return !!range && range.getClientRects().length > 0;
+		return !!range && !!range.getBoundingClientRect() &&
+				range.getClientRects().length > 0;
 	}
 
 //	-- Preparing Markers
@@ -386,6 +389,7 @@
 	function performEnvTests() {
 		var env = new CustomSelection.Lib.EnvironmentChecker();
 		return {
+			isWebkit: env.isWebkit(),
 			isAppleDevice: env.isAppleDevice(),
 			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
 			isAndroidStackBrowser: env.isAndroidStackBrowser()
@@ -845,6 +849,10 @@
 		return testUserAgent(/Android/g);
 	};
 
+	EnvironmentChecker.prototype.isWebkit = function() {
+		return testUserAgent(/WebKit/g);
+	};
+
 	function userAgentMatch(regExp) {
 		return regExp.exec(global.navigator.userAgent);
 	}
@@ -965,10 +973,12 @@
 	var canvas;
 	var context;
 	var settings;
+	var environment;
 	var isAppleDevice = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	function SelectionDrawer(options) {
 		settings = options;
+		environment = settings.environment;
 		initCanvas();
 	}
 
@@ -988,7 +998,7 @@
 
 	function drawSelection(range) {
 		var boundingClientRect = range.getBoundingClientRect();
-		var rects = range.getClientRects();
+		var rects = getClientRects(range);
 		var SUBPIXEL_OFFSET = 0.5;
 
 		var offsetX = SUBPIXEL_OFFSET - boundingClientRect.left;
@@ -997,7 +1007,7 @@
 		context.translate(offsetX, offsetY);
 
 		context.beginPath();
-		Array.prototype.forEach.call(rects, function(rect) {
+		rects.forEach(function(rect) {
 			context.rect(rect.left,
 					rect.top,
 					rect.width,
@@ -1030,6 +1040,57 @@
 		canvas.width = 0;
 		canvas.height = 0;
 		settings.$element[0].appendChild(canvas);
+	}
+
+	function getClientRects(range) {
+		var rects = [].slice.call(range.getClientRects());
+		if (environment.isWebkit && !environment.isAppleDevice) {
+			rects = filterDuplicatedRects(rects);
+		}
+		return rects;
+	}
+
+	function filterDuplicatedRects(rects) {
+		var lastRect = rects[rects.length - 1];
+		return rects.filter(function(rect) {
+			return !(rectEndsAfterLastRect(rect, lastRect) ||
+			rectContainsOneOfRects(rect, rects));
+		});
+	}
+
+	function rectEndsAfterLastRect(rect, lastRect) {
+		var TOLERATED_RIGHT_LEAK = 1;
+		return rect.bottom === lastRect.bottom &&
+				rect.right - lastRect.right > TOLERATED_RIGHT_LEAK;
+	}
+
+	function rectContainsOneOfRects(rect, rects) {
+		for (var i = 0; i < rects.length; i++) {
+			if (rectContainsNotEmptyRect(rect, rects[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function rectContainsNotEmptyRect(possibleParent, potentialChild) {
+		var R = possibleParent;
+		var r = potentialChild;
+		return !rectsAreEqual(R, r) &&
+				R.top <= r.top &&
+				R.right >= r.right &&
+				R.bottom >= r.bottom &&
+				R.left <= r.left &&
+				r.height > 0 &&
+				r.width > 0;
+	}
+
+	function rectsAreEqual(rectA, rectB) {
+		return rectA === rectB ||
+				(rectA.left === rectB.left &&
+				rectA.right === rectB.right &&
+				rectA.height === rectB.height &&
+				rectA.width === rectB.width);
 	}
 
 	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;
