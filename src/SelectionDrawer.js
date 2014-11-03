@@ -97,7 +97,9 @@
 	}
 
 	function rectEndsAfterLastRect(rect, lastRect) {
-		return rect.bottom === lastRect.bottom && rect.right > lastRect.right + 1;
+		var TOLERATED_RIGHT_LEAK = 1;
+		return rect.bottom === lastRect.bottom &&
+				rect.right - lastRect.right > TOLERATED_RIGHT_LEAK;
 	}
 
 	function rectContainsOneOfRects(rect, rects) {
