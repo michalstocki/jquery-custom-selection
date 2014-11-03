@@ -11,10 +11,12 @@
 	var canvas;
 	var context;
 	var settings;
+	var environment;
 	var isAppleDevice = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	function SelectionDrawer(options) {
 		settings = options;
+		environment = settings.environment;
 		initCanvas();
 	}
 
@@ -80,7 +82,7 @@
 
 	function getClientRects(range) {
 		var rects = [].slice.call(range.getClientRects());
-		if (settings.environment.isWebkit) {
+		if (environment.isWebkit && !environment.isAppleDevice) {
 			rects = filterDuplicatedRects(rects);
 		}
 		return rects;
