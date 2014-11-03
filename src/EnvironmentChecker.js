@@ -35,6 +35,10 @@
 		return testUserAgent(/Android/g);
 	};
 
+	EnvironmentChecker.prototype.isWebkit = function() {
+		return testUserAgent(/WebKit/g);
+	};
+
 	function userAgentMatch(regExp) {
 		return regExp.exec(global.navigator.userAgent);
 	}
