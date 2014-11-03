@@ -222,6 +222,7 @@
 				settings.onSelectionChange(lastSelectionRange);
 			}
 			showMarkers();
+			enableMarkerEvents();
 		}
 	}
 
