@@ -11,10 +11,12 @@
 	var canvas;
 	var context;
 	var settings;
+	var environment;
 	var isAppleDevice = (navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 	function SelectionDrawer(options) {
 		settings = options;
+		environment = settings.environment;
 		initCanvas();
 	}
 
@@ -34,7 +36,7 @@
 
 	function drawSelection(range) {
 		var boundingClientRect = range.getBoundingClientRect();
-		var rects = range.getClientRects();
+		var rects = getClientRects(range);
 		var SUBPIXEL_OFFSET = 0.5;
 
 		var offsetX = SUBPIXEL_OFFSET - boundingClientRect.left;
@@ -43,7 +45,7 @@
 		context.translate(offsetX, offsetY);
 
 		context.beginPath();
-		Array.prototype.forEach.call(rects, function(rect) {
+		rects.forEach(function(rect) {
 			context.rect(rect.left,
 					rect.top,
 					rect.width,
@@ -76,6 +78,57 @@
 		canvas.width = 0;
 		canvas.height = 0;
 		settings.$element[0].appendChild(canvas);
+	}
+
+	function getClientRects(range) {
+		var rects = [].slice.call(range.getClientRects());
+		if (environment.isWebkit && !environment.isAppleDevice) {
+			rects = filterDuplicatedRects(rects);
+		}
+		return rects;
+	}
+
+	function filterDuplicatedRects(rects) {
+		var lastRect = rects[rects.length - 1];
+		return rects.filter(function(rect) {
+			return !(rectEndsAfterLastRect(rect, lastRect) ||
+			rectContainsOneOfRects(rect, rects));
+		});
+	}
+
+	function rectEndsAfterLastRect(rect, lastRect) {
+		var TOLERATED_RIGHT_LEAK = 1;
+		return rect.bottom === lastRect.bottom &&
+				rect.right - lastRect.right > TOLERATED_RIGHT_LEAK;
+	}
+
+	function rectContainsOneOfRects(rect, rects) {
+		for (var i = 0; i < rects.length; i++) {
+			if (rectContainsNotEmptyRect(rect, rects[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function rectContainsNotEmptyRect(possibleParent, potentialChild) {
+		var R = possibleParent;
+		var r = potentialChild;
+		return !rectsAreEqual(R, r) &&
+				R.top <= r.top &&
+				R.right >= r.right &&
+				R.bottom >= r.bottom &&
+				R.left <= r.left &&
+				r.height > 0 &&
+				r.width > 0;
+	}
+
+	function rectsAreEqual(rectA, rectB) {
+		return rectA === rectB ||
+				(rectA.left === rectB.left &&
+				rectA.right === rectB.right &&
+				rectA.height === rectB.height &&
+				rectA.width === rectB.width);
 	}
 
 	global.CustomSelection.Lib.SelectionDrawer = SelectionDrawer;

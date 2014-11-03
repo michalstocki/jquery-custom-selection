@@ -38,6 +38,7 @@
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
+			environment: environment,
 			contextWindow: contextWindow,
 			contextDocument: contextDocument,
 			fillStyle: settings.selectionColor
@@ -209,6 +210,7 @@
 			var point = createPointFromEvent(pointerEvent, {shift: false});
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
+			enableMarkerEvents();
 			rejectTouchEnd = true;
 		}
 	}
@@ -234,14 +236,14 @@
 	}
 
 	function refreshSelection() {
-		if (doesRangeExist(lastSelectionRange)) {
-			drawSelectionRange();
-		}
+		drawSelectionRange();
 	}
 
 	function drawSelectionRange() {
-		selectionDrawer.redraw(lastSelectionRange);
-		adjustMarkerPositionsTo(lastSelectionRange);
+		if (doesRangeExist(lastSelectionRange)) {
+			selectionDrawer.redraw(lastSelectionRange);
+			adjustMarkerPositionsTo(lastSelectionRange);
+		}
 	}
 
 	function hasEndOtherThanLastSelectionEnd(range) {
@@ -273,7 +275,8 @@
 	}
 
 	function doesRangeExist(range) {
-		return !!range && range.getClientRects().length > 0;
+		return !!range && !!range.getBoundingClientRect() &&
+				range.getClientRects().length > 0;
 	}
 
 //	-- Preparing Markers
@@ -386,6 +389,7 @@
 	function performEnvTests() {
 		var env = new CustomSelection.Lib.EnvironmentChecker();
 		return {
+			isWebkit: env.isWebkit(),
 			isAppleDevice: env.isAppleDevice(),
 			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
 			isAndroidStackBrowser: env.isAndroidStackBrowser()
