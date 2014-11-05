@@ -5,7 +5,7 @@
 (function(global) {
 	'use strict';
 	var defaults = {shift: true};
-	var SHIFT_Y = -32;
+	var SHIFT_Y = -38;
 
 	function Point(pointerEvent, options) {
 		var settings = $.extend({}, defaults, options);
@@ -33,6 +33,11 @@
 		this.clientY *= scale;
 		this.pageX *= scale;
 		this.pageY *= scale;
+	};
+
+	Point.prototype.scaleOffset = function(scale) {
+		this.clientY = (this.clientY - SHIFT_Y) + SHIFT_Y * scale;
+		this.pageY = (this.pageY - SHIFT_Y) + SHIFT_Y * scale;
 	};
 
 	global.CustomSelection.Lib.Point = Point;

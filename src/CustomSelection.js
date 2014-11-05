@@ -323,7 +323,9 @@
 
 	function createPointFromMarkerEvent(pointerEvent) {
 		var point = createPointFromEvent(pointerEvent);
-		if (shouldConvertPointerEvent()) {
+		if (eventCoordsAutomaticallyConverted()) {
+			point.scaleOffset(getScaleOfMarkersContext());
+		} else {
 			point.translate(getVectorOfMarkersOrigin());
 			point.scale(getScaleOfMarkersContext());
 		}
@@ -382,8 +384,8 @@
 		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
 	}
 
-	function shouldConvertPointerEvent() {
-		return !(environment.isAndroidLowerThanKitkat && environment.isAndroidStackBrowser);
+	function eventCoordsAutomaticallyConverted() {
+		return environment.isAndroidStackBrowser && environment.isAndroidLowerThanKitkat;
 	}
 
 	function performEnvTests() {
