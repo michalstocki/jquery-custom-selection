@@ -9,6 +9,7 @@
 	var defaults = {
 		holdThreshold: 4,
 		holdTimeout: 500,
+		markerShiftY: 38,
 		onSelectionChange: function() {},
 		contextOrigin: {
 			offsetX: 0,
@@ -41,7 +42,8 @@
 			environment: environment,
 			contextWindow: contextWindow,
 			contextDocument: contextDocument,
-			fillStyle: settings.selectionColor
+			fillStyle: settings.selectionColor,
+			markerShiftY: settings.markerShiftY
 		});
 		initMarkers(this);
 		disableNativeSelectionFor(contextDocument.body);
@@ -207,7 +209,7 @@
 		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!isMarker(element)) {
 			clearSelection();
-			var point = createPointFromEvent(pointerEvent, {shift: false});
+			var point = createPointFromEvent(pointerEvent);
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
 			enableMarkerEvents();
@@ -322,8 +324,10 @@
 	}
 
 	function createPointFromMarkerEvent(pointerEvent) {
-		var point = createPointFromEvent(pointerEvent);
-		if (shouldConvertPointerEvent()) {
+		var point = createPointFromEvent(pointerEvent, {shiftY: -settings.markerShiftY});
+		if (eventCoordsAutomaticallyConverted()) {
+			point.scaleOffset(getScaleOfMarkersContext());
+		} else {
 			point.translate(getVectorOfMarkersOrigin());
 			point.scale(getScaleOfMarkersContext());
 		}
@@ -382,8 +386,8 @@
 		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
 	}
 
-	function shouldConvertPointerEvent() {
-		return !(environment.isAndroidLowerThanKitkat && environment.isAndroidStackBrowser);
+	function eventCoordsAutomaticallyConverted() {
+		return environment.isAndroidStackBrowser && environment.isAndroidLowerThanKitkat;
 	}
 
 	function performEnvTests() {
