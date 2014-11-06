@@ -411,39 +411,28 @@
 
 	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
 		// searching space backwards
-		var newStartContainer;
 		while (!rangeStartsWithWhitespace(range)) {
-			if (range.startOffset < 1) {
-				if (newStartContainer = getTextNodeBefore(range.startContainer)) {
-					range.setStart(newStartContainer, newStartContainer.data.length);
-				} else {
-					return;
-				}
-			} else {
+			if (range.startOffset > 0) {
 				range.setStart(range.startContainer, range.startOffset - 1);
+			} else if (!putRangeStartAtTheEndOfPreviousTextNode(range)) {
+				return;
 			}
 		}
 		range.setStart(range.startContainer, range.startOffset + 1);
+
 		if (rangeStartsOnWhitespaceAtTheEndOfNode(range)) {
-			newStartContainer = getTextNodeAfter(range.startContainer);
-			range.setStart(newStartContainer, 0);
+			range.setStart(getTextNodeAfter(range.startContainer), 0);
 		}
 	}
 
 	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
 		// searching space forwards
-		var maxIndex = range.endContainer.data.length;
-		var newEndContainer;
 		while (!rangeEndsWithWhitespace(range)) {
-			if (range.endOffset >= maxIndex) {
-				if (newEndContainer = getTextNodeAfter(range.endContainer)) {
-					maxIndex = newEndContainer.data.length;
-					range.setEnd(newEndContainer, 0);
-				} else {
-					return;
-				}
-			} else {
+			var maxIndex = range.endContainer.data.length;
+			if (range.endOffset < maxIndex) {
 				range.setEnd(range.endContainer, range.endOffset + 1);
+			} else if (!putRangeEndAtTheBeginningOfNextTextNode(range)) {
+				return;
 			}
 		}
 		range.setEnd(range.endContainer, Math.max(range.endOffset - 1, 0));
@@ -456,6 +445,26 @@
 	function rangeEndsWithWhitespace(range) {
 		var stringified = range.toString();
 		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
+	}
+
+	function putRangeStartAtTheEndOfPreviousTextNode(range) {
+		var newStartContainer;
+		if (newStartContainer = getTextNodeBefore(range.startContainer)) {
+			range.setStart(newStartContainer, newStartContainer.data.length);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function putRangeEndAtTheBeginningOfNextTextNode(range) {
+		var newEndContainer;
+		if (newEndContainer = getTextNodeAfter(range.endContainer)) {
+			range.setEnd(newEndContainer, 0);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	function rangeStartsOnWhitespaceAtTheEndOfNode(range) {
@@ -623,7 +632,8 @@
 		return node.childNodes.length > 0;
 	}
 
-	function getTextNodeAfter(node) {
+	function getTextNodeAfter(textNode) {
+		var node = textNode;
 		do {
 			if (nodeHasChildren(node)) {
 				node = node.childNodes[0];
@@ -638,7 +648,8 @@
 		return node;
 	}
 
-	function getTextNodeBefore(node) {
+	function getTextNodeBefore(textNode) {
+		var node = textNode;
 		do {
 			if (nodeHasChildren(node)) {
 				node = node.childNodes[node.childNodes.length - 1];
