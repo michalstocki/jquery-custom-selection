@@ -415,7 +415,7 @@
 		while (!rangeStartsWithWhitespace(range)) {
 			if (range.startOffset < 1) {
 				if (newStartContainer = getTextNodeBefore(range.startContainer)) {
-					range.setEnd(newStartContainer, newStartContainer.data.length);
+					range.setStart(newStartContainer, newStartContainer.data.length);
 				} else {
 					return;
 				}
@@ -424,6 +424,10 @@
 			}
 		}
 		range.setStart(range.startContainer, range.startOffset + 1);
+		if (rangeStartsOnWhitespaceAtTheEndOfNode(range)) {
+			newStartContainer = getTextNodeAfter(range.startContainer);
+			range.setStart(newStartContainer, 0);
+		}
 	}
 
 	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
@@ -452,6 +456,16 @@
 	function rangeEndsWithWhitespace(range) {
 		var stringified = range.toString();
 		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
+	}
+
+	function rangeStartsOnWhitespaceAtTheEndOfNode(range) {
+		return nodeEndsWithWhitespace(range.startContainer) &&
+				(range.startOffset === range.startContainer.data.length ||
+				range.startOffset === range.startContainer.data.length - 1);
+	}
+
+	function nodeEndsWithWhitespace(node) {
+		return node.data.charCodeAt(node.data.length - 1) in WHITESPACE_LIST;
 	}
 
 //	-- Marking
