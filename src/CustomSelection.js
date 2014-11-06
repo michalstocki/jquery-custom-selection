@@ -496,7 +496,8 @@
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
 		var range = contextDocument.createRange();
 		var startIndex = 0;
-		var endIndex = textNode.data.length;
+		var maxIndex = textNode.data.length;
+		var endIndex = maxIndex;
 		while (startIndex < endIndex) {
 			var middle = (startIndex + endIndex) >> 1;
 			range.setStart(textNode, startIndex);
@@ -508,6 +509,9 @@
 				range.setStart(textNode, startIndex);
 				range.setEnd(textNode, endIndex);
 			}
+		}
+		if (range.collapsed && range.endOffset < maxIndex) {
+			range.setEnd(textNode, range.endOffset + 1);
 		}
 		return range;
 	}

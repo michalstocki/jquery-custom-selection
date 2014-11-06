@@ -1,4 +1,5 @@
 
+/*exported logg*/
 function logg(m) {
 	$('.touch_status').text(m);
 }
