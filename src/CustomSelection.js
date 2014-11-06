@@ -686,18 +686,18 @@
 	}
 
 	function searchNode(el, comparator) {
-		var closestNode = null;
+		var bestNode = null;
 		if (el) {
 			var nodes = el.childNodes;
 			for (var i = 0, n; n = nodes[i++];) {
 				var rects;
 				if ((rects = getRectsForNode(n)) && rects.length &&
 					(nodeHasChildren(n) || nodeIsText(n))) {
-					closestNode = comparator(closestNode, n);
+					bestNode = comparator(bestNode, n);
 				}
 			}
 		}
-		return closestNode;
+		return bestNode;
 	}
 
 	function createNodeComparator(options) {
