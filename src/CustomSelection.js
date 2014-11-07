@@ -416,26 +416,30 @@
 	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
 		// searching space backwards
 		while (!rangeStartsWithWhitespace(range)) {
-			if (range.startOffset < 1) {
-				return;
-			} else {
+			if (range.startOffset > 0) {
 				range.setStart(range.startContainer, range.startOffset - 1);
+			} else if (!putRangeStartAtTheEndOfPreviousTextNode(range)) {
+				return;
 			}
 		}
 		range.setStart(range.startContainer, range.startOffset + 1);
+
+		if (rangeStartsOnWhitespaceAtTheEndOfNode(range)) {
+			range.setStart(getTextNodeAfter(range.startContainer), 0);
+		}
 	}
 
 	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
 		// searching space forwards
-		var maxIndex = Math.max(range.endContainer.data.length, 0);
 		while (!rangeEndsWithWhitespace(range)) {
-			if (range.endOffset >= maxIndex) {
-				return;
-			} else {
+			var maxIndex = range.endContainer.data.length;
+			if (range.endOffset < maxIndex) {
 				range.setEnd(range.endContainer, range.endOffset + 1);
+			} else if (!putRangeEndAtTheBeginningOfNextTextNode(range)) {
+				return;
 			}
 		}
-		range.setEnd(range.endContainer, range.endOffset - 1);
+		range.setEnd(range.endContainer, Math.max(range.endOffset - 1, 0));
 	}
 
 	function rangeStartsWithWhitespace(range) {
@@ -445,6 +449,36 @@
 	function rangeEndsWithWhitespace(range) {
 		var stringified = range.toString();
 		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
+	}
+
+	function putRangeStartAtTheEndOfPreviousTextNode(range) {
+		var newStartContainer;
+		if (newStartContainer = getTextNodeBefore(range.startContainer)) {
+			range.setStart(newStartContainer, newStartContainer.data.length);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function putRangeEndAtTheBeginningOfNextTextNode(range) {
+		var newEndContainer;
+		if (newEndContainer = getTextNodeAfter(range.endContainer)) {
+			range.setEnd(newEndContainer, 0);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function rangeStartsOnWhitespaceAtTheEndOfNode(range) {
+		return nodeEndsWithWhitespace(range.startContainer) &&
+				(range.startOffset === range.startContainer.data.length ||
+				range.startOffset === range.startContainer.data.length - 1);
+	}
+
+	function nodeEndsWithWhitespace(node) {
+		return node.data.charCodeAt(node.data.length - 1) in WHITESPACE_LIST;
 	}
 
 //	-- Marking
@@ -606,6 +640,38 @@
 		return node.childNodes.length > 0;
 	}
 
+	function getTextNodeAfter(textNode) {
+		var node = textNode;
+		do {
+			if (nodeHasChildren(node)) {
+				node = node.childNodes[0];
+			} else if (node.nextSibling) {
+				node = node.nextSibling;
+			} else if (node.parentNode && node.parentNode.nextSibling) {
+				node = node.parentNode.nextSibling;
+			} else {
+				return null;
+			}
+		} while (!nodeIsText(node));
+		return node;
+	}
+
+	function getTextNodeBefore(textNode) {
+		var node = textNode;
+		do {
+			if (nodeHasChildren(node)) {
+				node = node.childNodes[node.childNodes.length - 1];
+			} else if (node.previousSibling) {
+				node = node.previousSibling;
+			} else if (node.parentNode && node.parentNode.previousSibling) {
+				node = node.parentNode.previousSibling;
+			} else {
+				return null;
+			}
+		} while (!nodeIsText(node));
+		return node;
+	}
+
 //  ------ Finding the closest node to the pointer
 
 	var closestNode;
@@ -653,18 +719,18 @@
 	}
 
 	function searchNode(el, comparator) {
-		var closestNode = null;
+		var bestNode = null;
 		if (el) {
 			var nodes = el.childNodes;
 			for (var i = 0, n; n = nodes[i++];) {
 				var rects;
 				if ((rects = getRectsForNode(n)) && rects.length &&
 					(nodeHasChildren(n) || nodeIsText(n))) {
-					closestNode = comparator(closestNode, n);
+					bestNode = comparator(bestNode, n);
 				}
 			}
 		}
-		return closestNode;
+		return bestNode;
 	}
 
 	function createNodeComparator(options) {
