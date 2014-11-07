@@ -82,7 +82,7 @@
 
 	function getClientRects(range) {
 		var rects = [].slice.call(range.getClientRects());
-		if (environment.isWebkit && !environment.isAppleDevice) {
+		if (environment.isWebkit) {
 			rects = filterDuplicatedRects(rects);
 		}
 		return rects;
@@ -120,7 +120,7 @@
 				R.bottom >= r.bottom &&
 				R.left <= r.left &&
 				r.height > 0 &&
-				r.width > 0;
+				r.width > 1;
 	}
 
 	function rectsAreEqual(rectA, rectB) {
