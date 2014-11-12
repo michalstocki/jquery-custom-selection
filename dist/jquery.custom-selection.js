@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.5.0 - 2014-11-12 */(function($) {
+/*! jquery-custom-selection - v0.5.1 - 2014-11-12 */(function($) {
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
