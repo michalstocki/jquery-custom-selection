@@ -82,7 +82,7 @@
 
 	function getClientRects(range) {
 		var rects = [].slice.call(range.getClientRects());
-		if (environment.isWebkit && !environment.isAppleDevice) {
+		if (environment.isWebkit) {
 			rects = filterDuplicatedRects(rects);
 		}
 		return rects;
@@ -112,6 +112,8 @@
 	}
 
 	function rectContainsNotEmptyRect(possibleParent, potentialChild) {
+		var MINIMAL_RECT_WIDTH = 2;
+		var MINIMAL_RECT_HEIGHT = 1;
 		var R = possibleParent;
 		var r = potentialChild;
 		return !rectsAreEqual(R, r) &&
@@ -119,8 +121,8 @@
 				R.right >= r.right &&
 				R.bottom >= r.bottom &&
 				R.left <= r.left &&
-				r.height > 0 &&
-				r.width > 0;
+				r.height >= MINIMAL_RECT_HEIGHT &&
+				r.width >= MINIMAL_RECT_WIDTH;
 	}
 
 	function rectsAreEqual(rectA, rectB) {
