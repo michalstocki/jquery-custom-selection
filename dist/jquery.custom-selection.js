@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.4.3 - 2014-11-03 */(function($) {
+/*! jquery-custom-selection - v0.5.0 - 2014-11-12 */(function($) {
 	var MARKER_CLASS = 'jcs-marker';
 	var MARKER_START_CLASS = 'jcs-beginning-marker';
 	var MARKER_END_CLASS = 'jcs-end-marker';
@@ -9,6 +9,7 @@
 	var defaults = {
 		holdThreshold: 4,
 		holdTimeout: 500,
+		markerShiftY: 38,
 		onSelectionChange: function() {},
 		contextOrigin: {
 			offsetX: 0,
@@ -41,7 +42,8 @@
 			environment: environment,
 			contextWindow: contextWindow,
 			contextDocument: contextDocument,
-			fillStyle: settings.selectionColor
+			fillStyle: settings.selectionColor,
+			markerShiftY: settings.markerShiftY
 		});
 		initMarkers(this);
 		disableNativeSelectionFor(contextDocument.body);
@@ -207,7 +209,7 @@
 		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!isMarker(element)) {
 			clearSelection();
-			var point = createPointFromEvent(pointerEvent, {shift: false});
+			var point = createPointFromEvent(pointerEvent);
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
 			enableMarkerEvents();
@@ -322,8 +324,10 @@
 	}
 
 	function createPointFromMarkerEvent(pointerEvent) {
-		var point = createPointFromEvent(pointerEvent);
-		if (shouldConvertPointerEvent()) {
+		var point = createPointFromEvent(pointerEvent, {shiftY: -settings.markerShiftY});
+		if (eventCoordsAutomaticallyConverted()) {
+			point.scaleOffset(getScaleOfMarkersContext());
+		} else {
 			point.translate(getVectorOfMarkersOrigin());
 			point.scale(getScaleOfMarkersContext());
 		}
@@ -382,8 +386,8 @@
 		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
 	}
 
-	function shouldConvertPointerEvent() {
-		return !(environment.isAndroidLowerThanKitkat && environment.isAndroidStackBrowser);
+	function eventCoordsAutomaticallyConverted() {
+		return environment.isAndroidStackBrowser && environment.isAndroidLowerThanKitkat;
 	}
 
 	function performEnvTests() {
@@ -412,26 +416,30 @@
 	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
 		// searching space backwards
 		while (!rangeStartsWithWhitespace(range)) {
-			if (range.startOffset < 1) {
-				return;
-			} else {
+			if (range.startOffset > 0) {
 				range.setStart(range.startContainer, range.startOffset - 1);
+			} else if (!putRangeStartAtTheEndOfPreviousTextNode(range)) {
+				return;
 			}
 		}
 		range.setStart(range.startContainer, range.startOffset + 1);
+
+		if (rangeStartsOnWhitespaceAtTheEndOfNode(range)) {
+			range.setStart(getTextNodeAfter(range.startContainer), 0);
+		}
 	}
 
 	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
 		// searching space forwards
-		var maxIndex = Math.max(range.endContainer.data.length, 0);
 		while (!rangeEndsWithWhitespace(range)) {
-			if (range.endOffset >= maxIndex) {
-				return;
-			} else {
+			var maxIndex = range.endContainer.data.length;
+			if (range.endOffset < maxIndex) {
 				range.setEnd(range.endContainer, range.endOffset + 1);
+			} else if (!putRangeEndAtTheBeginningOfNextTextNode(range)) {
+				return;
 			}
 		}
-		range.setEnd(range.endContainer, range.endOffset - 1);
+		range.setEnd(range.endContainer, Math.max(range.endOffset - 1, 0));
 	}
 
 	function rangeStartsWithWhitespace(range) {
@@ -441,6 +449,36 @@
 	function rangeEndsWithWhitespace(range) {
 		var stringified = range.toString();
 		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
+	}
+
+	function putRangeStartAtTheEndOfPreviousTextNode(range) {
+		var newStartContainer;
+		if (newStartContainer = getTextNodeBefore(range.startContainer)) {
+			range.setStart(newStartContainer, newStartContainer.data.length);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function putRangeEndAtTheBeginningOfNextTextNode(range) {
+		var newEndContainer;
+		if (newEndContainer = getTextNodeAfter(range.endContainer)) {
+			range.setEnd(newEndContainer, 0);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function rangeStartsOnWhitespaceAtTheEndOfNode(range) {
+		return nodeEndsWithWhitespace(range.startContainer) &&
+				(range.startOffset === range.startContainer.data.length ||
+				range.startOffset === range.startContainer.data.length - 1);
+	}
+
+	function nodeEndsWithWhitespace(node) {
+		return node.data.charCodeAt(node.data.length - 1) in WHITESPACE_LIST;
 	}
 
 //	-- Marking
@@ -496,7 +534,8 @@
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
 		var range = contextDocument.createRange();
 		var startIndex = 0;
-		var endIndex = textNode.data.length;
+		var maxIndex = textNode.data.length;
+		var endIndex = maxIndex;
 		while (startIndex < endIndex) {
 			var middle = (startIndex + endIndex) >> 1;
 			range.setStart(textNode, startIndex);
@@ -508,6 +547,9 @@
 				range.setStart(textNode, startIndex);
 				range.setEnd(textNode, endIndex);
 			}
+		}
+		if (range.collapsed && range.endOffset < maxIndex) {
+			range.setEnd(textNode, range.endOffset + 1);
 		}
 		return range;
 	}
@@ -598,6 +640,60 @@
 		return node.childNodes.length > 0;
 	}
 
+	function getSiblingAfterParentOf(node) {
+		while (!node.nextSibling) {
+			if (node === node.ownerDocument.body) {
+				return null;
+			}
+			node = node.parentNode;
+		}
+		return node.nextSibling;
+	}
+
+	function getSiblingBeforeParentOf(node) {
+		while (!node.previousSibling) {
+			if (node === node.ownerDocument.body) {
+				return null;
+			}
+			node = node.parentNode;
+		}
+		return node.previousSibling;
+	}
+
+	function getTextNodeAfter(textNode) {
+		var node = textNode;
+		var uncle;
+		do {
+			if (nodeHasChildren(node)) {
+				node = node.childNodes[0];
+			} else if (node.nextSibling) {
+				node = node.nextSibling;
+			} else if ((uncle = getSiblingAfterParentOf(node))) {
+				node = uncle;
+			} else {
+				return null;
+			}
+		} while (!nodeIsText(node));
+		return node;
+	}
+
+	function getTextNodeBefore(textNode) {
+		var node = textNode;
+		var uncle;
+		do {
+			if (nodeHasChildren(node)) {
+				node = node.childNodes[node.childNodes.length - 1];
+			} else if (node.previousSibling) {
+				node = node.previousSibling;
+			} else if ((uncle = getSiblingBeforeParentOf(node))) {
+				node = uncle;
+			} else {
+				return null;
+			}
+		} while (!nodeIsText(node));
+		return node;
+	}
+
 //  ------ Finding the closest node to the pointer
 
 	var closestNode;
@@ -645,18 +741,18 @@
 	}
 
 	function searchNode(el, comparator) {
-		var closestNode = null;
+		var bestNode = null;
 		if (el) {
 			var nodes = el.childNodes;
 			for (var i = 0, n; n = nodes[i++];) {
 				var rects;
 				if ((rects = getRectsForNode(n)) && rects.length &&
 					(nodeHasChildren(n) || nodeIsText(n))) {
-					closestNode = comparator(closestNode, n);
+					bestNode = comparator(bestNode, n);
 				}
 			}
 		}
-		return closestNode;
+		return bestNode;
 	}
 
 	function createNodeComparator(options) {
@@ -896,21 +992,16 @@
 
 (function(global) {
 	'use strict';
-	var defaults = {shift: true};
-	var SHIFT_Y = -32;
+	var defaults = {shiftY: 0};
 
 	function Point(pointerEvent, options) {
-		var settings = $.extend({}, defaults, options);
+		this._settings = $.extend({}, defaults, options);
 		var touches = pointerEvent.touches || pointerEvent.pointers;
 		var touch = touches[0];
 		this.clientX = touch.clientX;
-		this.clientY = touch.clientY;
+		this.clientY = touch.clientY + this._settings.shiftY;
 		this.pageX = touch.pageX;
-		this.pageY = touch.pageY;
-		if (settings.shift) {
-			this.clientY += SHIFT_Y;
-			this.pageY += SHIFT_Y;
-		}
+		this.pageY = touch.pageY + this._settings.shiftY;
 	}
 
 	Point.prototype.translate = function(vector) {
@@ -925,6 +1016,12 @@
 		this.clientY *= scale;
 		this.pageX *= scale;
 		this.pageY *= scale;
+	};
+
+	Point.prototype.scaleOffset = function(scale) {
+		var shiftY = this._settings.shiftY;
+		this.clientY = (this.clientY - shiftY) + shiftY * scale;
+		this.pageY = (this.pageY - shiftY) + shiftY * scale;
 	};
 
 	global.CustomSelection.Lib.Point = Point;
@@ -1044,7 +1141,7 @@
 
 	function getClientRects(range) {
 		var rects = [].slice.call(range.getClientRects());
-		if (environment.isWebkit && !environment.isAppleDevice) {
+		if (environment.isWebkit) {
 			rects = filterDuplicatedRects(rects);
 		}
 		return rects;
@@ -1074,6 +1171,8 @@
 	}
 
 	function rectContainsNotEmptyRect(possibleParent, potentialChild) {
+		var MINIMAL_RECT_WIDTH = 2;
+		var MINIMAL_RECT_HEIGHT = 1;
 		var R = possibleParent;
 		var r = potentialChild;
 		return !rectsAreEqual(R, r) &&
@@ -1081,8 +1180,8 @@
 				R.right >= r.right &&
 				R.bottom >= r.bottom &&
 				R.left <= r.left &&
-				r.height > 0 &&
-				r.width > 0;
+				r.height >= MINIMAL_RECT_HEIGHT &&
+				r.width >= MINIMAL_RECT_WIDTH;
 	}
 
 	function rectsAreEqual(rectA, rectB) {
