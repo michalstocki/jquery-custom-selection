@@ -640,15 +640,36 @@
 		return node.childNodes.length > 0;
 	}
 
+	function getSiblingAfterParentOf(node) {
+		while (!node.nextSibling) {
+			if (node === node.ownerDocument.body) {
+				return null;
+			}
+			node = node.parentNode;
+		}
+		return node.nextSibling;
+	}
+
+	function getSiblingBeforeParentOf(node) {
+		while (!node.previousSibling) {
+			if (node === node.ownerDocument.body) {
+				return null;
+			}
+			node = node.parentNode;
+		}
+		return node.previousSibling;
+	}
+
 	function getTextNodeAfter(textNode) {
 		var node = textNode;
+		var uncle;
 		do {
 			if (nodeHasChildren(node)) {
 				node = node.childNodes[0];
 			} else if (node.nextSibling) {
 				node = node.nextSibling;
-			} else if (node.parentNode && node.parentNode.nextSibling) {
-				node = node.parentNode.nextSibling;
+			} else if ((uncle = getSiblingAfterParentOf(node))) {
+				node = uncle;
 			} else {
 				return null;
 			}
@@ -658,13 +679,14 @@
 
 	function getTextNodeBefore(textNode) {
 		var node = textNode;
+		var uncle;
 		do {
 			if (nodeHasChildren(node)) {
 				node = node.childNodes[node.childNodes.length - 1];
 			} else if (node.previousSibling) {
 				node = node.previousSibling;
-			} else if (node.parentNode && node.parentNode.previousSibling) {
-				node = node.parentNode.previousSibling;
+			} else if ((uncle = getSiblingBeforeParentOf(node))) {
+				node = uncle;
 			} else {
 				return null;
 			}
