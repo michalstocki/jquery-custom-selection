@@ -27,13 +27,6 @@ module.exports = function(grunt) {
 					port: 8003,
 					hostname: 'localhost'
 				}
-			},
-			server: {
-				options: {
-					keepalive: false,
-					port: 8004,
-					hostname: 'localhost'
-				}
 			}
 		},
 		coffee: {
@@ -81,16 +74,6 @@ module.exports = function(grunt) {
 					}
 				]
 			}
-		},
-		webdriver: {
-			options: {
-				desiredCapabilities: {
-					browserName: 'chrome'
-				}
-			},
-			customSelection: {
-				tests: ['test/e2e/*.js']
-			}
 		}
 	});
 
@@ -99,10 +82,8 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-webdriver');
 	grunt.loadNpmTasks('grunt-contrib-coffee');
 
 	grunt.registerTask('dist', ['jshint', 'coffee:compile', 'concat:build', 'uglify:build', 'clean:coffeeBuild']);
 	grunt.registerTask('server', ['connect:serverKeepAlive']);
-	grunt.registerTask('e2e', ['concat:build', 'uglify:build', 'connect:server', 'webdriver']);
 };
