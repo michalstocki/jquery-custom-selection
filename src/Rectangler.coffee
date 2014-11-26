@@ -1,10 +1,10 @@
 class CustomSelection.Lib.Rectangler
 
-	constructor: (@environment) ->
+	constructor: (@_environment) ->
 
 	getRectsFor: (range) ->
 		rects = [].slice.call(range.getClientRects())
-		if @environment.isWebkit
+		if @_environment.isWebkit
 			rects = @_filterDuplicatedRects(rects)
 		return rects
 

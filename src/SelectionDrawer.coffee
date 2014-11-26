@@ -7,12 +7,9 @@ class CustomSelection.Lib.SelectionDrawer
 		'z-index': -1
 	}
 
-	constructor: (@_settings) ->
-		@_canvas = null
-		@_context = null
-		@_environment = @_settings.environment
-		@_rectangler = @_settings.rectangler
-		@_initCanvas()
+	constructor: (@_rectangler, @_environment, @_settings) ->
+		@_canvas = @_createCanvas()
+		@_context = @_canvas.getContext('2d')
 
 	redraw: (range) ->
 		@_updateCanvasBounds(range.getBoundingClientRect())
@@ -20,10 +17,6 @@ class CustomSelection.Lib.SelectionDrawer
 
 	clearSelection: ->
 		@_updateCanvasBounds()
-
-	_initCanvas: ->
-		@_createCanvas()
-		@_context = @_canvas.getContext('2d')
 
 	_drawSelection: (range) ->
 		boundingClientRect = range.getBoundingClientRect()
@@ -57,9 +50,10 @@ class CustomSelection.Lib.SelectionDrawer
 		@_canvas.height = newBounds.height
 
 	_createCanvas: ->
-		@_canvas = @_settings.contextDocument.createElement('canvas')
-		@_canvas.className = CUSTOM_SELECTION_CANVAS_CLASS
-		$(@_canvas).css(CUSTOM_SELECTION_CANVAS_STYLE)
-		@_canvas.width = 0
-		@_canvas.height = 0
-		@_settings.$element[0].appendChild(@_canvas)
+		canvas = @_settings.contextDocument.createElement('canvas')
+		canvas.className = CUSTOM_SELECTION_CANVAS_CLASS
+		$(canvas).css(CUSTOM_SELECTION_CANVAS_STYLE)
+		canvas.width = 0
+		canvas.height = 0
+		@_settings.$element[0].appendChild(canvas)
+		return canvas

@@ -38,15 +38,17 @@
 		environment = environment || performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
-		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
-			$element: this,
-			environment: environment,
-			contextWindow: contextWindow,
-			contextDocument: contextDocument,
-			fillStyle: settings.selectionColor,
-			markerShiftY: settings.markerShiftY,
-			rectangler: rectangler
-		});
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(
+			rectangler,
+			environment,
+			{
+				$element: this,
+				contextWindow: contextWindow,
+				contextDocument: contextDocument,
+				fillStyle: settings.selectionColor,
+				markerShiftY: settings.markerShiftY
+			}
+		);
 		initMarkers(this);
 		disableNativeSelectionFor(contextDocument.body);
 		enableTouchSelectionFor(this);
