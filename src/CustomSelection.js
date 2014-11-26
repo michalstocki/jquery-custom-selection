@@ -36,6 +36,7 @@
 		settings = $.extend(defaults, options);
 		useContextOf(this);
 		environment = environment || performEnvTests();
+		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer({
 			$element: this,
@@ -43,7 +44,8 @@
 			contextWindow: contextWindow,
 			contextDocument: contextDocument,
 			fillStyle: settings.selectionColor,
-			markerShiftY: settings.markerShiftY
+			markerShiftY: settings.markerShiftY,
+			rectangler: rectangler
 		});
 		initMarkers(this);
 		disableNativeSelectionFor(contextDocument.body);
