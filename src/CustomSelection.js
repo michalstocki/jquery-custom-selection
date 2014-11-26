@@ -24,6 +24,7 @@
 	var endMarker = null;
 	var selectionDrawer = null;
 	var environment;
+	var contentContext;
 	var hammer;
 
 	window.CustomSelection = {
@@ -34,23 +35,21 @@
 
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
-		useContextOf(this);
+		contentContext = new CustomSelection.Lib.ContentContext(this);
 		environment = environment || performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(
 			rectangler,
 			environment,
+			contentContext,
 			{
-				$element: this,
-				contextWindow: contextWindow,
-				contextDocument: contextDocument,
 				fillStyle: settings.selectionColor,
 				markerShiftY: settings.markerShiftY
 			}
 		);
 		initMarkers(this);
-		disableNativeSelectionFor(contextDocument.body);
+		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
 		return this;
 	};
@@ -70,7 +69,7 @@
 
 	$.fn.disableCustomSelection = function() {
 		clearSelection();
-		restoreNativeSelectionFor(contextDocument.body);
+		restoreNativeSelectionFor(contentContext.body);
 		disableTouchSelectionFor(this);
 		return this;
 	};
@@ -85,19 +84,12 @@
 		10: '\n'
 	};
 	var rejectTouchEnd = false;
-	var contextWindow = null;
-	var contextDocument = null;
 	var lastSelectionRange = null;
 	var movedMarker = null;
 	var selectionAnchor = null;
 	var userSelectBeforeEnablingSelection = null;
 
 //	-- Binding events
-
-	function useContextOf($element) {
-		contextDocument = $element[0].ownerDocument;
-		contextWindow = getWindowOf($element[0]);
-	}
 
 	function initializeHammerFor($element) {
 		hammer = new Hammer.Manager($element[0], {
@@ -182,11 +174,6 @@
 		return element.ownerDocument.body;
 	}
 
-	function getWindowOf(element) {
-		var doc = element.ownerDocument;
-		return doc.defaultView || doc.parentWindow;
-	}
-
 	function getSelectionAnchor() {
 		if (movedMarker === startMarker) {
 			return getEndAnchorOf(lastSelectionRange);
@@ -236,7 +223,7 @@
 		if (doesRangeExist(lastSelectionRange)) {
 			hideMarkers();
 			selectionDrawer.clearSelection();
-			settings.onSelectionChange(contextDocument.createRange());
+			settings.onSelectionChange(contentContext.createRange());
 		}
 		lastSelectionRange = null;
 	}
@@ -358,16 +345,16 @@
 
 	function getTouchedElementByPoint(touchPoint) {
 		hideMarkers();
-		var element = contextDocument.elementFromPoint(touchPoint.clientX, touchPoint.clientY);
+		var element = contentContext.getElementByPoint(touchPoint);
 		if (!element) {
-			element = contextDocument.body;
+			element = contentContext.body;
 		}
 		showMarkers();
 		return element;
 	}
 
 	function createMarkerInside($parent, className) {
-		var element = contextDocument.createElement('div');
+		var element = contentContext.createElement('div');
 		element.setAttribute('class', MARKER_CLASS + ' ' + className);
 		element.setAttribute('style', 'position: absolute;');
 		$parent.append(element);
@@ -536,7 +523,7 @@
 	}
 
 	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
-		var range = contextDocument.createRange();
+		var range = contentContext.createRange();
 		var startIndex = 0;
 		var maxIndex = textNode.data.length;
 		var endIndex = maxIndex;
@@ -616,7 +603,7 @@
 	}
 
 	function getRectsForNode(node) {
-		var range = contextDocument.createRange();
+		var range = contentContext.createRange();
 		range.selectNode(node);
 		return range.getClientRects();
 	}

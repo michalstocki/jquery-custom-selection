@@ -7,7 +7,7 @@ class CustomSelection.Lib.SelectionDrawer
 		'z-index': -1
 	}
 
-	constructor: (@_rectangler, @_environment, @_settings) ->
+	constructor: (@_rectangler, @_environment, @_contentContext, @_settings) ->
 		@_canvas = @_createCanvas()
 		@_context = @_canvas.getContext('2d')
 
@@ -40,7 +40,7 @@ class CustomSelection.Lib.SelectionDrawer
 		return if @_environment.isAppleDevice
 			0
 		else
-			$(@_settings.contextWindow).scrollTop()
+			$(@_contentContext.window).scrollTop()
 
 	_updateCanvasBounds: (newBounds) ->
 		newBounds = newBounds || {top: 0, left: 0, width: 0, height: 0}
@@ -50,10 +50,10 @@ class CustomSelection.Lib.SelectionDrawer
 		@_canvas.height = newBounds.height
 
 	_createCanvas: ->
-		canvas = @_settings.contextDocument.createElement('canvas')
+		canvas = @_contentContext.createElement('canvas')
 		canvas.className = CUSTOM_SELECTION_CANVAS_CLASS
 		$(canvas).css(CUSTOM_SELECTION_CANVAS_STYLE)
 		canvas.width = 0
 		canvas.height = 0
-		@_settings.$element[0].appendChild(canvas)
+		@_contentContext.container.appendChild(canvas)
 		return canvas
