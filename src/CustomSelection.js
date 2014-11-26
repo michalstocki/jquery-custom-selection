@@ -1,7 +1,4 @@
 (function($) {
-	var MARKER_CLASS = 'jcs-marker';
-	var MARKER_START_CLASS = 'jcs-beginning-marker';
-	var MARKER_END_CLASS = 'jcs-end-marker';
 	var MARKER_MOVING_CLASS = 'jcs-marker-moving';
 
 	// Default configuration
@@ -20,15 +17,17 @@
 
 	// Collaborators
 	var frameRequester = null;
-	var startMarker = null;
-	var endMarker = null;
+	var startMarker;
+	var endMarker;
 	var selectionDrawer = null;
 	var environment;
 	var contentContext;
 	var hammer;
 
 	window.CustomSelection = {
-		Lib: {}
+		Lib: {
+			Marker: {}
+		}
 	};
 
 //	jQuery Plugin --------------------------------------------------------------
@@ -48,7 +47,7 @@
 				markerShiftY: settings.markerShiftY
 			}
 		);
-		initMarkers(this);
+		initMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
 		return this;
@@ -106,9 +105,9 @@
 
 	function enableTouchSelectionFor($element) {
 		initializeHammerFor($element);
-		$(startMarker).add(endMarker)
+		$(startMarker.element).add(endMarker.element)
 			.on('touchstart', handleMarkerTouchStart);
-		$(getBodyOf(startMarker))
+		$(getBodyOf(startMarker.element))
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
 		$element.on('touchend', handleGlobalTouchEnd);
@@ -117,7 +116,7 @@
 	}
 
 	function disableTouchSelectionFor($element) {
-		$(getBodyOf(startMarker))
+		$(getBodyOf(startMarker.element))
 			.off('touchmove', handleMarkerTouchMove)
 			.off('touchend', handleMarkerTouchMoveEnd);
 		$element
@@ -175,7 +174,7 @@
 	}
 
 	function getSelectionAnchor() {
-		if (movedMarker === startMarker) {
+		if (movedMarker === startMarker.element) {
 			return getEndAnchorOf(lastSelectionRange);
 		} else {
 			return getStartAnchorOf(lastSelectionRange);
@@ -257,11 +256,11 @@
 		var rects = range.getClientRects();
 		var firstRect = rects[0];
 		var lastRect = rects[rects.length - 1];
-		$(startMarker).css({
+		startMarker.$element.css({
 			top: yToMarkersContext(firstRect.bottom),
 			left: xToMarkersContext(firstRect.left)
 		});
-		$(endMarker).css({
+		endMarker.$element.css({
 			top: yToMarkersContext(lastRect.bottom),
 			left: xToMarkersContext(lastRect.right)
 		});
@@ -274,16 +273,20 @@
 
 //	-- Preparing Markers
 
-	function initMarkers($element) {
-		startMarker = $(settings.startMarker)[0] ||
-			createMarkerInside($element, MARKER_START_CLASS);
-		endMarker = $(settings.endMarker)[0] ||
-			createMarkerInside($element, MARKER_END_CLASS);
+	function initMarkers() {
+		startMarker = new CustomSelection.Lib.Marker.StartMarker(
+			contentContext,
+			$(settings.startMarker)[0]
+		);
+		endMarker = new CustomSelection.Lib.Marker.EndMarker(
+			contentContext,
+			$(settings.endMarker)[0]
+		);
 		hideMarkers();
 	}
 
 	function isMarker(element) {
-		return element === startMarker || element === endMarker;
+		return element === startMarker.element || element === endMarker.element;
 	}
 
 	function setMovedMarker(element) {
@@ -298,20 +301,22 @@
 
 	function toggleMovedMarker() {
 		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
-		if (movedMarker === startMarker) {
-			movedMarker = endMarker;
+		if (movedMarker === startMarker.element) {
+			movedMarker = endMarker.element;
 		} else {
-			movedMarker = startMarker;
+			movedMarker = startMarker.element;
 		}
 		$(movedMarker).addClass(MARKER_MOVING_CLASS);
 	}
 
 	function disableMarkerEvents() {
-		$(startMarker).add(endMarker).css('pointer-events', 'none');
+		startMarker.disablePointerEvents();
+		endMarker.disablePointerEvents();
 	}
 
 	function enableMarkerEvents() {
-		$(startMarker).add(endMarker).css('pointer-events', 'auto');
+		startMarker.enablePointerEvents();
+		endMarker.enablePointerEvents();
 	}
 
 	function createPointFromMarkerEvent(pointerEvent) {
@@ -353,20 +358,14 @@
 		return element;
 	}
 
-	function createMarkerInside($parent, className) {
-		var element = contentContext.createElement('div');
-		element.setAttribute('class', MARKER_CLASS + ' ' + className);
-		element.setAttribute('style', 'position: absolute;');
-		$parent.append(element);
-		return element;
-	}
-
 	function hideMarkers() {
-		$(startMarker).add(endMarker).css({visibility: 'hidden'});
+		startMarker.hide();
+		endMarker.hide();
 	}
 
 	function showMarkers() {
-		$(startMarker).add(endMarker).css({visibility: 'visible'});
+		startMarker.show();
+		endMarker.show();
 	}
 
 	function xToMarkersContext(x) {
@@ -491,7 +490,7 @@
 	}
 
 	function getNewSelectionBoundary(anchor) {
-		if (movedMarker === startMarker) {
+		if (movedMarker === startMarker.element) {
 			return createStartBoundary(anchor);
 		} else {
 			return createEndBoundary(anchor);
