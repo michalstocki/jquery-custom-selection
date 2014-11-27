@@ -1,6 +1,4 @@
 (function($) {
-	var MARKER_MOVING_CLASS = 'jcs-marker-moving';
-
 	// Default configuration
 	var settings;
 	var defaults = {
@@ -19,6 +17,7 @@
 	var frameRequester = null;
 	var startMarker;
 	var endMarker;
+	var movingMarker;
 	var selectionDrawer = null;
 	var environment;
 	var contentContext;
@@ -85,7 +84,6 @@
 	};
 	var rejectTouchEnd = false;
 	var lastSelectionRange = null;
-	var movedMarker = null;
 	var selectionAnchor = null;
 	var userSelectBeforeEnablingSelection = null;
 
@@ -150,28 +148,24 @@
 
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		setMovedMarker(jqueryEvent.target);
-		disableMarkerEvents();
+		movingMarker.setTo(jqueryEvent.target);
 		selectionAnchor = getSelectionAnchor();
 	}
 
 	function handleMarkerTouchMove(jqueryEvent) {
-		if (movedMarker) {
+		if (movingMarker.exists()) {
 			handleMarkerPointerMove(jqueryEvent);
 			rejectTouchEnd = true;
 		}
 	}
 
 	function handleMarkerTouchMoveEnd() {
-		if (movedMarker) {
-			unsetMovedMarker();
-			selectionAnchor = null;
-		}
-		enableMarkerEvents();
+		selectionAnchor = null;
+		movingMarker.unset();
 	}
 
 	function getSelectionAnchor() {
-		if (movedMarker === startMarker.element) {
+		if (movingMarker.isStartMarker()) {
 			return getEndAnchorOf(lastSelectionRange);
 		} else {
 			return getStartAnchorOf(lastSelectionRange);
@@ -199,7 +193,7 @@
 			var point = createPointFromEvent(pointerEvent);
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
-			enableMarkerEvents();
+			movingMarker.unset();
 			rejectTouchEnd = true;
 		}
 	}
@@ -270,51 +264,16 @@
 	}
 
 	function initMarkers() {
-		startMarker = new CustomSelection.Lib.Markers.StartMarker(
-			contentContext,
-			markersContext,
-			$(settings.startMarker)[0]
-		);
-		endMarker = new CustomSelection.Lib.Markers.EndMarker(
-			contentContext,
-			markersContext,
-			$(settings.endMarker)[0]
-		);
+		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext,
+			markersContext, $(settings.startMarker)[0]);
+		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext,
+			markersContext, $(settings.endMarker)[0]);
+		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
 		hideMarkers();
 	}
 
 	function isMarker(element) {
 		return element === startMarker.element || element === endMarker.element;
-	}
-
-	function setMovedMarker(element) {
-		movedMarker = element;
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
-	}
-
-	function unsetMovedMarker() {
-		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
-		movedMarker = null;
-	}
-
-	function toggleMovedMarker() {
-		$(movedMarker).removeClass(MARKER_MOVING_CLASS);
-		if (movedMarker === startMarker.element) {
-			movedMarker = endMarker.element;
-		} else {
-			movedMarker = startMarker.element;
-		}
-		$(movedMarker).addClass(MARKER_MOVING_CLASS);
-	}
-
-	function disableMarkerEvents() {
-		startMarker.disablePointerEvents();
-		endMarker.disablePointerEvents();
-	}
-
-	function enableMarkerEvents() {
-		startMarker.enablePointerEvents();
-		endMarker.enablePointerEvents();
 	}
 
 	function createPointFromMarkerEvent(pointerEvent) {
@@ -455,14 +414,14 @@
 			if (coveringRange.collapsed) {
 				protectedBound.applyTo(coveringRange);
 				bound.applyOppositeTo(coveringRange);
-				toggleMovedMarker();
+				movingMarker.toggleMoving();
 			}
 		}
 		return coveringRange;
 	}
 
 	function getNewSelectionBoundary(anchor) {
-		if (movedMarker === startMarker.element) {
+		if (movingMarker.isStartMarker()) {
 			return createStartBoundary(anchor);
 		} else {
 			return createEndBoundary(anchor);

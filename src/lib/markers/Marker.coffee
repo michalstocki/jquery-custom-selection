@@ -29,6 +29,9 @@ class Marker
 	enablePointerEvents: ->
 		@$element.css('pointer-events', 'auto')
 
+	setMoving: (isMoving) ->
+		@$element.toggleClass(MARKER_MOVING_CLASS, isMoving)
+
 	alignToRange: (range) ->
 
 	_createMarkerElement: ->
