@@ -1,4 +1,4 @@
-class Boundary
+class RangeBoundary
 
 	_container: null
 	_offset: null
@@ -8,7 +8,7 @@ class Boundary
 		@_offset = anchor.offset
 
 
-class CustomSelection.Lib.StartBoundary extends Boundary
+class CustomSelection.Lib.StartBoundary extends RangeBoundary
 
 	applyTo: (range) ->
 		range.setStart(@_container, @_offset)
@@ -17,7 +17,7 @@ class CustomSelection.Lib.StartBoundary extends Boundary
 		range.setEnd(@_container, @_offset)
 
 
-class CustomSelection.Lib.EndBoundary extends Boundary
+class CustomSelection.Lib.EndBoundary extends RangeBoundary
 
 	applyTo: (range) ->
 		range.setEnd(@_container, @_offset)
