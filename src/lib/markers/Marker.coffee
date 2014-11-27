@@ -31,13 +31,13 @@ class Marker
 		return element
 
 
-class CustomSelection.Lib.Marker.StartMarker extends Marker
+class CustomSelection.Lib.Markers.StartMarker extends Marker
 
 	constructor: ->
 		@_className = MARKER_START_CLASS
 		super
 
-class CustomSelection.Lib.Marker.EndMarker extends Marker
+class CustomSelection.Lib.Markers.EndMarker extends Marker
 
 	constructor: ->
 		@_className = MARKER_END_CLASS

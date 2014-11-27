@@ -26,7 +26,7 @@
 
 	window.CustomSelection = {
 		Lib: {
-			Marker: {}
+			Markers: {}
 		}
 	};
 
@@ -274,11 +274,11 @@
 //	-- Preparing Markers
 
 	function initMarkers() {
-		startMarker = new CustomSelection.Lib.Marker.StartMarker(
+		startMarker = new CustomSelection.Lib.Markers.StartMarker(
 			contentContext,
 			$(settings.startMarker)[0]
 		);
-		endMarker = new CustomSelection.Lib.Marker.EndMarker(
+		endMarker = new CustomSelection.Lib.Markers.EndMarker(
 			contentContext,
 			$(settings.endMarker)[0]
 		);
