@@ -5,9 +5,14 @@ MARKER_MOVING_CLASS = 'jcs-marker-moving';
 
 class Marker
 
-	_className: ''
+	element: null
+	$element: null
 
-	constructor: (@_contentContext, element) ->
+	_className: ''
+	_contentContext: null
+	_markersContext: null
+
+	constructor: (@_contentContext, @_markersContext, element) ->
 		@element = element || @_createMarkerElement()
 		@$element = $(@element)
 
@@ -23,6 +28,8 @@ class Marker
 	enablePointerEvents: ->
 		@$element.css('pointer-events', 'auto')
 
+	alignToRange: (range) ->
+
 	_createMarkerElement: ->
 		element = @_contentContext.createElement('div')
 		element.setAttribute('class', MARKER_CLASS + ' ' + @_className)
@@ -37,8 +44,22 @@ class CustomSelection.Lib.Markers.StartMarker extends Marker
 		@_className = MARKER_START_CLASS
 		super
 
+	alignToRange: (range) ->
+		firstRect = range.getClientRects()[0]
+		@$element.css
+			left: @_markersContext.contentXToMarkerContext(firstRect.left)
+			top: @_markersContext.contentYToMarkerContext(firstRect.bottom)
+
+
 class CustomSelection.Lib.Markers.EndMarker extends Marker
 
 	constructor: ->
 		@_className = MARKER_END_CLASS
 		super
+
+	alignToRange: (range) ->
+		rects = range.getClientRects()
+		lastRect = rects[rects.length - 1]
+		@$element.css
+			left: @_markersContext.contentXToMarkerContext(lastRect.right)
+			top: @_markersContext.contentYToMarkerContext(lastRect.bottom)

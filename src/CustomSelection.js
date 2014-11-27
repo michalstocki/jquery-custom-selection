@@ -22,6 +22,7 @@
 	var selectionDrawer = null;
 	var environment;
 	var contentContext;
+	var markersContext;
 	var hammer;
 
 	window.CustomSelection = {
@@ -35,6 +36,8 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		contentContext = new CustomSelection.Lib.ContentContext(this);
+		markersContext = new CustomSelection.Lib.Markers.MarkersContext();
+		transformMarkerContext(settings.contextOrigin);
 		environment = environment || performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
@@ -54,9 +57,7 @@
 	};
 
 	$.fn.refreshCustomSelection = function(contextOrigin) {
-		if (contextOrigin) {
-			settings.contextOrigin = contextOrigin;
-		}
+		transformMarkerContext(contextOrigin);
 		refreshSelection();
 		return this;
 	};
@@ -253,17 +254,8 @@
 	}
 
 	function adjustMarkerPositionsTo(range) {
-		var rects = range.getClientRects();
-		var firstRect = rects[0];
-		var lastRect = rects[rects.length - 1];
-		startMarker.$element.css({
-			top: yToMarkersContext(firstRect.bottom),
-			left: xToMarkersContext(firstRect.left)
-		});
-		endMarker.$element.css({
-			top: yToMarkersContext(lastRect.bottom),
-			left: xToMarkersContext(lastRect.right)
-		});
+		startMarker.alignToRange(range);
+		endMarker.alignToRange(range);
 	}
 
 	function doesRangeExist(range) {
@@ -273,13 +265,23 @@
 
 //	-- Preparing Markers
 
+	function transformMarkerContext(origin) {
+		markersContext.setOffset({
+			x: origin.offsetX,
+			y: origin.offsetY
+		});
+		markersContext.setScale(origin.scale);
+	}
+
 	function initMarkers() {
 		startMarker = new CustomSelection.Lib.Markers.StartMarker(
 			contentContext,
+			markersContext,
 			$(settings.startMarker)[0]
 		);
 		endMarker = new CustomSelection.Lib.Markers.EndMarker(
 			contentContext,
+			markersContext,
 			$(settings.endMarker)[0]
 		);
 		hideMarkers();
@@ -366,14 +368,6 @@
 	function showMarkers() {
 		startMarker.show();
 		endMarker.show();
-	}
-
-	function xToMarkersContext(x) {
-		return x * settings.contextOrigin.scale + settings.contextOrigin.offsetX;
-	}
-
-	function yToMarkersContext(y) {
-		return y * settings.contextOrigin.scale + settings.contextOrigin.offsetY;
 	}
 
 	function eventCoordsAutomaticallyConverted() {
