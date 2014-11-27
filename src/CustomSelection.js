@@ -22,6 +22,7 @@
 	var environment;
 	var contentContext;
 	var markersContext;
+	var lastSelection;
 	var hammer;
 
 	window.CustomSelection = {
@@ -40,6 +41,7 @@
 		environment = environment || performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
+		lastSelection = new CustomSelection.Lib.LastSelection();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(
 			rectangler,
 			environment,
@@ -83,7 +85,6 @@
 		10: '\n'
 	};
 	var rejectTouchEnd = false;
-	var lastSelectionRange = null;
 	var userSelectBeforeEnablingSelection = null;
 
 //	-- Binding events
@@ -189,57 +190,34 @@
 
 	function makeSelectionFor(range) {
 		if (range) {
-			if (rangeDiffersFromLastSelection(range)) {
-				lastSelectionRange = range;
-				drawSelectionRange();
-				settings.onSelectionChange(lastSelectionRange);
+			if (!lastSelection.rangeEqualsTo(range)) {
+				drawRange(range);
+				settings.onSelectionChange(range);
+				lastSelection.range = range;
 			}
 			showMarkers();
 		}
 	}
 
 	function clearSelection() {
-		if (doesRangeExist(lastSelectionRange)) {
+		if (lastSelection.exists()) {
 			hideMarkers();
 			selectionDrawer.clearSelection();
 			settings.onSelectionChange(contentContext.createRange());
 		}
-		lastSelectionRange = null;
+		lastSelection.range = null;
 	}
 
 	function refreshSelection() {
-		drawSelectionRange();
-	}
-
-	function drawSelectionRange() {
-		if (doesRangeExist(lastSelectionRange)) {
-			selectionDrawer.redraw(lastSelectionRange);
-			adjustMarkerPositionsTo(lastSelectionRange);
+		if (lastSelection.exists()) {
+			drawRange(lastSelection.getRange());
 		}
 	}
 
-	function hasEndOtherThanLastSelectionEnd(range) {
-		return lastSelectionRange.compareBoundaryPoints(Range.END_TO_END, range) !== 0;
-	}
-
-	function hasStartOtherThanLastSelectionStart(range) {
-		return lastSelectionRange.compareBoundaryPoints(Range.START_TO_START, range) !== 0;
-	}
-
-	function rangeDiffersFromLastSelection(range) {
-		return !lastSelectionRange ||
-			hasEndOtherThanLastSelectionEnd(range) ||
-			hasStartOtherThanLastSelectionStart(range);
-	}
-
-	function adjustMarkerPositionsTo(range) {
+	function drawRange(range) {
+		selectionDrawer.redraw(range);
 		startMarker.alignToRange(range);
 		endMarker.alignToRange(range);
-	}
-
-	function doesRangeExist(range) {
-		return !!range && !!range.getBoundingClientRect() &&
-				range.getClientRects().length > 0;
 	}
 
 //	-- Preparing Markers
@@ -394,7 +372,7 @@
 //	-- Marking
 
 	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
-		var coveringRange = lastSelectionRange.cloneRange();
+		var coveringRange = lastSelection.cloneRange();
 		var pointAnchor = convertPointInElementToAnchor(element, point);
 		if (pointAnchor) {
 			var movingBound = getNewSelectionBoundary(pointAnchor);
@@ -420,10 +398,10 @@
 	function getProtectedSelectionBoundary() {
 		var selectionAnchor;
 		if (movingMarker.isStartMarker()) {
-			selectionAnchor = getEndAnchorOf(lastSelectionRange);
+			selectionAnchor = getEndAnchorOf(lastSelection.range);
 			return createEndBoundary(selectionAnchor);
 		} else {
-			selectionAnchor = getStartAnchorOf(lastSelectionRange);
+			selectionAnchor = getStartAnchorOf(lastSelection.range);
 			return createStartBoundary(selectionAnchor);
 		}
 	}
