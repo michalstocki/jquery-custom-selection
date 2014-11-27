@@ -3,6 +3,11 @@ class CustomSelection.Lib.Point
 
 	defaults = {shiftY: 0}
 
+	clientX: 0
+	clientY: 0
+	pageX: 0
+	pageY: 0
+
 	constructor: (pointerEvent, options) ->
 		@_settings = $.extend({}, defaults, options)
 		touches = pointerEvent.touches || pointerEvent.pointers

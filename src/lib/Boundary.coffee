@@ -1,5 +1,8 @@
 class Boundary
 
+	_container: null
+	_offset: null
+
 	constructor: (anchor) ->
 		@_container = anchor.container
 		@_offset = anchor.offset

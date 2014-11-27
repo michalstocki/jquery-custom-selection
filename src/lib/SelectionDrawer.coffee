@@ -7,6 +7,13 @@ class CustomSelection.Lib.SelectionDrawer
 		'z-index': -1
 	}
 
+	_rectangler: null
+	_environment: null
+	_contentContext: null
+	_settings: null
+	_canvas: null
+	_context: null
+
 	constructor: (@_rectangler, @_environment, @_contentContext, @_settings) ->
 		@_canvas = @_createCanvas()
 		@_context = @_canvas.getContext('2d')

@@ -1,5 +1,10 @@
 class CustomSelection.Lib.ContentContext
 
+	window: null
+	document: null
+	body: null
+	container: null
+
 	constructor: ($element) ->
 		@container = $element[0]
 		@document = @container.ownerDocument

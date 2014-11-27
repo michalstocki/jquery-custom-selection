@@ -1,5 +1,7 @@
 class CustomSelection.Lib.Rectangler
 
+	_environment: null
+
 	constructor: (@_environment) ->
 
 	getRectsFor: (range) ->

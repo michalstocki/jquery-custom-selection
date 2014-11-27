@@ -1,7 +1,6 @@
 class CustomSelection.Lib.FrameRequester
 
-	constructor: ->
-		@_ticking = false
+	_ticking: false
 
 	requestFrame: (func) ->
 		unless @_ticking
