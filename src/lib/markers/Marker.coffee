@@ -15,6 +15,7 @@ class Marker
 	constructor: (@_contentContext, @_markersContext, element) ->
 		@element = element || @_createMarkerElement()
 		@$element = $(@element)
+		@_markersContext.setBody(@_getBodyOf(@element))
 
 	hide: ->
 		@$element.css(visibility: 'hidden')
@@ -36,6 +37,9 @@ class Marker
 		element.setAttribute('style', 'position: absolute')
 		@_contentContext.container.append(element)
 		return element
+
+	_getBodyOf: (element) ->
+		return element.ownerDocument.body
 
 
 class CustomSelection.Lib.Markers.StartMarker extends Marker

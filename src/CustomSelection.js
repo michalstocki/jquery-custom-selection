@@ -108,7 +108,7 @@
 		initializeHammerFor($element);
 		$(startMarker.element).add(endMarker.element)
 			.on('touchstart', handleMarkerTouchStart);
-		$(getBodyOf(startMarker.element))
+		$(markersContext.body)
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
 		$element.on('touchend', handleGlobalTouchEnd);
@@ -117,7 +117,7 @@
 	}
 
 	function disableTouchSelectionFor($element) {
-		$(getBodyOf(startMarker.element))
+		$(markersContext.body)
 			.off('touchmove', handleMarkerTouchMove)
 			.off('touchend', handleMarkerTouchMoveEnd);
 		$element
@@ -168,10 +168,6 @@
 			selectionAnchor = null;
 		}
 		enableMarkerEvents();
-	}
-
-	function getBodyOf(element) {
-		return element.ownerDocument.body;
 	}
 
 	function getSelectionAnchor() {
