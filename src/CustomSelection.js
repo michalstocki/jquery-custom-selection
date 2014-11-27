@@ -84,7 +84,6 @@
 	};
 	var rejectTouchEnd = false;
 	var lastSelectionRange = null;
-	var selectionAnchor = null;
 	var userSelectBeforeEnablingSelection = null;
 
 //	-- Binding events
@@ -149,7 +148,6 @@
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		movingMarker.setTo(jqueryEvent.target);
-		selectionAnchor = getSelectionAnchor();
 	}
 
 	function handleMarkerTouchMove(jqueryEvent) {
@@ -160,16 +158,7 @@
 	}
 
 	function handleMarkerTouchMoveEnd() {
-		selectionAnchor = null;
 		movingMarker.unset();
-	}
-
-	function getSelectionAnchor() {
-		if (movingMarker.isStartMarker()) {
-			return getEndAnchorOf(lastSelectionRange);
-		} else {
-			return getStartAnchorOf(lastSelectionRange);
-		}
 	}
 
 	// -- Dealing with native selection
@@ -408,12 +397,12 @@
 		var coveringRange = lastSelectionRange.cloneRange();
 		var pointAnchor = convertPointInElementToAnchor(element, point);
 		if (pointAnchor) {
-			var bound = getNewSelectionBoundary(pointAnchor);
+			var movingBound = getNewSelectionBoundary(pointAnchor);
 			var protectedBound = getProtectedSelectionBoundary();
-			bound.applyTo(coveringRange);
+			movingBound.applyTo(coveringRange);
 			if (coveringRange.collapsed) {
-				protectedBound.applyTo(coveringRange);
-				bound.applyOppositeTo(coveringRange);
+				protectedBound.applyOppositeTo(coveringRange);
+				movingBound.applyOppositeTo(coveringRange);
 				movingMarker.toggleMoving();
 			}
 		}
@@ -429,7 +418,14 @@
 	}
 
 	function getProtectedSelectionBoundary() {
-		return getNewSelectionBoundary(getSelectionAnchor());
+		var selectionAnchor;
+		if (movingMarker.isStartMarker()) {
+			selectionAnchor = getEndAnchorOf(lastSelectionRange);
+			return createEndBoundary(selectionAnchor);
+		} else {
+			selectionAnchor = getStartAnchorOf(lastSelectionRange);
+			return createStartBoundary(selectionAnchor);
+		}
 	}
 
 	function convertPointInElementToAnchor(element, point) {
