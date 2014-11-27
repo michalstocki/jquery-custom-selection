@@ -319,30 +319,16 @@
 
 	function createPointFromMarkerEvent(pointerEvent) {
 		var point = createPointFromEvent(pointerEvent, {shiftY: -settings.markerShiftY});
-		if (eventCoordsAutomaticallyConverted()) {
-			point.scaleOffset(getScaleOfMarkersContext());
-		} else {
-			point.translate(getVectorOfMarkersOrigin());
-			point.scale(getScaleOfMarkersContext());
-		}
+		point.convertToContentContext();
 		return point;
 	}
 
 	function createPointFromEvent(pointerEvent, options) {
-		return new CustomSelection.Lib.Point(pointerEvent, options);
-	}
-
-	function getVectorOfMarkersOrigin() {
-		var origin = settings.contextOrigin;
-		return {x: -origin.offsetX, y: -origin.offsetY};
-	}
-
-	function getScaleOfMarkersContext() {
-		return 1 / settings.contextOrigin.scale;
+		return new CustomSelection.Lib.Point(pointerEvent, markersContext, environment, options);
 	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
-		var touches = pointerEvent.touches || pointerEvent.pointers || [pointerEvent];
+		var touches = pointerEvent.touches || pointerEvent.pointers;
 		return touches[0].target;
 	}
 
@@ -364,10 +350,6 @@
 	function showMarkers() {
 		startMarker.show();
 		endMarker.show();
-	}
-
-	function eventCoordsAutomaticallyConverted() {
-		return environment.isAndroidStackBrowser && environment.isAndroidLowerThanKitkat;
 	}
 
 	function performEnvTests() {

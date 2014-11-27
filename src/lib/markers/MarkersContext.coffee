@@ -21,3 +21,12 @@ class CustomSelection.Lib.Markers.MarkersContext
 
 	contentYToMarkerContext: (contentY) ->
 		return contentY * @_scale + @_offsetY
+
+	scaleToContentContext: (n) ->
+		return n * (1 / @_scale)
+
+	markersYToContentContext: (markersY) ->
+		return @scaleToContentContext(markersY - @_offsetY)
+
+	markersXToContentContext: (markersX) ->
+		return @scaleToContentContext(markersX - @_offsetX)
