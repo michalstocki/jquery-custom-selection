@@ -23,11 +23,13 @@
 	var contentContext;
 	var markersContext;
 	var lastSelection;
+	var pointFactory;
 	var hammer;
 
 	window.CustomSelection = {
 		Lib: {
-			Markers: {}
+			Markers: {},
+			Point: {}
 		}
 	};
 
@@ -51,6 +53,7 @@
 				markerShiftY: settings.markerShiftY
 			}
 		);
+		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext);
 		initMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
@@ -138,7 +141,7 @@
 
 	function handleMarkerPointerMove(jqueryEvent) {
 		jqueryEvent.preventDefault();
-		lastPoint = createPointFromMarkerEvent(jqueryEvent.originalEvent);
+		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
 		frameRequester.requestFrame(function() {
 			var eventTarget = getTouchedElementByPoint(lastPoint);
 			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint, eventTarget);
@@ -180,7 +183,7 @@
 		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!isMarker(element)) {
 			clearSelection();
-			var point = createPointFromEvent(pointerEvent);
+			var point = pointFactory.createFromContentEvent(pointerEvent);
 			var range = getRangeWrappingWordAtPoint(element, point);
 			makeSelectionFor(range);
 			movingMarker.unset();
@@ -241,16 +244,6 @@
 
 	function isMarker(element) {
 		return element === startMarker.element || element === endMarker.element;
-	}
-
-	function createPointFromMarkerEvent(pointerEvent) {
-		var point = createPointFromEvent(pointerEvent, {shiftY: -settings.markerShiftY});
-		point.convertToContentContext();
-		return point;
-	}
-
-	function createPointFromEvent(pointerEvent, options) {
-		return new CustomSelection.Lib.Point(pointerEvent, markersContext, environment, options);
 	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
@@ -714,10 +707,10 @@
 			range.selectNode(closestNode);
 			return range;
 		} else {
-			var pointAtRightBoundaryOfRect = {
+			var pointAtRightBoundaryOfRect = pointFactory.createFromClientCoords({
 				clientX: closestRectInNode.right - 1,
 				clientY: closestRectInNode.bottom - 1
-			};
+			});
 			return getFromTextNodeMinimalRangeContainingPoint(closestNode, pointAtRightBoundaryOfRect);
 		}
 	}
