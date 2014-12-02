@@ -5,6 +5,7 @@ class CustomSelection.Lib.Point.Point
 	clientY: 0
 	pageX: 0
 	pageY: 0
+	parentText: null
 
 	constructor: (pointer) ->
 		@clientX = pointer.clientX if pointer.clientX?

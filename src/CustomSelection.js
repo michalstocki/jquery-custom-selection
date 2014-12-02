@@ -24,12 +24,15 @@
 	var markersContext;
 	var lastSelection;
 	var pointFactory;
+	var rightPointSnapper;
+	var belowPointSnapper;
 	var hammer;
 
 	window.CustomSelection = {
 		Lib: {
 			Markers: {},
-			Point: {}
+			Point: {},
+			Utils: {}
 		}
 	};
 
@@ -54,6 +57,9 @@
 			}
 		);
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext);
+		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
+		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
+		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		initMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
@@ -584,159 +590,15 @@
 
 //  ------ Finding the closest node to the pointer
 
-	var closestNode;
-	var closestRectInNode;
-
 	function getClosestPointRangeFormElement(el, point) {
 		var pointRange = null;
-		var nearestOnTheLeftOfPoint = createNodeComparator({
-			point: point,
-			getBetterRect: getRectMoreOnTheRight,
-			getBestRectFromNode: getRectNearestOnLeftOfPoint
-		});
-		var nearestAbovePoint = createNodeComparator({
-			point: point,
-			getBetterRect: getLowerRect,
-			getBestRectFromNode: getRectNearestAbovePoint
-		});
-
-		var closestNodeFound =
-				searchTextNode(el, nearestOnTheLeftOfPoint) ||
-				searchTextNode(el, nearestAbovePoint);
-
-		if (closestNodeFound) {
-			pointRange = createRangeAtTheEndOfTheClosestNode();
-			setClosestNodeAndRect(null, null);
+		var closestPoint = rightPointSnapper.snapPointToTextInElement(point, el) ||
+			belowPointSnapper.snapPointToTextInElement(point, el);
+		if (closestPoint) {
+			pointRange = getFromTextNodeMinimalRangeContainingPoint(
+				closestPoint.parentText, closestPoint);
 		}
 		return pointRange;
-	}
-
-	function setClosestNodeAndRect(node, rect) {
-		closestNode = node;
-		closestRectInNode = rect;
-	}
-
-	function searchTextNode(el, comparator) {
-		var node = el;
-		var subNode;
-		while (subNode = searchNode(node, comparator)) {
-			if (nodeIsText(subNode)) {
-				return subNode;
-			} else {
-				node = subNode;
-			}
-		}
-	}
-
-	function searchNode(el, comparator) {
-		var bestNode = null;
-		if (el) {
-			var nodes = el.childNodes;
-			for (var i = 0, n; n = nodes[i++];) {
-				var rects;
-				if ((rects = getRectsForNode(n)) && rects.length &&
-					(nodeHasChildren(n) || nodeIsText(n))) {
-					bestNode = comparator(bestNode, n);
-				}
-			}
-		}
-		return bestNode;
-	}
-
-	function createNodeComparator(options) {
-		var point = options.point;
-		var getBetterRect = options.getBetterRect;
-		var getBestRectFromNode = options.getBestRectFromNode;
-		return function(winner, rival) {
-			var newWinner = winner;
-			var nearestRivalRect = getBestRectFromNode(rival, point);
-			if (winner) {
-				var nearestWinnerRect = getBestRectFromNode(winner, point);
-				if (areDifferent(nearestRivalRect, nearestWinnerRect) &&
-						getBetterRect(nearestRivalRect, nearestWinnerRect) === nearestRivalRect) {
-					newWinner = rival;
-					setClosestNodeAndRect(rival, nearestRivalRect);
-				}
-			} else if (nearestRivalRect) {
-				newWinner = rival;
-				setClosestNodeAndRect(rival, nearestRivalRect);
-			}
-			return newWinner;
-		};
-	}
-
-//	-------- Finding node on the **left** of the pointer
-
-	function getRectMoreOnTheRight(rectA, rectB) {
-		if (rectA.right > rectB.right) {
-			return rectA;
-		} else if (rectB.right > rectA.right) {
-			return rectB;
-		} else {
-			return null;
-		}
-	}
-
-	function getRectNearestOnLeftOfPoint(node, point) {
-		var rects = getRectsForNode(node);
-		var nearestRect = null;
-		for (var j = 0, rect; rect = rects[j++];) {
-			if (rectIsInTheSameLineOnLeft(rect, point) &&
-				(!nearestRect || rect.right > nearestRect.right)) {
-				nearestRect = rect;
-			}
-		}
-		return nearestRect;
-	}
-
-	function areDifferent(arg1, arg2) {
-		return arg1 && arg2 && arg1 !== arg2;
-	}
-
-	function rectIsInTheSameLineOnLeft(rect, point) {
-		var x = point.clientX;
-		var y = point.clientY;
-		return rect.right < x && rect.top <= y && rect.bottom >= y;
-	}
-
-	function createRangeAtTheEndOfTheClosestNode() {
-		var rects = getRectsForNode(closestNode);
-		var lastRectInNode = rects[rects.length - 1];
-		if (closestRectInNode === lastRectInNode) {
-			var range = document.createRange();
-			range.selectNode(closestNode);
-			return range;
-		} else {
-			var pointAtRightBoundaryOfRect = pointFactory.createFromClientCoords({
-				clientX: closestRectInNode.right - 1,
-				clientY: closestRectInNode.bottom - 1
-			});
-			return getFromTextNodeMinimalRangeContainingPoint(closestNode, pointAtRightBoundaryOfRect);
-		}
-	}
-
-//	-------- Finding node **above** the pointer
-
-	function getLowerRect(rectA, rectB) {
-		if (rectA.top >= rectB.top) {
-			return rectA;
-		} else if (rectB.top >= rectA.top) {
-			return rectB;
-		} else {
-			return null;
-		}
-	}
-
-	function getRectNearestAbovePoint(node, point) {
-		var y = point.clientY;
-		var rects = getRectsForNode(node);
-		var nearestRect = null;
-		for (var j = 0, rect; rect = rects[j++];) {
-			if (rect.top < y && (!nearestRect || rect.top >= nearestRect.top)) {
-				nearestRect = rect;
-			}
-		}
-		return nearestRect;
 	}
 
 })(jQuery);
