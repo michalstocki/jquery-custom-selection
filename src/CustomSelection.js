@@ -26,6 +26,7 @@
 	var pointFactory;
 	var rightPointSnapper;
 	var belowPointSnapper;
+	var nodeUtil;
 	var hammer;
 
 	window.CustomSelection = {
@@ -57,7 +58,7 @@
 			}
 		);
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext);
-		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
+		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		initMarkers();
@@ -477,7 +478,7 @@
 		if (el) {
 			var nodes = el.childNodes;
 			for (var i = 0, n; n = nodes[i++];) {
-				if (nodeIsText(n) && nodeContainsPoint(n, point)) {
+				if (nodeUtil.nodeIsText(n) && nodeContainsPoint(n, point)) {
 					return n;
 				}
 			}
@@ -496,19 +497,13 @@
 	}
 
 	function nodeContainsPoint(node, point) {
-		var rects = getRectsForNode(node);
+		var rects = nodeUtil.getRectsForNode(node);
 		for (var j = 0, rect; rect = rects[j++];) {
 			if (rectContainsPoint(rect, point)) {
 				return true;
 			}
 		}
 		return false;
-	}
-
-	function getRectsForNode(node) {
-		var range = contentContext.createRange();
-		range.selectNode(node);
-		return range.getClientRects();
 	}
 
 	function rectContainsPoint(rect, point) {
@@ -524,14 +519,6 @@
 	function rectOrItsBoundsContainPointHorizontally(rect, point) {
 		var x = environment.isAppleDevice ? point.pageX : point.clientX;
 		return x >= rect.left && x <= rect.right;
-	}
-
-	function nodeIsText(node) {
-		return node.nodeType === Node.TEXT_NODE && node.length > 0;
-	}
-
-	function nodeHasChildren(node) {
-		return node.childNodes.length > 0;
 	}
 
 	function getSiblingAfterParentOf(node) {
@@ -558,7 +545,7 @@
 		var node = textNode;
 		var uncle;
 		do {
-			if (nodeHasChildren(node)) {
+			if (nodeUtil.nodeHasChildren(node)) {
 				node = node.childNodes[0];
 			} else if (node.nextSibling) {
 				node = node.nextSibling;
@@ -567,7 +554,7 @@
 			} else {
 				return null;
 			}
-		} while (!nodeIsText(node));
+		} while (!nodeUtil.nodeIsText(node));
 		return node;
 	}
 
@@ -575,7 +562,7 @@
 		var node = textNode;
 		var uncle;
 		do {
-			if (nodeHasChildren(node)) {
+			if (nodeUtil.nodeHasChildren(node)) {
 				node = node.childNodes[node.childNodes.length - 1];
 			} else if (node.previousSibling) {
 				node = node.previousSibling;
@@ -584,7 +571,7 @@
 			} else {
 				return null;
 			}
-		} while (!nodeIsText(node));
+		} while (!nodeUtil.nodeIsText(node));
 		return node;
 	}
 
