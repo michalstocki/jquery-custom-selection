@@ -8,55 +8,56 @@ class PointSnapper
 
 	snapPointToTextInElement: (point, element) ->
 		newPoint = null
-		if closestNode = @_searchTextNodeByPoint(element, point)
-			newPoint = @_createPointWithinRectInNode(@_closestRectInNode,
-				closestNode)
+		if position = @_searchPositionInTextByPoint(element, point)
+			newPoint = @_createPointAt(position)
 		@_closestRectInNode = null
 		return newPoint
 
-	_searchTextNodeByPoint: (el, point) ->
-		node = el;
-		while subNode = @_searchNodeByPoint(node, point)
-			if @_nodeUtil.nodeIsText(subNode)
-				return subNode;
+	_searchPositionInTextByPoint: (el, point) ->
+		node = el
+		while position = @_searchPositionWithin(node, point)
+			if @_nodeUtil.nodeIsText(position.node)
+				return position
 			else
-				node = subNode;
+				node = position.node
+		return null
 
-	_searchNodeByPoint: (element, point) ->
-		closestNode = null;
+	_searchPositionWithin: (element, point) ->
+		position = null;
 		for node in element?.childNodes or []
 			if @_nodeMightBeClosest(node)
-				closestNode = @_getNodeCloserToPoint(closestNode, node, point)
-		return closestNode
+				position = @_getPositionCloserToPoint(position, node, point)
+		return position
 
-	_getNodeCloserToPoint: (winner, rival, point) ->
-		newWinner = winner
-		closestRivalRect = @_getClosestRectFromNode(rival, point)
-		if winner?
-			closestWinnerRect = @_getClosestRectFromNode(winner, point)
-			if @_isRivalRectCloser(closestRivalRect, closestWinnerRect)
-				newWinner = rival
-				@_closestRectInNode = closestRivalRect
-		else if closestRivalRect?
-			newWinner = rival
-			@_closestRectInNode = closestRivalRect
+	_getPositionCloserToPoint: (winningPosition, rivalingNode, point) ->
+		newWinner = winningPosition
+		rivalingRect = @_getClosestRectFromNode(rivalingNode, point)
+		if  @_rivalingRectWins(winningPosition, rivalingRect)
+			newWinner = {
+				node: rivalingNode
+				rect: rivalingRect
+			}
 		return newWinner
 
-	_isRivalRectCloser: (closestRivalRect, closestWinnerRect) ->
-		return closestRivalRect? and closestWinnerRect? and
-			closestRivalRect isnt closestWinnerRect and
-			@_getCloserRect(closestRivalRect,
-				closestWinnerRect) is closestRivalRect
+	_rivalingRectWins: (winningPosition, rivalingRect) ->
+		return (winningPosition? and @_isRivalingRectCloser(rivalingRect,
+			winningPosition.rect)) or (not winningPosition? and rivalingRect?)
+
+
+	_isRivalingRectCloser: (rivalingRect, winningRect) ->
+		return rivalingRect? and winningRect? and
+			rivalingRect isnt winningRect and
+			@_getCloserRect(rivalingRect, winningRect) is rivalingRect
 
 	_nodeMightBeClosest: (node) ->
 		return @_nodeUtil.nodeHasRects(node) and
 			(@_nodeUtil.nodeHasChildren(node) or @_nodeUtil.nodeIsText(node))
 
-	_createPointWithinRectInNode: (rect, node) ->
+	_createPointAt: (position) ->
 		return @_pointFactory.createFromClientCoordsInText
-			clientX: rect.right - 1
-			clientY: rect.bottom - 1
-			parentText: node
+			clientX: position.rect.right - 1
+			clientY: position.rect.bottom - 1
+			parentText: position.node
 
 class CustomSelection.Lib.Point.RightPointSnapper extends PointSnapper
 
