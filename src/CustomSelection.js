@@ -27,6 +27,7 @@
 	var rightPointSnapper;
 	var belowPointSnapper;
 	var nodeUtil;
+	var boundFactory;
 	var hammer;
 
 	window.CustomSelection = {
@@ -62,6 +63,7 @@
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		initMarkers();
+		boundFactory = new CustomSelection.Lib.RangeBoundaryFactory(lastSelection, movingMarker);
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
 		return this;
@@ -375,8 +377,8 @@
 		var coveringRange = lastSelection.cloneRange();
 		var pointAnchor = convertPointInElementToAnchor(element, point);
 		if (pointAnchor) {
-			var movingBound = getNewSelectionBoundary(pointAnchor);
-			var protectedBound = getProtectedSelectionBoundary();
+			var movingBound = boundFactory.getMovingSelectionBound(pointAnchor);
+			var protectedBound = boundFactory.getProtectedSelectionBound();
 			movingBound.applyTo(coveringRange);
 			if (coveringRange.collapsed) {
 				protectedBound.applyOppositeTo(coveringRange);
@@ -385,25 +387,6 @@
 			}
 		}
 		return coveringRange;
-	}
-
-	function getNewSelectionBoundary(anchor) {
-		if (movingMarker.isStartMarker()) {
-			return createStartBoundary(anchor);
-		} else {
-			return createEndBoundary(anchor);
-		}
-	}
-
-	function getProtectedSelectionBoundary() {
-		var selectionAnchor;
-		if (movingMarker.isStartMarker()) {
-			selectionAnchor = getEndAnchorOf(lastSelection.range);
-			return createEndBoundary(selectionAnchor);
-		} else {
-			selectionAnchor = getStartAnchorOf(lastSelection.range);
-			return createStartBoundary(selectionAnchor);
-		}
 	}
 
 	function convertPointInElementToAnchor(element, point) {
@@ -447,14 +430,6 @@
 			range.setEnd(textNode, range.endOffset + 1);
 		}
 		return range;
-	}
-
-	function createStartBoundary(anchor) {
-		return new CustomSelection.Lib.StartBoundary(anchor);
-	}
-
-	function createEndBoundary(anchor) {
-		return new CustomSelection.Lib.EndBoundary(anchor);
 	}
 
 	function getStartAnchorOf(range) {
@@ -589,4 +564,3 @@
 	}
 
 })(jQuery);
-
