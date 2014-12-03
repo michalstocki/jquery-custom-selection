@@ -28,6 +28,7 @@
 	var nodeUtil;
 	var boundFactory;
 	var pointLocator;
+	var pointToRangeConverter;
 	var hammer;
 
 	window.CustomSelection = {
@@ -68,6 +69,7 @@
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		boundFactory = new CustomSelection.Lib.RangeBoundaryFactory(lastSelection, movingMarker);
+		pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext);
 		hideMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
@@ -280,7 +282,7 @@
 	function getRangeWrappingWordAtPoint(point) {
 		var range = null;
 		if (nodeUtil.nodeIsText(point.target)) {
-			range = convertPointToRange(point);
+			range = pointToRangeConverter.pointToRange(point);
 			expandRangeToStartAfterTheWhitespaceOnLeft(range);
 			expandRangeToEndBeforeTheWhitespaceOnRight(range);
 		}
@@ -377,37 +379,13 @@
 		var pointRange;
 		var pointAnchor = null;
 		if (nodeUtil.nodeIsText(point.target)) {
-			pointRange = convertPointToRange(point);
+			pointRange = pointToRangeConverter.pointToRange(point);
 			pointAnchor = getStartAnchorOf(pointRange);
 		} else if (point = snapPointToText(point)) {
-			pointRange = convertPointToRange(point);
+			pointRange = pointToRangeConverter.pointToRange(point);
 			pointAnchor = getEndAnchorOf(pointRange);
 		}
 		return pointAnchor;
-	}
-
-
-	function convertPointToRange(point) {
-		var range = contentContext.createRange();
-		var startIndex = 0;
-		var maxIndex = point.target.data.length;
-		var endIndex = maxIndex;
-		while (startIndex < endIndex) {
-			var middle = (startIndex + endIndex) >> 1;
-			range.setStart(point.target, startIndex);
-			range.setEnd(point.target, middle + 1);
-			if (pointLocator.rangeContainsPoint(range, point)) {
-				endIndex = middle;
-			} else {
-				startIndex = middle + 1;
-				range.setStart(point.target, startIndex);
-				range.setEnd(point.target, endIndex);
-			}
-		}
-		if (range.collapsed && range.endOffset < maxIndex) {
-			range.setEnd(point.target, range.endOffset + 1);
-		}
-		return range;
 	}
 
 	function getStartAnchorOf(range) {
