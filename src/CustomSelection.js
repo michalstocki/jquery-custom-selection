@@ -27,7 +27,6 @@
 	var belowPointSnapper;
 	var nodeUtil;
 	var boundFactory;
-	var pointLocator;
 	var pointToRangeConverter;
 	var hammer;
 
@@ -60,7 +59,7 @@
 			}
 		);
 		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
-		pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
+		var pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
 		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
 		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
 		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
