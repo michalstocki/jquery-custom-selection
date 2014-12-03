@@ -58,12 +58,16 @@
 				markerShiftY: settings.markerShiftY
 			}
 		);
-		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext);
 		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
+		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
+		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
+		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
+		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, startMarker, endMarker, environment);
+		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext, pointTargetLocator);
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
-		initMarkers();
 		boundFactory = new CustomSelection.Lib.RangeBoundaryFactory(lastSelection, movingMarker);
+		hideMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
 		return this;
@@ -152,8 +156,7 @@
 		jqueryEvent.preventDefault();
 		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
 		frameRequester.requestFrame(function() {
-			var eventTarget = getTouchedElementByPoint(lastPoint);
-			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint, eventTarget);
+			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint);
 			makeSelectionFor(range);
 		});
 	}
@@ -193,7 +196,7 @@
 		if (!isMarker(element)) {
 			clearSelection();
 			var point = pointFactory.createFromContentEvent(pointerEvent);
-			var range = getRangeWrappingWordAtPoint(element, point);
+			var range = getRangeWrappingWordAtPoint(point);
 			makeSelectionFor(range);
 			movingMarker.unset();
 			rejectTouchEnd = true;
@@ -242,15 +245,6 @@
 		markersContext.setScale(origin.scale);
 	}
 
-	function initMarkers() {
-		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext,
-			markersContext, $(settings.startMarker)[0]);
-		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext,
-			markersContext, $(settings.endMarker)[0]);
-		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
-		hideMarkers();
-	}
-
 	function isMarker(element) {
 		return element === startMarker.element || element === endMarker.element;
 	}
@@ -258,16 +252,6 @@
 	function getTargetElementFromPointerEvent(pointerEvent) {
 		var touches = pointerEvent.touches || pointerEvent.pointers;
 		return touches[0].target;
-	}
-
-	function getTouchedElementByPoint(touchPoint) {
-		hideMarkers();
-		var element = contentContext.getElementByPoint(touchPoint);
-		if (!element) {
-			element = contentContext.body;
-		}
-		showMarkers();
-		return element;
 	}
 
 	function hideMarkers() {
@@ -292,11 +276,10 @@
 
 //	-- Extracting a word under the pointer
 
-	function getRangeWrappingWordAtPoint(element, point) {
-		var textNode;
+	function getRangeWrappingWordAtPoint(point) {
 		var range = null;
-		if (textNode = getFromElNodeContainingPoint(element, point)) {
-			range = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
+		if (nodeUtil.nodeIsText(point.target)) {
+			range = convertPointToRange(point);
 			expandRangeToStartAfterTheWhitespaceOnLeft(range);
 			expandRangeToEndBeforeTheWhitespaceOnRight(range);
 		}
@@ -371,131 +354,6 @@
 		return node.data.charCodeAt(node.data.length - 1) in WHITESPACE_LIST;
 	}
 
-//	-- Marking
-
-	function getRangeCoveringLastSelectionAndPointInElement(point, element) {
-		var coveringRange = lastSelection.cloneRange();
-		var pointAnchor = convertPointInElementToAnchor(element, point);
-		if (pointAnchor) {
-			var movingBound = boundFactory.getMovingSelectionBound(pointAnchor);
-			var protectedBound = boundFactory.getProtectedSelectionBound();
-			movingBound.applyTo(coveringRange);
-			if (coveringRange.collapsed) {
-				protectedBound.applyOppositeTo(coveringRange);
-				movingBound.applyOppositeTo(coveringRange);
-				movingMarker.toggleMoving();
-			}
-		}
-		return coveringRange;
-	}
-
-	function convertPointInElementToAnchor(element, point) {
-		var pointRange;
-		var pointAnchor = null;
-		if (pointRange = getPointRangeFromElement(element, point)) {
-			pointAnchor = getStartAnchorOf(pointRange);
-		} else if (pointRange = getClosestPointRangeFormElement(element, point)) {
-			pointAnchor = getEndAnchorOf(pointRange);
-		}
-		return pointAnchor;
-	}
-
-	function getPointRangeFromElement(element, point) {
-		var textNode = getFromElNodeContainingPoint(element, point);
-		var pointRange = null;
-		if (textNode) {
-			pointRange = getFromTextNodeMinimalRangeContainingPoint(textNode, point);
-		}
-		return pointRange;
-	}
-
-	function getFromTextNodeMinimalRangeContainingPoint(textNode, point) {
-		var range = contentContext.createRange();
-		var startIndex = 0;
-		var maxIndex = textNode.data.length;
-		var endIndex = maxIndex;
-		while (startIndex < endIndex) {
-			var middle = (startIndex + endIndex) >> 1;
-			range.setStart(textNode, startIndex);
-			range.setEnd(textNode, middle + 1);
-			if (rangeContainsPoint(range, point)) {
-				endIndex = middle;
-			} else {
-				startIndex = middle + 1;
-				range.setStart(textNode, startIndex);
-				range.setEnd(textNode, endIndex);
-			}
-		}
-		if (range.collapsed && range.endOffset < maxIndex) {
-			range.setEnd(textNode, range.endOffset + 1);
-		}
-		return range;
-	}
-
-	function getStartAnchorOf(range) {
-		return {
-			container: range.startContainer,
-			offset: range.startOffset
-		};
-	}
-
-	function getEndAnchorOf(range) {
-		return {
-			container: range.endContainer,
-			offset: range.endOffset
-		};
-	}
-
-//  ---- Finding a text node
-//  ------ Finding a node containing the pointer
-
-	function getFromElNodeContainingPoint(el, point) {
-		if (el) {
-			var nodes = el.childNodes;
-			for (var i = 0, n; n = nodes[i++];) {
-				if (nodeUtil.nodeIsText(n) && nodeContainsPoint(n, point)) {
-					return n;
-				}
-			}
-		}
-		return null;
-	}
-
-	function rangeContainsPoint(range, point) {
-		var rects = range.getClientRects();
-		for (var j = 0, rect; rect = rects[j++];) {
-			if (rectContainsPoint(rect, point)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	function nodeContainsPoint(node, point) {
-		var rects = nodeUtil.getRectsForNode(node);
-		for (var j = 0, rect; rect = rects[j++];) {
-			if (rectContainsPoint(rect, point)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	function rectContainsPoint(rect, point) {
-		return rectContainsPointVertically(rect, point) &&
-		rectOrItsBoundsContainPointHorizontally(rect, point);
-	}
-
-	function rectContainsPointVertically(rect, point) {
-		var y = environment.isAppleDevice ? point.pageY : point.clientY;
-		return y > rect.top && y < rect.bottom;
-	}
-
-	function rectOrItsBoundsContainPointHorizontally(rect, point) {
-		var x = environment.isAppleDevice ? point.pageX : point.clientX;
-		return x >= rect.left && x <= rect.right;
-	}
-
 	function getSiblingAfterParentOf(node) {
 		while (!node.nextSibling) {
 			if (node === node.ownerDocument.body) {
@@ -550,17 +408,109 @@
 		return node;
 	}
 
+
+//	-- Marking
+
+	function getRangeCoveringLastSelectionAndPointInElement(point) {
+		var coveringRange = lastSelection.cloneRange();
+		var pointAnchor = convertPointToAnchor(point);
+		if (pointAnchor) {
+			var movingBound = boundFactory.getMovingSelectionBound(pointAnchor);
+			var protectedBound = boundFactory.getProtectedSelectionBound();
+			movingBound.applyTo(coveringRange);
+			if (coveringRange.collapsed) {
+				protectedBound.applyOppositeTo(coveringRange);
+				movingBound.applyOppositeTo(coveringRange);
+				movingMarker.toggleMoving();
+			}
+		}
+		return coveringRange;
+	}
+
+	function convertPointToAnchor(point) {
+		var pointRange;
+		var pointAnchor = null;
+		if (nodeUtil.nodeIsText(point.target)) {
+			pointRange = convertPointToRange(point);
+			pointAnchor = getStartAnchorOf(pointRange);
+		} else if (point = snapPointToText(point)) {
+			pointRange = convertPointToRange(point);
+			pointAnchor = getEndAnchorOf(pointRange);
+		}
+		return pointAnchor;
+	}
+
+
+	function convertPointToRange(point) {
+		var range = contentContext.createRange();
+		var startIndex = 0;
+		var maxIndex = point.target.data.length;
+		var endIndex = maxIndex;
+		while (startIndex < endIndex) {
+			var middle = (startIndex + endIndex) >> 1;
+			range.setStart(point.target, startIndex);
+			range.setEnd(point.target, middle + 1);
+			if (rangeContainsPoint(range, point)) {
+				endIndex = middle;
+			} else {
+				startIndex = middle + 1;
+				range.setStart(point.target, startIndex);
+				range.setEnd(point.target, endIndex);
+			}
+		}
+		if (range.collapsed && range.endOffset < maxIndex) {
+			range.setEnd(point.target, range.endOffset + 1);
+		}
+		return range;
+	}
+
+	function getStartAnchorOf(range) {
+		return {
+			container: range.startContainer,
+			offset: range.startOffset
+		};
+	}
+
+	function getEndAnchorOf(range) {
+		return {
+			container: range.endContainer,
+			offset: range.endOffset
+		};
+	}
+
+//  ---- Finding a text node
+//  ------ Finding a node containing the pointer
+
+	function rangeContainsPoint(range, point) {
+		var rects = range.getClientRects();
+		for (var j = 0, rect; rect = rects[j++];) {
+			if (rectContainsPoint(rect, point)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function rectContainsPoint(rect, point) {
+		return rectContainsPointVertically(rect, point) &&
+		rectOrItsBoundsContainPointHorizontally(rect, point);
+	}
+
+	function rectContainsPointVertically(rect, point) {
+		var y = environment.isAppleDevice ? point.pageY : point.clientY;
+		return y > rect.top && y < rect.bottom;
+	}
+
+	function rectOrItsBoundsContainPointHorizontally(rect, point) {
+		var x = environment.isAppleDevice ? point.pageX : point.clientX;
+		return x >= rect.left && x <= rect.right;
+	}
+
 //  ------ Finding the closest node to the pointer
 
-	function getClosestPointRangeFormElement(el, point) {
-		var pointRange = null;
-		var closestPoint = rightPointSnapper.snapPointToTextInElement(point, el) ||
-			belowPointSnapper.snapPointToTextInElement(point, el);
-		if (closestPoint) {
-			pointRange = getFromTextNodeMinimalRangeContainingPoint(
-				closestPoint.parentText, closestPoint);
-		}
-		return pointRange;
+	function snapPointToText(point) {
+		return rightPointSnapper.snapPointToTextInElement(point, point.target) ||
+			belowPointSnapper.snapPointToTextInElement(point, point.target);
 	}
 
 })(jQuery);

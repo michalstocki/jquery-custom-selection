@@ -7,8 +7,9 @@ class CustomSelection.Lib.Point.Point
 	pageY: 0
 	parentText: null
 
-	constructor: (pointer) ->
-		@clientX = pointer.clientX if pointer.clientX?
-		@clientY = pointer.clientY if pointer.clientY?
+	constructor: (pointer, targetNode) ->
+		@clientX = pointer.clientX
+		@clientY = pointer.clientY
 		@pageX = pointer.pageX if pointer.pageX?
 		@pageY = pointer.pageY if pointer.pageY?
+		@target = targetNode

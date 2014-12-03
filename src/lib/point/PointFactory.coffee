@@ -2,23 +2,25 @@ class CustomSelection.Lib.Point.PointFactory
 
 	_markersContext: null
 	_environment: null
+	_pointTargetLocator: null
 
-	constructor: (@_environment, @_markersContext) ->
+	constructor: (@_environment, @_markersContext, @_pointTargetLocator) ->
 
 	createFromContentEvent: (pointerEvent) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
-		return new CustomSelection.Lib.Point.Point(pointer)
+		targetElement = @_pointTargetLocator.getTargetFromEvent(pointerEvent)
+		return new CustomSelection.Lib.Point.Point(pointer, targetElement)
 
 	createFromMarkerEvent: (pointerEvent, shiftY) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
 		@_scalePointerCoords(pointer) unless @_pointerCoordsAutomaticallyScaled()
 		@_shiftPointer(pointer, shiftY)
-		return new CustomSelection.Lib.Point.Point(pointer)
+		targetElement = @_pointTargetLocator.getTargetByCoords(pointer)
+		return new CustomSelection.Lib.Point.Point(pointer, targetElement)
 
 	createFromClientCoordsInText: (coords) ->
-		point =  new CustomSelection.Lib.Point.Point(coords)
-		point.parentText = coords.parentText
-		return point
+		targetElement = coords.parentText
+		return new CustomSelection.Lib.Point.Point(coords, targetElement)
 
 	_getPointerFromEvent: (pointerEvent) ->
 		pointers = pointerEvent.touches || pointerEvent.pointers
