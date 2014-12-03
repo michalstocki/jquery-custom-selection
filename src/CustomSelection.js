@@ -19,7 +19,6 @@
 	var endMarker;
 	var movingMarker;
 	var selectionDrawer = null;
-	var environment;
 	var contentContext;
 	var markersContext;
 	var lastSelection;
@@ -28,6 +27,7 @@
 	var belowPointSnapper;
 	var nodeUtil;
 	var boundFactory;
+	var pointLocator;
 	var hammer;
 
 	window.CustomSelection = {
@@ -45,7 +45,7 @@
 		contentContext = new CustomSelection.Lib.ContentContext(this);
 		markersContext = new CustomSelection.Lib.Markers.MarkersContext();
 		transformMarkerContext(settings.contextOrigin);
-		environment = environment || performEnvTests();
+		var environment = performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
 		lastSelection = new CustomSelection.Lib.LastSelection();
@@ -59,10 +59,11 @@
 			}
 		);
 		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
+		pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
 		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
 		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
 		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
-		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, startMarker, endMarker, environment);
+		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, startMarker, endMarker, pointLocator);
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext, pointTargetLocator);
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
@@ -450,7 +451,7 @@
 			var middle = (startIndex + endIndex) >> 1;
 			range.setStart(point.target, startIndex);
 			range.setEnd(point.target, middle + 1);
-			if (rangeContainsPoint(range, point)) {
+			if (pointLocator.rangeContainsPoint(range, point)) {
 				endIndex = middle;
 			} else {
 				startIndex = middle + 1;
@@ -476,34 +477,6 @@
 			container: range.endContainer,
 			offset: range.endOffset
 		};
-	}
-
-//  ---- Finding a text node
-//  ------ Finding a node containing the pointer
-
-	function rangeContainsPoint(range, point) {
-		var rects = range.getClientRects();
-		for (var j = 0, rect; rect = rects[j++];) {
-			if (rectContainsPoint(rect, point)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	function rectContainsPoint(rect, point) {
-		return rectContainsPointVertically(rect, point) &&
-		rectOrItsBoundsContainPointHorizontally(rect, point);
-	}
-
-	function rectContainsPointVertically(rect, point) {
-		var y = environment.isAppleDevice ? point.pageY : point.clientY;
-		return y > rect.top && y < rect.bottom;
-	}
-
-	function rectOrItsBoundsContainPointHorizontally(rect, point) {
-		var x = environment.isAppleDevice ? point.pageX : point.clientX;
-		return x >= rect.left && x <= rect.right;
 	}
 
 //  ------ Finding the closest node to the pointer

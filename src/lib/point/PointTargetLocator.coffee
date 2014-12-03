@@ -4,9 +4,9 @@ class CustomSelection.Lib.Point.PointTargetLocator
 	_nodeUtil: null
 	_startMarker: null
 	_endMarker: null
-	_environment: null
+	_pointLocator: null
 
-	constructor: (@_contentContext, @_nodeUtil, @_startMarker, @_endMarker, @_environment) ->
+	constructor: (@_contentContext, @_nodeUtil, @_startMarker, @_endMarker, @_pointLocator) ->
 
 	getTargetFromEvent: (pointerEvent) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
@@ -35,24 +35,10 @@ class CustomSelection.Lib.Point.PointTargetLocator
 	_locateTextNodeWithinElementByCoords: (element, pointer) ->
 		children = element.childNodes
 		for child in children
-			if @_nodeUtil.nodeIsText(child) and @_nodeContainsPoint(child, pointer)
+			if @_isPointerInText(child, pointer)
 				return child
 		return null
 
-	_nodeContainsPoint: (node, point) ->
-		for rect in @_nodeUtil.getRectsForNode(node)
-			if @_rectContainsPoint(rect, point)
-				return true;
-		return false
-
-	_rectContainsPoint: (rect, point) ->
-		return @_rectContainsPointVertically(rect, point) and
-			@_rectOrItsBoundsContainPointHorizontally(rect, point)
-
-	_rectContainsPointVertically: (rect, point) ->
-		y = if @_environment.isAppleDevice then point.pageY else point.clientY
-		return y > rect.top and y < rect.bottom
-
-	_rectOrItsBoundsContainPointHorizontally: (rect, point) ->
-		x = if @_environment.isAppleDevice then point.pageX else point.clientX
-		return x >= rect.left and x <= rect.right
+	_isPointerInText: (node, point) ->
+		return @_nodeUtil.nodeIsText(node) and
+			@_pointLocator.nodeContainsPoint(node, point)
