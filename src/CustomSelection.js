@@ -157,7 +157,7 @@
 		jqueryEvent.preventDefault();
 		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
 		frameRequester.requestFrame(function() {
-			var range = getRangeCoveringLastSelectionAndPointInElement(lastPoint);
+			var range = getRangeCoveringLastSelectionAndPoint(lastPoint);
 			makeSelectionFor(range);
 		});
 	}
@@ -299,7 +299,7 @@
 		range.setStart(range.startContainer, range.startOffset + 1);
 
 		if (rangeStartsOnWhitespaceAtTheEndOfNode(range)) {
-			range.setStart(getTextNodeAfter(range.startContainer), 0);
+			range.setStart(nodeUtil.getTextNodeAfter(range.startContainer), 0);
 		}
 	}
 
@@ -327,7 +327,7 @@
 
 	function putRangeStartAtTheEndOfPreviousTextNode(range) {
 		var newStartContainer;
-		if (newStartContainer = getTextNodeBefore(range.startContainer)) {
+		if (newStartContainer = nodeUtil.getTextNodeBefore(range.startContainer)) {
 			range.setStart(newStartContainer, newStartContainer.data.length);
 			return true;
 		} else {
@@ -337,7 +337,7 @@
 
 	function putRangeEndAtTheBeginningOfNextTextNode(range) {
 		var newEndContainer;
-		if (newEndContainer = getTextNodeAfter(range.endContainer)) {
+		if (newEndContainer = nodeUtil.getTextNodeAfter(range.endContainer)) {
 			range.setEnd(newEndContainer, 0);
 			return true;
 		} else {
@@ -355,64 +355,9 @@
 		return node.data.charCodeAt(node.data.length - 1) in WHITESPACE_LIST;
 	}
 
-	function getSiblingAfterParentOf(node) {
-		while (!node.nextSibling) {
-			if (node === node.ownerDocument.body) {
-				return null;
-			}
-			node = node.parentNode;
-		}
-		return node.nextSibling;
-	}
-
-	function getSiblingBeforeParentOf(node) {
-		while (!node.previousSibling) {
-			if (node === node.ownerDocument.body) {
-				return null;
-			}
-			node = node.parentNode;
-		}
-		return node.previousSibling;
-	}
-
-	function getTextNodeAfter(textNode) {
-		var node = textNode;
-		var uncle;
-		do {
-			if (nodeUtil.nodeHasChildren(node)) {
-				node = node.childNodes[0];
-			} else if (node.nextSibling) {
-				node = node.nextSibling;
-			} else if ((uncle = getSiblingAfterParentOf(node))) {
-				node = uncle;
-			} else {
-				return null;
-			}
-		} while (!nodeUtil.nodeIsText(node));
-		return node;
-	}
-
-	function getTextNodeBefore(textNode) {
-		var node = textNode;
-		var uncle;
-		do {
-			if (nodeUtil.nodeHasChildren(node)) {
-				node = node.childNodes[node.childNodes.length - 1];
-			} else if (node.previousSibling) {
-				node = node.previousSibling;
-			} else if ((uncle = getSiblingBeforeParentOf(node))) {
-				node = uncle;
-			} else {
-				return null;
-			}
-		} while (!nodeUtil.nodeIsText(node));
-		return node;
-	}
-
-
 //	-- Marking
 
-	function getRangeCoveringLastSelectionAndPointInElement(point) {
+	function getRangeCoveringLastSelectionAndPoint(point) {
 		var coveringRange = lastSelection.cloneRange();
 		var pointAnchor = convertPointToAnchor(point);
 		if (pointAnchor) {
