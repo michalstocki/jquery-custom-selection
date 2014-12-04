@@ -6,12 +6,12 @@ class CustomSelection.Lib.Utils.NodeUtil
 
 
 	nodeIsText: (node) ->
-		return node.nodeType == Node.TEXT_NODE && node.length > 0
+		return node.nodeType is Node.TEXT_NODE and node.length > 0
 
 	getRectsForNode: (node) ->
-		range = @_contentContext.createRange();
-		range.selectNode(node);
-		return range.getClientRects();
+		range = @_contentContext.createRange()
+		range.selectNode(node)
+		return range.getClientRects()
 
 	nodeHasRects: (node) ->
 		return @getRectsForNode(node).length > 0
@@ -47,14 +47,14 @@ class CustomSelection.Lib.Utils.NodeUtil
 
 	_getSiblingAfterParentOf: (node) ->
 		while !node.nextSibling
-			if node == node.ownerDocument.body
+			if node is @_contentContext.body
 				return null
 			node = node.parentNode
 		return node.nextSibling
 
 	_getSiblingBeforeParentOf: (node) ->
 		while !node.previousSibling
-			if node == node.ownerDocument.body
+			if node is @_contentContext.body
 				return null
 			node = node.parentNode
 		return node.previousSibling

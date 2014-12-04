@@ -28,6 +28,7 @@
 	var nodeUtil;
 	var boundFactory;
 	var pointToRangeConverter;
+	var wordRangeBuilder;
 	var hammer;
 
 	window.CustomSelection = {
@@ -69,6 +70,7 @@
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		boundFactory = new CustomSelection.Lib.RangeBoundaryFactory(lastSelection, movingMarker);
 		pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext);
+		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		hideMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
@@ -96,12 +98,6 @@
 //	Private methods ------------------------------------------------------------
 
 	var lastPoint = null;
-	var WHITESPACE_LIST = {
-		32: ' ',
-		9: '\t',
-		13: '\r',
-		10: '\n'
-	};
 	var rejectTouchEnd = false;
 	var userSelectBeforeEnablingSelection = null;
 
@@ -198,7 +194,7 @@
 		if (!isMarker(element)) {
 			clearSelection();
 			var point = pointFactory.createFromContentEvent(pointerEvent);
-			var range = getRangeWrappingWordAtPoint(point);
+			var range = wordRangeBuilder.getRangeOfWordUnderPoint(point);
 			makeSelectionFor(range);
 			movingMarker.unset();
 			rejectTouchEnd = true;
@@ -274,86 +270,6 @@
 			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
 			isAndroidStackBrowser: env.isAndroidStackBrowser()
 		};
-	}
-
-//	-- Extracting a word under the pointer
-
-	function getRangeWrappingWordAtPoint(point) {
-		var range = null;
-		if (nodeUtil.nodeIsText(point.target)) {
-			range = pointToRangeConverter.pointToRange(point);
-			expandRangeToStartAfterTheWhitespaceOnLeft(range);
-			expandRangeToEndBeforeTheWhitespaceOnRight(range);
-		}
-		return range;
-	}
-
-	function expandRangeToStartAfterTheWhitespaceOnLeft(range) {
-		// searching space backwards
-		while (!rangeStartsWithWhitespace(range)) {
-			if (range.startOffset > 0) {
-				range.setStart(range.startContainer, range.startOffset - 1);
-			} else if (!putRangeStartAtTheEndOfPreviousTextNode(range)) {
-				return;
-			}
-		}
-		range.setStart(range.startContainer, range.startOffset + 1);
-
-		if (rangeStartsOnWhitespaceAtTheEndOfNode(range)) {
-			range.setStart(nodeUtil.getTextNodeAfter(range.startContainer), 0);
-		}
-	}
-
-	function expandRangeToEndBeforeTheWhitespaceOnRight(range) {
-		// searching space forwards
-		while (!rangeEndsWithWhitespace(range)) {
-			var maxIndex = range.endContainer.data.length;
-			if (range.endOffset < maxIndex) {
-				range.setEnd(range.endContainer, range.endOffset + 1);
-			} else if (!putRangeEndAtTheBeginningOfNextTextNode(range)) {
-				return;
-			}
-		}
-		range.setEnd(range.endContainer, Math.max(range.endOffset - 1, 0));
-	}
-
-	function rangeStartsWithWhitespace(range) {
-		return range.toString().charCodeAt(0) in WHITESPACE_LIST;
-	}
-
-	function rangeEndsWithWhitespace(range) {
-		var stringified = range.toString();
-		return stringified.charCodeAt(stringified.length - 1) in WHITESPACE_LIST;
-	}
-
-	function putRangeStartAtTheEndOfPreviousTextNode(range) {
-		var newStartContainer;
-		if (newStartContainer = nodeUtil.getTextNodeBefore(range.startContainer)) {
-			range.setStart(newStartContainer, newStartContainer.data.length);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	function putRangeEndAtTheBeginningOfNextTextNode(range) {
-		var newEndContainer;
-		if (newEndContainer = nodeUtil.getTextNodeAfter(range.endContainer)) {
-			range.setEnd(newEndContainer, 0);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	function rangeStartsOnWhitespaceAtTheEndOfNode(range) {
-		return nodeEndsWithWhitespace(range.startContainer) &&
-				(range.startOffset === range.startContainer.data.length ||
-				range.startOffset === range.startContainer.data.length - 1);
-	}
-
-	function nodeEndsWithWhitespace(node) {
-		return node.data.charCodeAt(node.data.length - 1) in WHITESPACE_LIST;
 	}
 
 //	-- Marking
