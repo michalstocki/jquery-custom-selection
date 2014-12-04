@@ -55,7 +55,7 @@
 				markerShiftY: settings.markerShiftY
 			}
 		);
-		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
+		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil();
 		var pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
 		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
 		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);

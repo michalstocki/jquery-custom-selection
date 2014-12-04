@@ -1,15 +1,10 @@
 class CustomSelection.Lib.Utils.NodeUtil
 
-	_contentContext: null
-
-	constructor: (@_contentContext) ->
-
-
 	nodeIsText: (node) ->
 		return node.nodeType is Node.TEXT_NODE and node.length > 0
 
 	getRectsForNode: (node) ->
-		range = @_contentContext.createRange()
+		range = node.ownerDocument.createRange()
 		range.selectNode(node)
 		return range.getClientRects()
 
@@ -46,15 +41,17 @@ class CustomSelection.Lib.Utils.NodeUtil
 		return node
 
 	_getSiblingAfterParentOf: (node) ->
+		body = node.ownerDocument.body
 		while !node.nextSibling
-			if node is @_contentContext.body
+			if node is body
 				return null
 			node = node.parentNode
 		return node.nextSibling
 
 	_getSiblingBeforeParentOf: (node) ->
+		body = node.ownerDocument.body
 		while !node.previousSibling
-			if node is @_contentContext.body
+			if node is body
 				return null
 			node = node.parentNode
 		return node.previousSibling
