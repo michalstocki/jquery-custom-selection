@@ -23,11 +23,6 @@
 	var markersContext;
 	var lastSelection;
 	var pointFactory;
-	var rightPointSnapper;
-	var belowPointSnapper;
-	var nodeUtil;
-	var boundFactory;
-	var pointToRangeConverter;
 	var wordRangeBuilder;
 	var selectionRangeBuilder;
 	var hammer;
@@ -60,17 +55,17 @@
 				markerShiftY: settings.markerShiftY
 			}
 		);
-		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
+		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil(contentContext);
 		var pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
 		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
 		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
 		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
 		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, startMarker, endMarker, pointLocator);
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext, pointTargetLocator);
-		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
-		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
-		boundFactory = new CustomSelection.Lib.SelectionBoundFactory(lastSelection, movingMarker);
-		pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, nodeUtil, rightPointSnapper, belowPointSnapper);
+		var rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
+		var belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
+		var boundFactory = new CustomSelection.Lib.SelectionBoundFactory(lastSelection, movingMarker);
+		var pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, nodeUtil, rightPointSnapper, belowPointSnapper);
 		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		selectionRangeBuilder = new CustomSelection.Lib.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		hideMarkers();
