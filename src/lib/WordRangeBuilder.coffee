@@ -9,7 +9,7 @@ class CustomSelection.Lib.WordRangeBuilder
 
 	getRangeOfWordUnderPoint: (point) ->
 		range = null
-		if @_nodeUtil.nodeIsText(point.target)
+		if point.isInText
 			range = @_pointToRangeConverter.pointToRange(point)
 			@_expandRangeToStartAfterTheWhitespaceOnLeft(range)
 			@_expandRangeToEndBeforeTheWhitespaceOnRight(range)

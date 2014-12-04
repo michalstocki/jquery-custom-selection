@@ -5,11 +5,14 @@ class CustomSelection.Lib.Point.Point
 	clientY: 0
 	pageX: 0
 	pageY: 0
-	parentText: null
+	target: null
+	isInText: false
 
-	constructor: (pointer, targetNode) ->
+	constructor: (pointer, target) ->
 		@clientX = pointer.clientX
 		@clientY = pointer.clientY
 		@pageX = pointer.pageX if pointer.pageX?
 		@pageY = pointer.pageY if pointer.pageY?
-		@target = targetNode
+		@target = target.node
+		@isInText = target.isText
+

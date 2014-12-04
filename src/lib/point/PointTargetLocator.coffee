@@ -11,12 +11,18 @@ class CustomSelection.Lib.Point.PointTargetLocator
 	getTargetFromEvent: (pointerEvent) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
 		textNode = @_locateTextNodeWithinElementByCoords(pointer.target, pointer)
-		return textNode || pointer.target
+		return {
+			node: textNode || pointer.target
+			isText: textNode?
+		}
 
 	getTargetByCoords: (coords) ->
 		targetElement = @_getTargetElementByCoords(coords)
 		textNode = @_locateTextNodeWithinElementByCoords(targetElement, coords)
-		return textNode || targetElement
+		return {
+			node: textNode || targetElement
+			isText: textNode?
+		}
 
 	_getTargetElementFromPointerEvent: (pointerEvent) ->
 		return @_getPointerFromEvent(pointerEvent).target

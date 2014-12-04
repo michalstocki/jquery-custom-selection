@@ -65,7 +65,7 @@
 		var rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		var belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		var boundFactory = new CustomSelection.Lib.SelectionBoundFactory(lastSelection, movingMarker);
-		var pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, nodeUtil, rightPointSnapper, belowPointSnapper);
+		var pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, rightPointSnapper, belowPointSnapper);
 		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		selectionRangeBuilder = new CustomSelection.Lib.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		hideMarkers();
@@ -220,7 +220,7 @@
 
 	function refreshSelection() {
 		if (lastSelection.exists()) {
-			drawRange(lastSelection.getRange());
+			drawRange(lastSelection.range);
 		}
 	}
 

@@ -2,11 +2,10 @@ class CustomSelection.Lib.Point.PointToRangeConverter
 
 	_pointLocator: null
 	_contentContext: null
-	_nodeUtil: null
 	_rightPointSnapper: null
 	_belowPointSnapper: null
 
-	constructor: (@_pointLocator, @_contentContext, @_nodeUtil, @_rightPointSnapper, @_belowPointSnapper) ->
+	constructor: (@_pointLocator, @_contentContext, @_rightPointSnapper, @_belowPointSnapper) ->
 
 	pointToRange: (point) ->
 		range = @_contentContext.createRange()
@@ -30,7 +29,7 @@ class CustomSelection.Lib.Point.PointToRangeConverter
 
 	pointToRangeAnchor: (point) ->
 		pointAnchor = null;
-		if @_nodeUtil.nodeIsText(point.target)
+		if point.isInText
 			pointAnchor = @_getStartAnchorOf(@pointToRange(point))
 		else if point = @_snapPointToText(point)
 			pointAnchor = @_getEndAnchorOf(@pointToRange(point))

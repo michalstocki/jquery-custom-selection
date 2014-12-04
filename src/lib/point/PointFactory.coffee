@@ -19,8 +19,8 @@ class CustomSelection.Lib.Point.PointFactory
 		return new CustomSelection.Lib.Point.Point(pointer, targetElement)
 
 	createFromClientCoordsInText: (coords) ->
-		targetElement = coords.parentText
-		return new CustomSelection.Lib.Point.Point(coords, targetElement)
+		target = {node: coords.parentText, isText: true}
+		return new CustomSelection.Lib.Point.Point(coords, target)
 
 	_getPointerFromEvent: (pointerEvent) ->
 		pointers = pointerEvent.touches || pointerEvent.pointers
