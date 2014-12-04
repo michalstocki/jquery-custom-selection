@@ -29,6 +29,7 @@
 	var boundFactory;
 	var pointToRangeConverter;
 	var wordRangeBuilder;
+	var selectionRangeBuilder;
 	var hammer;
 
 	window.CustomSelection = {
@@ -68,9 +69,10 @@
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext, pointTargetLocator);
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
-		boundFactory = new CustomSelection.Lib.RangeBoundaryFactory(lastSelection, movingMarker);
-		pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext);
+		boundFactory = new CustomSelection.Lib.SelectionBoundFactory(lastSelection, movingMarker);
+		pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, nodeUtil, rightPointSnapper, belowPointSnapper);
 		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
+		selectionRangeBuilder = new CustomSelection.Lib.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		hideMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
@@ -154,7 +156,7 @@
 		jqueryEvent.preventDefault();
 		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
 		frameRequester.requestFrame(function() {
-			var range = getRangeCoveringLastSelectionAndPoint(lastPoint);
+			var range = selectionRangeBuilder.getRangeUpdatedWithPoint(lastPoint);
 			makeSelectionFor(range);
 		});
 	}
@@ -270,58 +272,6 @@
 			isAndroidLowerThanKitkat: env.isAndroidLowerThan('4.4'),
 			isAndroidStackBrowser: env.isAndroidStackBrowser()
 		};
-	}
-
-//	-- Marking
-
-	function getRangeCoveringLastSelectionAndPoint(point) {
-		var coveringRange = lastSelection.cloneRange();
-		var pointAnchor = convertPointToAnchor(point);
-		if (pointAnchor) {
-			var movingBound = boundFactory.getMovingSelectionBound(pointAnchor);
-			var protectedBound = boundFactory.getProtectedSelectionBound();
-			movingBound.applyTo(coveringRange);
-			if (coveringRange.collapsed) {
-				protectedBound.applyOppositeTo(coveringRange);
-				movingBound.applyOppositeTo(coveringRange);
-				movingMarker.toggleMoving();
-			}
-		}
-		return coveringRange;
-	}
-
-	function convertPointToAnchor(point) {
-		var pointRange;
-		var pointAnchor = null;
-		if (nodeUtil.nodeIsText(point.target)) {
-			pointRange = pointToRangeConverter.pointToRange(point);
-			pointAnchor = getStartAnchorOf(pointRange);
-		} else if (point = snapPointToText(point)) {
-			pointRange = pointToRangeConverter.pointToRange(point);
-			pointAnchor = getEndAnchorOf(pointRange);
-		}
-		return pointAnchor;
-	}
-
-	function getStartAnchorOf(range) {
-		return {
-			container: range.startContainer,
-			offset: range.startOffset
-		};
-	}
-
-	function getEndAnchorOf(range) {
-		return {
-			container: range.endContainer,
-			offset: range.endOffset
-		};
-	}
-
-//  ------ Finding the closest node to the pointer
-
-	function snapPointToText(point) {
-		return rightPointSnapper.snapPointToTextInElement(point, point.target) ||
-			belowPointSnapper.snapPointToTextInElement(point, point.target);
 	}
 
 })(jQuery);

@@ -1,4 +1,4 @@
-class CustomSelection.Lib.RangeBoundaryFactory
+class CustomSelection.Lib.SelectionBoundFactory
 
 	_lastSelection: null
 	_movingMarker: null

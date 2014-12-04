@@ -2,8 +2,11 @@ class CustomSelection.Lib.Point.PointToRangeConverter
 
 	_pointLocator: null
 	_contentContext: null
+	_nodeUtil: null
+	_rightPointSnapper: null
+	_belowPointSnapper: null
 
-	constructor: (@_pointLocator, @_contentContext) ->
+	constructor: (@_pointLocator, @_contentContext, @_nodeUtil, @_rightPointSnapper, @_belowPointSnapper) ->
 
 	pointToRange: (point) ->
 		range = @_contentContext.createRange()
@@ -24,3 +27,27 @@ class CustomSelection.Lib.Point.PointToRangeConverter
 		if range.collapsed && range.endOffset < maxIndex
 			range.setEnd(point.target, range.endOffset + 1)
 		return range
+
+	pointToRangeAnchor: (point) ->
+		pointAnchor = null;
+		if @_nodeUtil.nodeIsText(point.target)
+			pointAnchor = @_getStartAnchorOf(@pointToRange(point))
+		else if point = @_snapPointToText(point)
+			pointAnchor = @_getEndAnchorOf(@pointToRange(point))
+		return pointAnchor
+
+	_snapPointToText: (point) ->
+		return @_rightPointSnapper.snapPointToTextInElement(point, point.target) or
+			@_belowPointSnapper.snapPointToTextInElement(point, point.target)
+
+	_getStartAnchorOf: (range) ->
+		return {
+			container: range.startContainer
+			offset: range.startOffset
+		}
+
+	_getEndAnchorOf: (range) ->
+		return {
+			container: range.endContainer
+			offset: range.endOffset
+		}
