@@ -40,7 +40,7 @@
 		settings = $.extend(defaults, options);
 		contentContext = new CustomSelection.Lib.ContentContext(this);
 		markersContext = new CustomSelection.Lib.Markers.MarkersContext();
-		transformMarkerContext(settings.contextOrigin);
+		markersContext.setOriginTransformation(settings.contextOrigin);
 		var environment = performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
@@ -75,7 +75,7 @@
 	};
 
 	$.fn.refreshCustomSelection = function(contextOrigin) {
-		transformMarkerContext(contextOrigin);
+		markersContext.setOriginTransformation(contextOrigin);
 		refreshSelection();
 		return this;
 	};
@@ -230,14 +230,6 @@
 	}
 
 //	-- Preparing Markers
-
-	function transformMarkerContext(origin) {
-		markersContext.setOffset({
-			x: origin.offsetX,
-			y: origin.offsetY
-		});
-		markersContext.setScale(origin.scale);
-	}
 
 	function getTargetElementFromPointerEvent(pointerEvent) {
 		var touches = pointerEvent.touches || pointerEvent.pointers;

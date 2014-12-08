@@ -9,12 +9,10 @@ class CustomSelection.Lib.Markers.MarkersContext
 	setBody: (body) ->
 		@body = body;
 
-	setOffset: (offsetVector) ->
-		@_offsetX = offsetVector.x
-		@_offsetY = offsetVector.y
-
-	setScale: (scale) ->
-		@_scale = scale
+	setOriginTransformation: (transformation) ->
+		@_offsetX = transformation.offsetX
+		@_offsetY = transformation.offsetX
+		@_scale = transformation.scale
 
 	contentXToMarkerContext: (contentX) ->
 		return contentX * @_scale + @_offsetX
