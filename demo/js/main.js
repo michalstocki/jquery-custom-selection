@@ -22,7 +22,7 @@ $(function() {
 			startMarker: $('.start-marker'),
 			endMarker: $('.end-marker'),
 			markerShiftY: 40,
-			contextOrigin: {
+			contentOrigin: {
 				offsetY: iframeOffset.top + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
 				offsetX: iframeOffset.left + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
 				scale: IFRAME_SCALE

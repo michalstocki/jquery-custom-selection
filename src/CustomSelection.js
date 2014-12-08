@@ -6,7 +6,7 @@
 		holdTimeout: 500,
 		markerShiftY: 38,
 		onSelectionChange: function() {},
-		contextOrigin: {
+		contentOrigin: {
 			offsetX: 0,
 			offsetY: 0,
 			scale: 1
@@ -19,7 +19,7 @@
 	var markersWrapper;
 	var selectionDrawer = null;
 	var contentContext;
-	var markersContext;
+	var contextTranslator;
 	var lastSelection;
 	var pointFactory;
 	var wordRangeBuilder;
@@ -39,8 +39,8 @@
 	$.fn.customSelection = function(options) {
 		settings = $.extend(defaults, options);
 		contentContext = new CustomSelection.Lib.ContentContext(this);
-		markersContext = new CustomSelection.Lib.Markers.MarkersContext();
-		markersContext.setOriginTransformation(settings.contextOrigin);
+		contextTranslator = new CustomSelection.Lib.ContextTranslator();
+		contextTranslator.setContentTransformationFromMarkersContext(settings.contentOrigin);
 		var environment = performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
@@ -56,12 +56,12 @@
 		);
 		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil();
 		var pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
-		var startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
-		var endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
+		var startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, contextTranslator, $(settings.startMarker)[0]);
+		var endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, contextTranslator, $(settings.endMarker)[0]);
 		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
 		markersWrapper = new CustomSelection.Lib.Markers.MarkersWrapper(startMarker, endMarker);
 		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, markersWrapper, pointLocator);
-		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext, pointTargetLocator);
+		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, contextTranslator, pointTargetLocator);
 		var rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		var belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
 		var boundFactory = new CustomSelection.Lib.SelectionBoundFactory(lastSelection, movingMarker);
@@ -74,8 +74,10 @@
 		return this;
 	};
 
-	$.fn.refreshCustomSelection = function(contextOrigin) {
-		markersContext.setOriginTransformation(contextOrigin);
+	$.fn.refreshCustomSelection = function(contentOrigin) {
+		if (contentOrigin) {
+			contextTranslator.setContentTransformationFromMarkersContext(contentOrigin);
+		}
 		refreshSelection();
 		return this;
 	};
@@ -117,7 +119,7 @@
 		initializeHammerFor($element);
 		markersWrapper.$markerElements
 			.on('touchstart', handleMarkerTouchStart);
-		$(markersContext.body)
+		markersWrapper.$markersBody
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
 		$element.on('touchend', handleGlobalTouchEnd);
@@ -126,7 +128,7 @@
 	}
 
 	function disableTouchSelectionFor($element) {
-		$(markersContext.body)
+		markersWrapper.$markersBody
 			.off('touchmove', handleMarkerTouchMove)
 			.off('touchend', handleMarkerTouchMoveEnd);
 		$element

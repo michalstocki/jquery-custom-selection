@@ -1,12 +1,14 @@
 class CustomSelection.Lib.Markers.MarkersWrapper
 
 	$markerElements: null
+	$markersBody: null
 
 	_startMarker: null
 	_endMarker: null
 
 	constructor: (@_startMarker, @_endMarker) ->
 		@$markerElements = @_startMarker.$element.add(@_endMarker.$element)
+		@$markersBody = $(@_startMarker.element.ownerDocument.body)
 
 	showMarkers: ->
 		@_startMarker.show()

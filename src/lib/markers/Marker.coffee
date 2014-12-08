@@ -10,12 +10,11 @@ class Marker
 
 	_className: ''
 	_contentContext: null
-	_markersContext: null
+	_contextTranslator: null
 
-	constructor: (@_contentContext, @_markersContext, element) ->
+	constructor: (@_contentContext, @_contextTranslator, element) ->
 		@element = element || @_createMarkerElement()
 		@$element = $(@element)
-		@_markersContext.setBody(@_getBodyOf(@element))
 
 	hide: ->
 		@$element.css(visibility: 'hidden')
@@ -41,9 +40,6 @@ class Marker
 		@_contentContext.container.append(element)
 		return element
 
-	_getBodyOf: (element) ->
-		return element.ownerDocument.body
-
 
 class CustomSelection.Lib.Markers.StartMarker extends Marker
 
@@ -54,8 +50,8 @@ class CustomSelection.Lib.Markers.StartMarker extends Marker
 	alignToRange: (range) ->
 		firstRect = range.getClientRects()[0]
 		@$element.css
-			left: @_markersContext.contentXToMarkerContext(firstRect.left)
-			top: @_markersContext.contentYToMarkerContext(firstRect.bottom)
+			left: @_contextTranslator.contentXToMarkerContext(firstRect.left)
+			top: @_contextTranslator.contentYToMarkerContext(firstRect.bottom)
 
 
 class CustomSelection.Lib.Markers.EndMarker extends Marker
@@ -68,5 +64,5 @@ class CustomSelection.Lib.Markers.EndMarker extends Marker
 		rects = range.getClientRects()
 		lastRect = rects[rects.length - 1]
 		@$element.css
-			left: @_markersContext.contentXToMarkerContext(lastRect.right)
-			top: @_markersContext.contentYToMarkerContext(lastRect.bottom)
+			left: @_contextTranslator.contentXToMarkerContext(lastRect.right)
+			top: @_contextTranslator.contentYToMarkerContext(lastRect.bottom)

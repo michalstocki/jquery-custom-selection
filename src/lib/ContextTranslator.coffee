@@ -1,7 +1,6 @@
-class CustomSelection.Lib.Markers.MarkersContext
+class CustomSelection.Lib.ContextTranslator
 
-	body: null
-
+	# The transformation of  the content origin relative to the markers origin
 	_offsetX: 0
 	_offsetY: 0
 	_scale: 0
@@ -9,7 +8,7 @@ class CustomSelection.Lib.Markers.MarkersContext
 	setBody: (body) ->
 		@body = body;
 
-	setOriginTransformation: (transformation) ->
+	setContentTransformationFromMarkersContext: (transformation) ->
 		@_offsetX = transformation.offsetX
 		@_offsetY = transformation.offsetX
 		@_scale = transformation.scale
@@ -21,7 +20,7 @@ class CustomSelection.Lib.Markers.MarkersContext
 		return contentY * @_scale + @_offsetY
 
 	scaleToContentContext: (n) ->
-		return n * (1 / @_scale)
+		return n / @_scale
 
 	markersYToContentContext: (markersY) ->
 		return @scaleToContentContext(markersY - @_offsetY)

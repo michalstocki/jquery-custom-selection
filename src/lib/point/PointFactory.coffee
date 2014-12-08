@@ -1,10 +1,10 @@
 class CustomSelection.Lib.Point.PointFactory
 
-	_markersContext: null
+	_contextTranslator: null
 	_environment: null
 	_pointTargetLocator: null
 
-	constructor: (@_environment, @_markersContext, @_pointTargetLocator) ->
+	constructor: (@_environment, @_contextTranslator, @_pointTargetLocator) ->
 
 	createFromContentEvent: (pointerEvent) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
@@ -37,13 +37,13 @@ class CustomSelection.Lib.Point.PointFactory
 			@_environment.isAndroidLowerThanKitkat
 
 	_scalePointerCoords: (pointer) ->
-		pointer.clientX = @_markersContext.markersXToContentContext(pointer.clientX)
-		pointer.clientY = @_markersContext.markersYToContentContext(pointer.clientY)
-		pointer.pageX = @_markersContext.markersXToContentContext(pointer.pageX)
-		pointer.pageY = @_markersContext.markersYToContentContext(pointer.pageY)
+		pointer.clientX = @_contextTranslator.markersXToContentContext(pointer.clientX)
+		pointer.clientY = @_contextTranslator.markersYToContentContext(pointer.clientY)
+		pointer.pageX = @_contextTranslator.markersXToContentContext(pointer.pageX)
+		pointer.pageY = @_contextTranslator.markersYToContentContext(pointer.pageY)
 
 
 	_shiftPointer: (pointer, shiftY) ->
-		shiftY = @_markersContext.scaleToContentContext(shiftY)
+		shiftY = @_contextTranslator.scaleToContentContext(shiftY)
 		pointer.pageY = pointer.pageY + shiftY
 		pointer.clientY = pointer.clientY + shiftY
