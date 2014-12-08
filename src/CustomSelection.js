@@ -25,6 +25,7 @@
 	var wordRangeBuilder;
 	var selectionRangeBuilder;
 	var hammer;
+	var selectionApplier;
 
 	window.CustomSelection = {
 		Lib: {
@@ -70,6 +71,8 @@
 		wordRangeBuilder = new CustomSelection.Lib.Range.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		selectionRangeBuilder = new CustomSelection.Lib.Range.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		hammer = new CustomSelection.Lib.HammerAdapter(settings);
+		selectionApplier = new CustomSelection.Lib.SelectionApplier(settings, lastSelection, markersWrapper, selectionDrawer);
+
 		markersWrapper.hideMarkers();
 		contentContext.disableNativeSelection();
 		enableTouchSelectionFor(this);
@@ -80,17 +83,17 @@
 		if (contentOrigin) {
 			contextTranslator.setContentTransformationFromMarkersContext(contentOrigin);
 		}
-		refreshSelection();
+		selectionApplier.refreshSelection();
 		return this;
 	};
 
 	$.fn.clearCustomSelection = function() {
-		clearSelection();
+		selectionApplier.clearSelection();
 		return this;
 	};
 
 	$.fn.disableCustomSelection = function() {
-		clearSelection();
+		selectionApplier.clearSelection();
 		disableTouchSelectionFor(this);
 		contentContext.restoreNativeSelection();
 		return this;
@@ -111,7 +114,7 @@
 			.on('touchend', handleMarkerTouchMoveEnd);
 		$element.on('touchend', handleGlobalTouchEnd);
 		hammer.bindTapHoldInElement($element[0], handleGlobalTapHold);
-		hammer.bindTapInElement($element[0], clearSelection);
+		hammer.bindTapInElement($element[0], selectionApplier.clearSelection);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -157,7 +160,7 @@
 		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
 		frameRequester.requestFrame(function() {
 			var range = selectionRangeBuilder.getRangeUpdatedWithPoint(lastPoint);
-			makeSelectionFor(range);
+			selectionApplier.applySelectionFor(range);
 		});
 	}
 
@@ -166,44 +169,13 @@
 	function selectWordUnderPointer(pointerEvent) {
 		var element = getTargetElementFromPointerEvent(pointerEvent);
 		if (!markersWrapper.isMarkerElement(element)) {
-			clearSelection();
+			selectionApplier.clearSelection();
 			var point = pointFactory.createFromContentEvent(pointerEvent);
 			var range = wordRangeBuilder.getRangeOfWordUnderPoint(point);
-			makeSelectionFor(range);
+			selectionApplier.applySelectionFor(range);
 			movingMarker.unset();
 			rejectTouchEnd = true;
 		}
-	}
-
-	function makeSelectionFor(range) {
-		if (range) {
-			if (!lastSelection.rangeEqualsTo(range)) {
-				drawRange(range);
-				settings.onSelectionChange(range);
-				lastSelection.range = range;
-			}
-			markersWrapper.showMarkers();
-		}
-	}
-
-	function clearSelection() {
-		if (lastSelection.exists()) {
-			markersWrapper.hideMarkers();
-			selectionDrawer.clearSelection();
-			settings.onSelectionChange(contentContext.createRange());
-		}
-		lastSelection.range = null;
-	}
-
-	function refreshSelection() {
-		if (lastSelection.exists()) {
-			drawRange(lastSelection.range);
-		}
-	}
-
-	function drawRange(range) {
-		selectionDrawer.redraw(range);
-		markersWrapper.alignMarkersToRange(range);
 	}
 
 //	-- Preparing Markers
