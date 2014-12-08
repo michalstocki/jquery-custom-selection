@@ -1,4 +1,4 @@
-class CustomSelection.Lib.LastSelection
+class CustomSelection.Lib.Range.LastSelection
 
 	range: null
 

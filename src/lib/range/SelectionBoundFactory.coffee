@@ -1,4 +1,4 @@
-class CustomSelection.Lib.SelectionBoundFactory
+class CustomSelection.Lib.Range.SelectionBoundFactory
 
 	_lastSelection: null
 	_movingMarker: null
@@ -23,7 +23,7 @@ class CustomSelection.Lib.SelectionBoundFactory
 			@_createStartBoundary(anchor)
 
 	_createEndBoundary: (anchor) ->
-		return new CustomSelection.Lib.EndBoundary(anchor)
+		return new CustomSelection.Lib.Range.EndBoundary(anchor)
 
 	_createStartBoundary: (anchor) ->
-		return new CustomSelection.Lib.StartBoundary(anchor)
+		return new CustomSelection.Lib.Range.StartBoundary(anchor)

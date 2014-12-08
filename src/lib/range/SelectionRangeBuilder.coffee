@@ -1,4 +1,4 @@
-class CustomSelection.Lib.SelectionRangeBuilder
+class CustomSelection.Lib.Range.SelectionRangeBuilder
 
 	_contentContext: null
 	_pointToRangeConverter: null

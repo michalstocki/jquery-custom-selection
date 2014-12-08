@@ -1,4 +1,4 @@
-class CustomSelection.Lib.WordRangeBuilder
+class CustomSelection.Lib.Range.WordRangeBuilder
 
 	WHITESPACE_LIST = [' ', '\t', '\r', '\n']
 

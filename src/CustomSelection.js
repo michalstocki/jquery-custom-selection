@@ -30,6 +30,7 @@
 		Lib: {
 			Markers: {},
 			Point: {},
+			Range: {},
 			Utils: {}
 		}
 	};
@@ -44,7 +45,7 @@
 		var environment = performEnvTests();
 		var rectangler = new CustomSelection.Lib.Rectangler(environment);
 		frameRequester = new CustomSelection.Lib.FrameRequester();
-		lastSelection = new CustomSelection.Lib.LastSelection();
+		lastSelection = new CustomSelection.Lib.Range.LastSelection();
 		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(
 			rectangler,
 			environment,
@@ -64,10 +65,10 @@
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, contextTranslator, pointTargetLocator);
 		var rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		var belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
-		var boundFactory = new CustomSelection.Lib.SelectionBoundFactory(lastSelection, movingMarker);
+		var boundFactory = new CustomSelection.Lib.Range.SelectionBoundFactory(lastSelection, movingMarker);
 		var pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, rightPointSnapper, belowPointSnapper);
-		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
-		selectionRangeBuilder = new CustomSelection.Lib.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
+		wordRangeBuilder = new CustomSelection.Lib.Range.WordRangeBuilder(nodeUtil, pointToRangeConverter);
+		selectionRangeBuilder = new CustomSelection.Lib.Range.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		markersWrapper.hideMarkers();
 		contentContext.disableNativeSelection();
 		enableTouchSelectionFor(this);
