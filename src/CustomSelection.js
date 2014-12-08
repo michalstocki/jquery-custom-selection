@@ -15,9 +15,8 @@
 
 	// Collaborators
 	var frameRequester = null;
-	var startMarker;
-	var endMarker;
 	var movingMarker;
+	var markersWrapper;
 	var selectionDrawer = null;
 	var contentContext;
 	var markersContext;
@@ -57,10 +56,11 @@
 		);
 		var nodeUtil = new CustomSelection.Lib.Utils.NodeUtil();
 		var pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil);
-		startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
-		endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
+		var startMarker = new CustomSelection.Lib.Markers.StartMarker(contentContext, markersContext, $(settings.startMarker)[0]);
+		var endMarker = new CustomSelection.Lib.Markers.EndMarker(contentContext, markersContext, $(settings.endMarker)[0]);
 		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker);
-		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, startMarker, endMarker, pointLocator);
+		markersWrapper = new CustomSelection.Lib.Markers.MarkersWrapper(startMarker, endMarker);
+		var pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(contentContext, nodeUtil, markersWrapper, pointLocator);
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, markersContext, pointTargetLocator);
 		var rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil);
 		var belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil);
@@ -68,7 +68,7 @@
 		var pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, rightPointSnapper, belowPointSnapper);
 		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		selectionRangeBuilder = new CustomSelection.Lib.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
-		hideMarkers();
+		markersWrapper.hideMarkers();
 		disableNativeSelectionFor(contentContext.body);
 		enableTouchSelectionFor(this);
 		return this;
@@ -115,7 +115,7 @@
 
 	function enableTouchSelectionFor($element) {
 		initializeHammerFor($element);
-		$(startMarker.element).add(endMarker.element)
+		markersWrapper.$markerElements
 			.on('touchstart', handleMarkerTouchStart);
 		$(markersContext.body)
 			.on('touchmove', handleMarkerTouchMove)
@@ -147,15 +147,6 @@
 		}
 	}
 
-	function handleMarkerPointerMove(jqueryEvent) {
-		jqueryEvent.preventDefault();
-		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
-		frameRequester.requestFrame(function() {
-			var range = selectionRangeBuilder.getRangeUpdatedWithPoint(lastPoint);
-			makeSelectionFor(range);
-		});
-	}
-
 	function handleMarkerTouchStart(jqueryEvent) {
 		jqueryEvent.preventDefault();
 		movingMarker.setTo(jqueryEvent.target);
@@ -170,6 +161,15 @@
 
 	function handleMarkerTouchMoveEnd() {
 		movingMarker.unset();
+	}
+
+	function handleMarkerPointerMove(jqueryEvent) {
+		jqueryEvent.preventDefault();
+		lastPoint = pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -settings.markerShiftY);
+		frameRequester.requestFrame(function() {
+			var range = selectionRangeBuilder.getRangeUpdatedWithPoint(lastPoint);
+			makeSelectionFor(range);
+		});
 	}
 
 	// -- Dealing with native selection
@@ -188,7 +188,7 @@
 
 	function selectWordUnderPointer(pointerEvent) {
 		var element = getTargetElementFromPointerEvent(pointerEvent);
-		if (!isMarker(element)) {
+		if (!markersWrapper.isMarkerElement(element)) {
 			clearSelection();
 			var point = pointFactory.createFromContentEvent(pointerEvent);
 			var range = wordRangeBuilder.getRangeOfWordUnderPoint(point);
@@ -205,13 +205,13 @@
 				settings.onSelectionChange(range);
 				lastSelection.range = range;
 			}
-			showMarkers();
+			markersWrapper.showMarkers();
 		}
 	}
 
 	function clearSelection() {
 		if (lastSelection.exists()) {
-			hideMarkers();
+			markersWrapper.hideMarkers();
 			selectionDrawer.clearSelection();
 			settings.onSelectionChange(contentContext.createRange());
 		}
@@ -226,8 +226,7 @@
 
 	function drawRange(range) {
 		selectionDrawer.redraw(range);
-		startMarker.alignToRange(range);
-		endMarker.alignToRange(range);
+		markersWrapper.alignMarkersToRange(range);
 	}
 
 //	-- Preparing Markers
@@ -240,23 +239,9 @@
 		markersContext.setScale(origin.scale);
 	}
 
-	function isMarker(element) {
-		return element === startMarker.element || element === endMarker.element;
-	}
-
 	function getTargetElementFromPointerEvent(pointerEvent) {
 		var touches = pointerEvent.touches || pointerEvent.pointers;
 		return touches[0].target;
-	}
-
-	function hideMarkers() {
-		startMarker.hide();
-		endMarker.hide();
-	}
-
-	function showMarkers() {
-		startMarker.show();
-		endMarker.show();
 	}
 
 	function performEnvTests() {

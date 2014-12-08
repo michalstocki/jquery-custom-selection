@@ -2,11 +2,10 @@ class CustomSelection.Lib.Point.PointTargetLocator
 
 	_contentContext: null
 	_nodeUtil: null
-	_startMarker: null
-	_endMarker: null
+	_markersWrapper: null
 	_pointLocator: null
 
-	constructor: (@_contentContext, @_nodeUtil, @_startMarker, @_endMarker, @_pointLocator) ->
+	constructor: (@_contentContext, @_nodeUtil, @_markersWrapper, @_pointLocator) ->
 
 	getTargetFromEvent: (pointerEvent) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
@@ -28,11 +27,9 @@ class CustomSelection.Lib.Point.PointTargetLocator
 		return @_getPointerFromEvent(pointerEvent).target
 
 	_getTargetElementByCoords: (coords) ->
-		@_startMarker.hide();
-		@_endMarker.hide();
+		@_markersWrapper.hideMarkers();
 		element = @_contentContext.getElementByPoint(coords) || @_contentContext.body
-		@_startMarker.show();
-		@_endMarker.show();
+		@_markersWrapper.showMarkers();
 		return element
 
 	_getPointerFromEvent: (pointerEvent) ->
