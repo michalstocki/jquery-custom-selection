@@ -23,7 +23,7 @@ class CustomSelection.Lib.SelectionApplier
 		if @_lastSelection.exists()
 			@_markersWrapper.hideMarkers()
 			@_selectionDrawer.clearSelection()
-			@_settings.onSelectionChange.call(null, null)
+			@_settings.onSelectionChange.call(null, window.document.createRange())
 		@_lastSelection.range = null
 
 	_drawSelection: (range) ->

@@ -6,8 +6,7 @@ class CustomSelection.Lib.ContentContext
 	container: null
 	_overriddenUserSelectValue: null
 
-	constructor: ($element) ->
-		@container = $element[0]
+	constructor: (@container) ->
 		@document = @container.ownerDocument
 		@body = @document.body
 		@window = @document.defaultView || @document.parentWindow
