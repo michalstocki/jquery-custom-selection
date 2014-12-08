@@ -4,6 +4,7 @@ class CustomSelection.Lib.ContentContext
 	document: null
 	body: null
 	container: null
+	_overriddenUserSelectValue: null
 
 	constructor: ($element) ->
 		@container = $element[0]
@@ -19,3 +20,10 @@ class CustomSelection.Lib.ContentContext
 
 	getElementByPoint: (point) ->
 		return @document.elementFromPoint(point.clientX, point.clientY)
+
+	disableNativeSelection: ->
+		@_overriddenUserSelectValue = $(@body).css('user-select')
+		$(@body).css('user-select', 'none')
+
+	restoreNativeSelection: ->
+		$(@body).css('user-select', @_overriddenUserSelectValue)

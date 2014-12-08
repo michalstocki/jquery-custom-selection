@@ -69,7 +69,7 @@
 		wordRangeBuilder = new CustomSelection.Lib.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		selectionRangeBuilder = new CustomSelection.Lib.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		markersWrapper.hideMarkers();
-		disableNativeSelectionFor(contentContext.body);
+		contentContext.disableNativeSelection();
 		enableTouchSelectionFor(this);
 		return this;
 	};
@@ -89,8 +89,8 @@
 
 	$.fn.disableCustomSelection = function() {
 		clearSelection();
-		restoreNativeSelectionFor(contentContext.body);
 		disableTouchSelectionFor(this);
+		contentContext.restoreNativeSelection();
 		return this;
 	};
 
@@ -98,7 +98,6 @@
 
 	var lastPoint = null;
 	var rejectTouchEnd = false;
-	var userSelectBeforeEnablingSelection = null;
 
 //	-- Binding events
 
@@ -172,18 +171,6 @@
 			var range = selectionRangeBuilder.getRangeUpdatedWithPoint(lastPoint);
 			makeSelectionFor(range);
 		});
-	}
-
-	// -- Dealing with native selection
-
-	function disableNativeSelectionFor(element) {
-		var $element = $(element);
-		userSelectBeforeEnablingSelection = $element.css('user-select');
-		$element.css('user-select', 'none');
-	}
-
-	function restoreNativeSelectionFor(element) {
-		$(element).css('user-select', userSelectBeforeEnablingSelection);
 	}
 
 //	-- Creating Selection
