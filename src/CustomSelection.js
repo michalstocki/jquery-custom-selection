@@ -69,6 +69,7 @@
 		var pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, contentContext, rightPointSnapper, belowPointSnapper);
 		wordRangeBuilder = new CustomSelection.Lib.Range.WordRangeBuilder(nodeUtil, pointToRangeConverter);
 		selectionRangeBuilder = new CustomSelection.Lib.Range.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
+		hammer = new CustomSelection.Lib.HammerAdapter(settings);
 		markersWrapper.hideMarkers();
 		contentContext.disableNativeSelection();
 		enableTouchSelectionFor(this);
@@ -102,29 +103,15 @@
 
 //	-- Binding events
 
-	function initializeHammerFor($element) {
-		hammer = new Hammer.Manager($element[0], {
-			recognizers: [
-				[Hammer.Press],
-				[Hammer.Tap]
-			]
-		});
-		hammer.set({
-			holdThreshold: settings.holdThreshold,
-			holdTimeout: settings.holdTimeout
-		});
-	}
-
 	function enableTouchSelectionFor($element) {
-		initializeHammerFor($element);
 		markersWrapper.$markerElements
 			.on('touchstart', handleMarkerTouchStart);
 		markersWrapper.$markersBody
 			.on('touchmove', handleMarkerTouchMove)
 			.on('touchend', handleMarkerTouchMoveEnd);
 		$element.on('touchend', handleGlobalTouchEnd);
-		hammer.on('press', handleGlobalTapHold);
-		hammer.on('tap', clearSelection);
+		hammer.bindTapHoldInElement($element[0], handleGlobalTapHold);
+		hammer.bindTapInElement($element[0], clearSelection);
 	}
 
 	function disableTouchSelectionFor($element) {
@@ -133,7 +120,7 @@
 			.off('touchend', handleMarkerTouchMoveEnd);
 		$element
 			.off('touchend', handleGlobalTouchEnd);
-		hammer.destroy();
+		hammer.destroyBindingsFor($element[0]);
 	}
 
 	function handleGlobalTapHold(e) {
