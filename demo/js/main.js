@@ -4,13 +4,11 @@ $(function() {
 
 	var $content;
 	var $iframe = $('#main-frame');
-	var iframeOffset;
 
 	window.dConsole(window);
 
 	$iframe.bind('load', function() {
 		$content = $(this.contentWindow.document).find('.content');
-		iframeOffset = $iframe.offset();
 		window.enableSelection();
 
 	});
@@ -22,21 +20,34 @@ $(function() {
 			startMarker: $('.start-marker'),
 			endMarker: $('.end-marker'),
 			markerShiftY: 40,
-			contentOrigin: {
-				offsetY: iframeOffset.top + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
-				offsetX: iframeOffset.left + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
-				scale: IFRAME_SCALE
-			}
+			contentOrigin: getContentOriginTransformation()
 		});
-		$('.settings .button-enable').attr('disabled', true);
-		$('.settings .button-disable').attr('disabled', false);
+		$('.settings button.button-enable').attr('disabled', true);
+		$('.settings button:not(.button-enable)').attr('disabled', false);
 	};
 
 	window.disableSelection = function() {
 		$content.disableCustomSelection();
-		$('.settings .button-enable').attr('disabled', false);
-		$('.settings .button-disable').attr('disabled', true);
+		$('.settings button.button-enable').attr('disabled', false);
+		$('.settings button:not(.button-enable)').attr('disabled', true);
 	};
+
+	window.refreshSelection = function() {
+		$content.refreshCustomSelection(getContentOriginTransformation());
+	};
+
+	window.clearSelection = function() {
+		$content.clearCustomSelection();
+	};
+
+	function getContentOriginTransformation() {
+		var iframeOffset = $iframe.offset();
+		return {
+			offsetY: iframeOffset.top + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
+			offsetX: iframeOffset.left + IFRAME_BORDER_WIDTH * IFRAME_SCALE,
+			scale: IFRAME_SCALE
+		};
+	}
 
 	function onSelectionChange(range) {
 		$('.selected-text-status').text(range.toString());

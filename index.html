@@ -19,16 +19,17 @@
 <body>
 	<div class="container">
 		<aside class="right">
-			<div class="debug-console"></div>
 			<div class="settings">
 				<button class="button-enable" onclick="enableSelection();">Enable selection</button>
 				<button class="button-disable" onclick="disableSelection();" disabled="disabled">Disable selection</button>
-				<div class="touch_status"></div>
+				<button onclick="refreshSelection();" disabled="disabled">Refresh selection</button>
+				<button onclick="clearSelection();" disabled="disabled">Clear selection</button>
 			</div>
 			<div class="selected-text-status-panel">
 				<span>Selected text:</span>
 				<span class="selected-text-status"></span>
 			</div>
+			<div class="debug-console"></div>
 		</aside>
 
 		<div class="scaller">
