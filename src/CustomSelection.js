@@ -59,7 +59,8 @@
 		var selectionRangeBuilder = new CustomSelection.Lib.Range.SelectionRangeBuilder(contentContext, pointToRangeConverter, boundFactory, movingMarker);
 		var hammer = new CustomSelection.Lib.HammerAdapter(settings);
 		selectionApplier = new CustomSelection.Lib.SelectionApplier(settings, lastSelection, markersWrapper, selectionDrawer);
-		var pointerEventBus = new CustomSelection.Lib.PointerEventBus(settings, selectionRangeBuilder, movingMarker, markersWrapper, pointFactory, wordRangeBuilder, selectionApplier, frameRequester);
+		var selectionConstructor = new CustomSelection.Lib.Range.SelectionConstructor(settings, selectionRangeBuilder, markersWrapper, pointFactory, wordRangeBuilder, frameRequester);
+		var pointerEventBus = new CustomSelection.Lib.PointerEventBus(movingMarker, selectionApplier, selectionConstructor);
 		pointerEventBinder = new CustomSelection.Lib.PointerEventBinder(element, hammer, markersWrapper, pointerEventBus);
 
 		markersWrapper.hideMarkers();

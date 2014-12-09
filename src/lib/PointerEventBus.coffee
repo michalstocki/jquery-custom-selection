@@ -1,18 +1,12 @@
 class CustomSelection.Lib.PointerEventBus
 
-	_rejectTouchEnd: false
-	_lastPoint: null
-
-	_settings: null
-	_selectionRangeBuilder: null
 	_movingMarker: null
-	_markersWrapper: null
-	_pointFactory: null
-	_wordRangeBuilder: null
 	_selectionApplier: null
-	_frameRequester: null
+	_selectionConstructor: null
 
-	constructor: (@_settings, @_selectionRangeBuilder, @_movingMarker, @_markersWrapper, @_pointFactory, @_wordRangeBuilder, @_selectionApplier, @_frameRequester) ->
+	_rejectTouchEnd: false
+
+	constructor: (@_movingMarker, @_selectionApplier, @_selectionConstructor) ->
 
 	handleGlobalTapHold: (hammerEvent) =>
 		hammerEvent.srcEvent.preventDefault()
@@ -40,20 +34,14 @@ class CustomSelection.Lib.PointerEventBus
 	handleGlobalTap: (hammerEvent) =>
 		@_selectionApplier.clearSelection()
 
-	_selectWordUnderPointer: (hammerEvent) =>
-		eventTarget = hammerEvent.pointers[0].target;
-		unless @_markersWrapper.isMarkerElement(eventTarget)
-			@_selectionApplier.clearSelection()
-			point = @_pointFactory.createFromContentEvent(hammerEvent)
-			range = @_wordRangeBuilder.getRangeOfWordUnderPoint(point)
-			@_selectionApplier.applySelectionFor(range)
+	_selectWordUnderPointer: (hammerEvent) ->
+		if range = @_selectionConstructor.getWordSelectionFrom(hammerEvent)
 			@_movingMarker.unset()
+			@_selectionApplier.clearSelection()
+			@_selectionApplier.applySelectionFor(range)
 			@_rejectTouchEnd = true
 
 
-	_updateSelectionWithPointerMove: (jqueryEvent) =>
-		@_lastPoint = @_pointFactory.createFromMarkerEvent(jqueryEvent.originalEvent, -@_settings.markerShiftY)
-		@_frameRequester.requestFrame =>
-			range = @_selectionRangeBuilder.getRangeUpdatedWithPoint(@_lastPoint)
+	_updateSelectionWithPointerMove: (jqueryEvent) ->
+		@_selectionConstructor.getSelectionUpdatedWith jqueryEvent, (range) =>
 			@_selectionApplier.applySelectionFor(range)
-
