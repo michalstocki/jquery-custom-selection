@@ -1,5 +1,5 @@
 MARKER_CLASS = 'jcs-marker';
-MARKER_START_CLASS = 'jcs-beginning-marker';
+MARKER_START_CLASS = 'jcs-start-marker';
 MARKER_END_CLASS = 'jcs-end-marker';
 MARKER_MOVING_CLASS = 'jcs-marker-moving';
 
@@ -31,7 +31,7 @@ class Marker
 	setMoving: (isMoving) ->
 		@$element.toggleClass(MARKER_MOVING_CLASS, isMoving)
 
-	alignToRange: (range) ->
+	alignToRange: ->
 
 	_createMarkerElement: ->
 		element = @_contentContext.createElement('div')
