@@ -33,7 +33,10 @@ module.exports = function(grunt) {
 			compile: {
 				files: [
 					{
-						src: [SRC_DIR + ANY_SUB_DIR + ANY_COFFEE_FILE],
+						src: [
+								SRC_DIR + 'CustomSelection.coffee',
+								SRC_DIR + ANY_SUB_DIR + ANY_COFFEE_FILE
+						],
 						dest: DIST_DIR + 'all-coffee.js'
 					}
 				]
@@ -51,7 +54,6 @@ module.exports = function(grunt) {
 				files: [
 					{
 						src: [
-								SRC_DIR + 'CustomSelection.js',
 								DIST_DIR + 'all-coffee.js',
 								SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE
 						],

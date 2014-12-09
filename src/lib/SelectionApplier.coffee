@@ -21,9 +21,9 @@ class CustomSelection.Lib.SelectionApplier
 
 	clearSelection: ->
 		if @_lastSelection.exists()
-			@_markersWrapper.hideMarkers()
 			@_selectionDrawer.clearSelection()
 			@_settings.onSelectionChange.call(null, window.document.createRange())
+		@_markersWrapper.hideMarkers()
 		@_lastSelection.range = null
 
 	_drawSelection: (range) ->
