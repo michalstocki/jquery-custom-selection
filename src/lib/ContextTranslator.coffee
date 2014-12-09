@@ -10,7 +10,7 @@ class CustomSelection.Lib.ContextTranslator
 
 	setContentTransformationFromMarkersContext: (transformation) ->
 		@_offsetX = transformation.offsetX
-		@_offsetY = transformation.offsetX
+		@_offsetY = transformation.offsetY
 		@_scale = transformation.scale
 
 	contentXToMarkerContext: (contentX) ->
