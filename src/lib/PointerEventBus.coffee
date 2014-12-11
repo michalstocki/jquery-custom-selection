@@ -23,7 +23,7 @@ class CustomSelection.Lib.PointerEventBus
 			@_updateSelectionWithPointerMove(jqueryEvent)
 			@_rejectTouchEnd = true
 
-	handleMarkerTouchMoveEnd: (jqueryEvent) =>
+	handleMarkerTouchMoveEnd: =>
 		@_movingMarker.unset()
 
 	handleGlobalTouchEnd: (jqueryEvent) =>
@@ -31,7 +31,7 @@ class CustomSelection.Lib.PointerEventBus
 			jqueryEvent.preventDefault()
 			@_rejectTouchEnd = false
 
-	handleGlobalTap: (hammerEvent) =>
+	handleGlobalTap: =>
 		@_selectionApplier.clearSelection()
 
 	_selectWordUnderPointer: (hammerEvent) ->
