@@ -8,7 +8,7 @@ class CustomSelection.Lib.Markers.MarkersWrapper
 
 	constructor: (@_startMarker, @_endMarker) ->
 		@$markerElements = @_startMarker.$element.add(@_endMarker.$element)
-		@$markersBody = $(@_startMarker.element.ownerDocument.body)
+		@$markersBody = $(@_startMarker.ownerBody)
 
 	showMarkers: ->
 		@_startMarker.show()

@@ -7,6 +7,7 @@ class Marker
 
 	element: null
 	$element: null
+	ownerBody: null
 
 	_className: ''
 	_contentContext: null
@@ -15,6 +16,7 @@ class Marker
 	constructor: (@_contentContext, @_contextTranslator, element) ->
 		@element = element || @_createMarkerElement()
 		@$element = $(@element)
+		@ownerBody = @element.ownerDocument.body
 
 	hide: ->
 		@$element.css(visibility: 'hidden')
