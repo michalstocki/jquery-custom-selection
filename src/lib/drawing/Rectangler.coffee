@@ -12,9 +12,12 @@ class CustomSelection.Lib.Drawing.Rectangler
 
 	_filterDuplicatedRects: (rects) ->
 		lastRect = rects[rects.length - 1]
-		return rects.filter (rect) =>
-			return !(@_rectEndsAfterLastRect(rect, lastRect) ||
-				@_rectContainsOneOfRects(rect, rects))
+		return rects.filter(@_isRectUnique.bind(this, rects, lastRect))
+
+
+	_isRectUnique: (rects, lastRect, rect) ->
+		return not @_rectEndsAfterLastRect(rect, lastRect) and
+			not @_rectContainsOneOfRects(rect, rects)
 
 	_rectEndsAfterLastRect: (rect, lastRect) ->
 		TOLERATED_RIGHT_LEAK = 1
