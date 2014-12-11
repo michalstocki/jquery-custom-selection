@@ -1,4 +1,4 @@
-class CustomSelection.Lib.SelectionDrawer
+class CustomSelection.Lib.Drawing.SelectionDrawer
 
 	CUSTOM_SELECTION_CANVAS_CLASS = 'custom-selection-canvas'
 	CUSTOM_SELECTION_CANVAS_STYLE = {

@@ -1,4 +1,4 @@
-class CustomSelection.Lib.Rectangler
+class CustomSelection.Lib.Drawing.Rectangler
 
 	_environment: null
 
