@@ -40,34 +40,45 @@ class window.CustomSelection
 		@_contentContext.restoreNativeSelection()
 
 	_injectDependencies: ->
+		# lowest dependencies
+		environment = @_performEnvTests()
+		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil()
+		frameRequester = new CustomSelection.Lib.FrameRequester()
+		hammerAdapter = new CustomSelection.Lib.HammerAdapter(@_settings)
 		@_contentContext = new CustomSelection.Lib.ContentContext(@_element)
 		@_contextTranslator = new CustomSelection.Lib.ContextTranslator()
-		environment = @_performEnvTests()
-		rectangler = new CustomSelection.Lib.Rectangler(environment)
-		frameRequester = new CustomSelection.Lib.FrameRequester()
-		lastSelection = new CustomSelection.Lib.Range.LastSelection()
-		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(rectangler, environment, @_contentContext,
-			fillStyle: @_settings.selectionColor
-			markerShiftY: @_settings.markerShiftY)
-		nodeUtil = new CustomSelection.Lib.Utils.NodeUtil()
-		pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil)
+
+		# markers
 		startMarker = new CustomSelection.Lib.Markers.StartMarker(@_contentContext, @_contextTranslator, $(@_settings.startMarker)[0])
 		endMarker = new CustomSelection.Lib.Markers.EndMarker(@_contentContext, @_contextTranslator, $(@_settings.endMarker)[0])
 		movingMarker = new CustomSelection.Lib.Markers.MovingMarker(startMarker, endMarker)
 		markersWrapper = new CustomSelection.Lib.Markers.MarkersWrapper(startMarker, endMarker)
+
+		# selection drawing
+		rectangler = new CustomSelection.Lib.Rectangler(environment)
+		selectionDrawer = new CustomSelection.Lib.SelectionDrawer(rectangler, environment, @_contentContext,
+			fillStyle: @_settings.selectionColor
+			markerShiftY: @_settings.markerShiftY)
+
+		# point construction
+		pointLocator = new CustomSelection.Lib.Point.PointLocator(environment, nodeUtil)
 		pointTargetLocator = new CustomSelection.Lib.Point.PointTargetLocator(@_contentContext, nodeUtil, markersWrapper, pointLocator)
 		pointFactory = new CustomSelection.Lib.Point.PointFactory(environment, @_contextTranslator, pointTargetLocator)
 		rightPointSnapper = new CustomSelection.Lib.Point.RightPointSnapper(pointFactory, nodeUtil)
 		belowPointSnapper = new CustomSelection.Lib.Point.BelowPointSnapper(pointFactory, nodeUtil)
-		boundFactory = new CustomSelection.Lib.Range.SelectionBoundFactory(lastSelection, movingMarker)
 		pointToRangeConverter = new CustomSelection.Lib.Point.PointToRangeConverter(pointLocator, @_contentContext, rightPointSnapper, belowPointSnapper)
+
+		# range construction
+		lastSelection = new CustomSelection.Lib.Range.LastSelection()
+		boundFactory = new CustomSelection.Lib.Range.SelectionBoundFactory(lastSelection, movingMarker)
 		wordRangeBuilder = new CustomSelection.Lib.Range.WordRangeBuilder(nodeUtil, pointToRangeConverter)
 		selectionRangeBuilder = new CustomSelection.Lib.Range.SelectionRangeBuilder(@_contentContext, pointToRangeConverter, boundFactory, movingMarker)
-		hammer = new CustomSelection.Lib.HammerAdapter(@_settings)
-		@_selectionApplier = new CustomSelection.Lib.SelectionApplier(@_settings, lastSelection, markersWrapper, selectionDrawer)
 		selectionConstructor = new CustomSelection.Lib.Range.SelectionConstructor(@_settings, selectionRangeBuilder, markersWrapper, pointFactory, wordRangeBuilder, frameRequester)
+
+		# highest dependencies
+		@_selectionApplier = new CustomSelection.Lib.SelectionApplier(@_settings, lastSelection, markersWrapper, selectionDrawer)
 		pointerEventBus = new CustomSelection.Lib.PointerEventBus(movingMarker, @_selectionApplier, selectionConstructor)
-		@_pointerEventBinder = new CustomSelection.Lib.PointerEventBinder(@_element, hammer, markersWrapper, pointerEventBus)
+		@_pointerEventBinder = new CustomSelection.Lib.PointerEventBinder(@_element, hammerAdapter, markersWrapper, pointerEventBus)
 
 
 	_performEnvTests: ->
