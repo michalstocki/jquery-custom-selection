@@ -1,7 +1,7 @@
 MARKER_CLASS = 'jcs-marker';
-MARKER_START_CLASS = 'jcs-start-marker';
-MARKER_END_CLASS = 'jcs-end-marker';
-MARKER_MOVING_CLASS = 'jcs-marker-moving';
+START_MARKER_CLASS = 'jcs-start-marker';
+END_MARKER_CLASS = 'jcs-end-marker';
+MOVING_MARKER_CLASS = 'jcs-marker-moving';
 
 class Marker
 
@@ -29,7 +29,7 @@ class Marker
 		@$element.css('pointer-events', 'auto')
 
 	setMoving: (isMoving) ->
-		@$element.toggleClass(MARKER_MOVING_CLASS, isMoving)
+		@$element.toggleClass(MOVING_MARKER_CLASS, isMoving)
 
 	alignToRange: ->
 
@@ -44,7 +44,7 @@ class Marker
 class CustomSelection.Lib.Markers.StartMarker extends Marker
 
 	constructor: ->
-		@_className = MARKER_START_CLASS
+		@_className = START_MARKER_CLASS
 		super
 
 	alignToRange: (range) ->
@@ -57,7 +57,7 @@ class CustomSelection.Lib.Markers.StartMarker extends Marker
 class CustomSelection.Lib.Markers.EndMarker extends Marker
 
 	constructor: ->
-		@_className = MARKER_END_CLASS
+		@_className = END_MARKER_CLASS
 		super
 
 	alignToRange: (range) ->
