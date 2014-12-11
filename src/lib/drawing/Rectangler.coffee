@@ -21,8 +21,9 @@ class CustomSelection.Lib.Drawing.Rectangler
 
 	_rectEndsAfterLastRect: (rect, lastRect) ->
 		TOLERATED_RIGHT_LEAK = 1
-		return rect.bottom == lastRect.bottom &&
-			rect.right - lastRect.right > TOLERATED_RIGHT_LEAK
+		return rect.bottom > lastRect.bottom or
+			(rect.bottom == lastRect.bottom and
+			rect.right - lastRect.right > TOLERATED_RIGHT_LEAK)
 
 	_rectContainsOneOfRects: (rect, rects) ->
 		for r in rects
