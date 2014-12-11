@@ -2,7 +2,6 @@ class PointSnapper
 
 	_pointFactory: null
 	_nodeUtil: null
-	_closestRectInNode: null
 
 	constructor: (@_pointFactory, @_nodeUtil) ->
 
@@ -10,7 +9,6 @@ class PointSnapper
 		newPoint = null
 		if position = @_searchPositionInTextByPoint(element, point)
 			newPoint = @_createPointAt(position)
-		@_closestRectInNode = null
 		return newPoint
 
 	_searchPositionInTextByPoint: (el, point) ->
