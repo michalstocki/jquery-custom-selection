@@ -4,7 +4,7 @@ class CustomSelection.Lib.ContentContext
 	document: null
 	body: null
 	container: null
-	_overriddenUserSelectValue: null
+	_originalUserSelectValue: null
 
 	constructor: (@container) ->
 		@document = @container.ownerDocument
@@ -21,8 +21,8 @@ class CustomSelection.Lib.ContentContext
 		return @document.elementFromPoint(point.clientX, point.clientY)
 
 	disableNativeSelection: ->
-		@_overriddenUserSelectValue = $(@body).css('user-select')
+		@_originalUserSelectValue = $(@body).css('user-select')
 		$(@body).css('user-select', 'none')
 
 	restoreNativeSelection: ->
-		$(@body).css('user-select', @_overriddenUserSelectValue)
+		$(@body).css('user-select', @_originalUserSelectValue)
