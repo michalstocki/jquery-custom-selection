@@ -4,8 +4,9 @@ class CustomSelection.Lib.SelectionApplier
 	_lastSelection: null
 	_markersWrapper: null
 	_selectionDrawer: null
+	_contentContext: null
 
-	constructor: (@_settings, @_lastSelection, @_markersWrapper, @_selectionDrawer) ->
+	constructor: (@_settings, @_lastSelection, @_markersWrapper, @_selectionDrawer, @_contentContext) ->
 
 	applySelectionFor: (range) ->
 		if range?
@@ -22,7 +23,7 @@ class CustomSelection.Lib.SelectionApplier
 	clearSelection: ->
 		if @_lastSelection.exists()
 			@_selectionDrawer.clearSelection()
-			@_settings.onSelectionChange.call(null, window.document.createRange())
+			@_settings.onSelectionChange.call(null, @_contentContext.createRange())
 		@_markersWrapper.hideMarkers()
 		@_lastSelection.range = null
 

@@ -80,7 +80,7 @@ class window.CustomSelection
 		selectionConstructor = new Package.SelectionConstructor(@_settings, selectionRangeBuilder, markersWrapper, pointFactory, wordRangeBuilder, frameRequester)
 
 		# highest dependencies
-		@_selectionApplier = new CustomSelection.Lib.SelectionApplier(@_settings, lastSelection, markersWrapper, selectionDrawer)
+		@_selectionApplier = new CustomSelection.Lib.SelectionApplier(@_settings, lastSelection, markersWrapper, selectionDrawer, @_contentContext)
 		pointerEventBus = new CustomSelection.Lib.PointerEventBus(movingMarker, @_selectionApplier, selectionConstructor)
 		@_pointerEventBinder = new CustomSelection.Lib.PointerEventBinder(@_element, hammerAdapter, markersWrapper, pointerEventBus)
 
