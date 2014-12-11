@@ -8,18 +8,18 @@ class CustomSelection.Lib.Point.PointFactory
 
 	createFromContentEvent: (pointerEvent) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
-		targetElement = @_pointTargetLocator.getTargetFromEvent(pointerEvent)
-		return new CustomSelection.Lib.Point.Point(pointer, targetElement)
+		target = @_pointTargetLocator.getTargetFromEvent(pointerEvent)
+		return new CustomSelection.Lib.Point.Point(pointer, target)
 
 	createFromMarkerEvent: (pointerEvent, shiftY) ->
 		pointer = @_getPointerFromEvent(pointerEvent)
 		@_scalePointerCoords(pointer) unless @_pointerCoordsAutomaticallyScaled()
 		@_shiftPointer(pointer, shiftY)
-		targetElement = @_pointTargetLocator.getTargetByCoords(pointer)
-		return new CustomSelection.Lib.Point.Point(pointer, targetElement)
+		target = @_pointTargetLocator.getTargetByCoords(pointer)
+		return new CustomSelection.Lib.Point.Point(pointer, target)
 
-	createFromClientCoordsInText: (coords) ->
-		target = {node: coords.parentText, isText: true}
+	createFromClientCoordsInText: (coords, textNode) ->
+		target = {node: textNode, isText: true}
 		return new CustomSelection.Lib.Point.Point(coords, target)
 
 	_getPointerFromEvent: (pointerEvent) ->

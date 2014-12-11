@@ -52,10 +52,10 @@ class PointSnapper
 			(@_nodeUtil.nodeHasChildren(node) or @_nodeUtil.nodeIsText(node))
 
 	_createPointAt: (position) ->
-		return @_pointFactory.createFromClientCoordsInText
+		return @_pointFactory.createFromClientCoordsInText({
 			clientX: position.rect.right - 1
 			clientY: position.rect.bottom - 1
-			parentText: position.node
+		}, position.node)
 
 class CustomSelection.Lib.Point.RightPointSnapper extends PointSnapper
 
