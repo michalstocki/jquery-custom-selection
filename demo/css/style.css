@@ -41,7 +41,7 @@ aside.right {
     font-family: sans-serif;
     font-size: 12px;
     height: 300px;
-    margin: 0 0 10px 0;
+    margin: 10px 0 0 0;
     padding: 5px 6px;
     text-align: center;
     width: 200px;
@@ -77,11 +77,15 @@ aside.right {
 	color: white;
 	font-family: sans-serif;
 	font-size: 12px;
-	height: 50px;
+	height: 100px;
 	margin: 0 0 10px 0;
 	padding: 5px 6px;
 	text-align: center;
 	width: 200px;
+}
+.settings button {
+	margin-bottom: 4px;
+	width: 140px;
 }
 
 .touch_status {
@@ -94,7 +98,7 @@ aside.right {
 	color: #CFF09E;
 	font-family: sans-serif;
 	font-size: 12px;
-	height: 416px;
+	height: 336px;
 	overflow: auto;
 	padding: 12px;
 	right: 0;
