@@ -7,9 +7,6 @@ Using native text selection causes displaying CAB bar (Android) or actions butto
 - Apache Cordova / PhoneGap
 - mobile website
 
-## Warning: Unstable ##
-Custom Selection is still unstable and should not be used in production.
-
 ## Usage ##
 
 1. Include dependencies:
@@ -32,25 +29,59 @@ Custom Selection is still unstable and should not be used in production.
 
 ### Initialization
 
-		var iframe = $('iframe')[0];
-		$(iframe.contentDocument.body).customSelection({
-			startMarker: $('.selection-marker-start'),
-			endMarker: $('.selection-marker-end'),
-			onSelectionChange: function(range) {},
-			contextOrigin: {
-				scale: 0.7,
-				offsetX: 100,
-				offsetY: 35
-			}
-		});
+Example advanced initialization via jQuery plugin:
+
+	var iframeBody = $('iframe')[0].contentDocument.body;
+	var options = {
+		startMarker: $('.selection-marker-start'),
+		endMarker: $('.selection-marker-end'),
+		onSelectionChange: function(range) {},
+		contentOrigin: {
+			scale: 0.7,
+			offsetX: 100,
+			offsetY: 35
+		}
+	};
+	$(iframeBody).customSelection(options);
+		
+The same effect we can accomplish using classic object-oriented API:
+	
+	var customSelection = new CustomSelection(iframeBody, options);
 
 ### Refreshing
 
-		$(iframe.contentDocument.body).refreshCustomSelection({
-			scale: 0.8,
-			offsetX: 80,
-			offsetY: 25
-		)};
+Refreshes the selection drawing and the markers position. Useful after a screen resize or change of the iframe scale.
+
+	var contentOrigin = {
+        scale: 0.8,
+        offsetX: 80,
+        offsetY: 25
+    };
+	$(iframeBody).refreshCustomSelection(contentOrigin);
+	
+or 
+	
+	customSelection.refresh(contentOrigin);
+	
+### Clearing
+
+Clears current selection and calls `onSelectionChange` callback with an empty range.
+
+	$(iframeBody).clearCustomSelection();
+	
+or
+
+	customSelection.clear();
+	
+### Disabling
+
+Disables Custom Selection and restores a native text selection. It is possible to re-enable Custom Selection using a next initialization.
+
+	$(iframeBody).disableCustomSelection();
+	
+or
+
+	customSelection.destroy();
 
 ## Acknowledgements ##
 
