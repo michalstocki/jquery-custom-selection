@@ -7,6 +7,7 @@ module.exports = function(grunt) {
 	var DEMO_DIR = BASE_DIR + 'demo/';
 	var ANY_SUB_DIR = '**/';
 	var ANY_JS_FILE = '*.js';
+	var ANY_COFFEE_FILE = '*.coffee';
 
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
@@ -26,14 +27,23 @@ module.exports = function(grunt) {
 					port: 8003,
 					hostname: 'localhost'
 				}
-			},
-			server: {
-				options: {
-					keepalive: false,
-					port: 8004,
-					hostname: 'localhost'
-				}
 			}
+		},
+		coffee: {
+			compile: {
+				files: [
+					{
+						src: [
+								SRC_DIR + 'CustomSelection.coffee',
+								SRC_DIR + ANY_SUB_DIR + ANY_COFFEE_FILE
+						],
+						dest: DIST_DIR + 'all-coffee.js'
+					}
+				]
+			}
+		},
+		clean: {
+			coffeeBuild: [DIST_DIR + 'all-coffee.js']
 		},
 		concat: {
 			options: {
@@ -44,7 +54,7 @@ module.exports = function(grunt) {
 				files: [
 					{
 						src: [
-								SRC_DIR + 'CustomSelection.js',
+								DIST_DIR + 'all-coffee.js',
 								SRC_DIR + ANY_SUB_DIR + ANY_JS_FILE
 						],
 						dest: DIST_DIR + 'jquery.custom-selection.js'
@@ -66,26 +76,16 @@ module.exports = function(grunt) {
 					}
 				]
 			}
-		},
-		webdriver: {
-			options: {
-				desiredCapabilities: {
-					browserName: 'chrome'
-				}
-			},
-			customSelection: {
-				tests: ['test/e2e/*.js']
-			}
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-webdriver');
+	grunt.loadNpmTasks('grunt-contrib-coffee');
 
-	grunt.registerTask('dist', ['jshint', 'concat:build', 'uglify:build']);
+	grunt.registerTask('dist', ['jshint', 'coffee:compile', 'concat:build', 'uglify:build', 'clean:coffeeBuild']);
 	grunt.registerTask('server', ['connect:serverKeepAlive']);
-	grunt.registerTask('e2e', ['concat:build', 'uglify:build', 'connect:server', 'webdriver']);
 };
