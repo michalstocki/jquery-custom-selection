@@ -1,4 +1,4 @@
-/*! jquery-custom-selection - v0.5.1 - 2014-12-12 */(function() {
+/*! jquery-custom-selection - v0.5.2 - 2014-12-12 */(function() {
   window.CustomSelection = (function() {
     var DEFAULTS;
 
